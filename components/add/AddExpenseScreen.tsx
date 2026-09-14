@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { FormError } from "@/components/ui/FormError";
 import { Input } from "@/components/ui/Input";
 import {
+  addCategory,
   addEntry,
   listEntries,
   removeEntry,
@@ -66,6 +67,14 @@ export function AddExpenseScreen({
   const todaySpent = spentOnDay(data, reference.day);
 
   const month = `${reference.year}-${pad(reference.monthIndex + 1)}`;
+
+  const handleCreateCategory = (name: string, budget: number) => {
+    const id = `c${Date.now()}`;
+    setData((current) => addCategory(current, { id, name, budget }));
+    setCategoryId(id);
+    setError("");
+    amountRef.current?.focus();
+  };
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -157,6 +166,7 @@ export function AddExpenseScreen({
             categories={summary.categories}
             selected={categoryId}
             onSelect={setCategoryId}
+            onCreate={handleCreateCategory}
           />
 
           {error && (

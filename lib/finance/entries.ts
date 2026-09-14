@@ -50,6 +50,16 @@ export function addEntry(
   };
 }
 
+export function addCategory(
+  data: MonthData,
+  category: { id: string; name: string; budget: number },
+): MonthData {
+  return {
+    ...data,
+    variable: [...data.variable, { ...category, entries: [] }],
+  };
+}
+
 export function removeEntry(data: MonthData, entryId: string): MonthData {
   return {
     ...data,
