@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/Input";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Button } from "@/components/ui/Button";
-import { FormError } from "./FormError";
+import { FormError } from "@/components/ui/FormError";
 import { signInSchema, type SignInValues } from "@/lib/validation/auth";
 import { fakeRequest } from "@/lib/utils";
 

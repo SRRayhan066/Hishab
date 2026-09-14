@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/Input";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Button } from "@/components/ui/Button";
-import { FormError } from "./FormError";
+import { FormError } from "@/components/ui/FormError";
 import { signUpSchema, type SignUpValues } from "@/lib/validation/auth";
 import { fakeRequest } from "@/lib/utils";
 

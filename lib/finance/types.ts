@@ -14,6 +14,7 @@ export type ExpenseEntry = {
   id: string;
   day: number;
   amount: number;
+  addedAt?: number;
 };
 
 export type VariableCategory = {
@@ -83,6 +84,7 @@ export type Burndown = {
 
 export type MonthSummary = {
   monthName: string;
+  monthIndex: number;
   year: number;
   day: number;
   daysInMonth: number;

@@ -176,6 +176,7 @@ export function buildMonthSummary(
 
   return {
     monthName: BENGALI_MONTHS[now.getMonth()],
+    monthIndex: now.getMonth(),
     year: now.getFullYear(),
     day,
     daysInMonth,

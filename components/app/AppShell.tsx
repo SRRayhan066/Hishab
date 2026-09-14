@@ -15,8 +15,8 @@ export function AppShell({
   children,
 }: AppShellProps) {
   return (
-    <div className="flex-1 px-4 pt-[22px]">
-      <div className="mx-auto flex w-full max-w-[1060px] flex-col gap-4">
+    <div className="flex flex-1 flex-col px-4 pt-[22px]">
+      <div className="mx-auto flex w-full max-w-[1060px] flex-1 flex-col gap-4">
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-ink-muted text-[14px] font-medium">
@@ -31,7 +31,7 @@ export function AppShell({
           </p>
         </header>
 
-        <main className="flex flex-col gap-4">{children}</main>
+        <main className="flex flex-1 flex-col gap-4">{children}</main>
 
         <BottomNav />
       </div>
