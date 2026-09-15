@@ -1,13 +1,13 @@
 import { Card } from "@/components/ui/Card";
 import { formatTaka } from "@/lib/finance/format";
-import type { SavingsMonth } from "@/lib/finance/savings";
+import type { MonthResult } from "@/lib/finance/history";
 
-const toneInk: Record<SavingsMonth["tone"], string> = {
+const toneInk: Record<MonthResult["tone"], string> = {
   good: "var(--color-primary)",
   over: "var(--color-over)",
 };
 
-export function SavingsHistory({ months }: { months: SavingsMonth[] }) {
+export function SavingsHistory({ months }: { months: MonthResult[] }) {
   return (
     <Card className="px-[22px] pt-[22px] pb-4">
       <h2 className="font-display text-[18px] font-bold">
