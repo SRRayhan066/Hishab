@@ -1,18 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { GoogleIcon } from "@/components/icons/GoogleIcon";
-import { fakeRequest } from "@/lib/utils";
 
 export function GoogleButton({ label }: { label: string }) {
   const [loading, setLoading] = useState(false);
 
-  const handleClick = async () => {
+  useEffect(() => {
+    const reset = () => setLoading(false);
+    window.addEventListener("pageshow", reset);
+    return () => window.removeEventListener("pageshow", reset);
+  }, []);
+
+  const handleClick = () => {
     setLoading(true);
-    await fakeRequest();
-    console.log("google sign in requested");
-    setLoading(false);
+    window.location.assign("/api/auth/google");
   };
 
   return (

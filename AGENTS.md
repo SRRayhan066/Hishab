@@ -6,4 +6,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
+# Very important rule
+
+- Never read the .env.local file. You can read at most .env.example file
+- No need to read the .git file, until I explicitly says it
+
 <!-- END:nextjs-agent-rules -->

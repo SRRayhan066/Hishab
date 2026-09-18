@@ -4,15 +4,17 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Input } from "@/components/ui/Input";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Button } from "@/components/ui/Button";
 import { FormError } from "@/components/ui/FormError";
-import { signUpSchema, type SignUpValues } from "@/lib/validation/auth";
-import { signUp } from "@/app/actions/auth";
+import {
+  setPasswordSchema,
+  type SetPasswordValues,
+} from "@/lib/validation/auth";
+import { completeGoogleSignUp } from "@/app/actions/auth";
 import { requestFailedError } from "@/lib/auth/messages";
 
-export function SignUpForm({ cta }: { cta: string }) {
+export function SetPasswordForm({ email }: { email: string }) {
   const router = useRouter();
   const [navigating, startNavigation] = useTransition();
   const {
@@ -20,14 +22,14 @@ export function SignUpForm({ cta }: { cta: string }) {
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<SignUpValues>({
-    resolver: zodResolver(signUpSchema),
-    defaultValues: { name: "", email: "", password: "", confirmPassword: "" },
+  } = useForm<SetPasswordValues>({
+    resolver: zodResolver(setPasswordSchema),
+    defaultValues: { password: "", confirmPassword: "" },
   });
 
-  const onSubmit = async (values: SignUpValues) => {
+  const onSubmit = async (values: SetPasswordValues) => {
     try {
-      const result = await signUp(values);
+      const result = await completeGoogleSignUp(values);
       if (result.error) {
         setError("root", { message: result.error });
         return;
@@ -44,22 +46,13 @@ export function SignUpForm({ cta }: { cta: string }) {
       onSubmit={handleSubmit(onSubmit)}
       className="flex flex-col gap-[14px]"
     >
-      <Input
-        label="তোমার নাম"
-        autoComplete="name"
-        placeholder="যেমন, রাকিব"
-        error={errors.name?.message}
-        {...register("name")}
-      />
-
-      <Input
-        label="ইমেইল"
+      <input
         type="email"
-        inputMode="email"
-        autoComplete="email"
-        placeholder="tumi@example.com"
-        error={errors.email?.message}
-        {...register("email")}
+        name="username"
+        autoComplete="username"
+        value={email}
+        readOnly
+        hidden
       />
 
       <PasswordInput
@@ -85,7 +78,7 @@ export function SignUpForm({ cta }: { cta: string }) {
         loading={isSubmitting || navigating}
         className="mt-[6px]"
       >
-        {cta}
+        সাইন ইন
       </Button>
     </form>
   );

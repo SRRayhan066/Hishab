@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { BottomNav } from "./BottomNav";
+import { SignOutButton } from "./SignOutButton";
 
 type AppShellProps = {
   title: string;
@@ -26,9 +27,12 @@ export function AppShell({
               {title}
             </h1>
           </div>
-          <p className="bg-surface border-line-soft text-ink-soft rounded-full border px-[18px] py-[10px] text-[14px] font-semibold">
-            জমা আছে {savingsLabel}
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="bg-surface border-line-soft text-ink-soft rounded-full border px-[18px] py-[10px] text-[14px] font-semibold">
+              জমা আছে {savingsLabel}
+            </p>
+            <SignOutButton />
+          </div>
         </header>
 
         <main className="flex flex-1 flex-col gap-4">{children}</main>
