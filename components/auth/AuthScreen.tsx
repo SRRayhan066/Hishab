@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { AuthMode } from "@/types/auth";
 import { Logo } from "@/components/icons/Logo";
 import { Divider } from "@/components/ui/Divider";
+import { FormError } from "@/components/ui/FormError";
 import { AuthCard } from "./AuthCard";
 import { AuthPanel } from "./AuthPanel";
 import { AuthTabs } from "./AuthTabs";
@@ -19,7 +20,7 @@ const copy: Record<
     title: "আবার স্বাগতম",
     subtitle: "হিসাব যেখানে রেখেছিলে, সেখান থেকেই চলবে।",
     cta: "সাইন ইন",
-    note: "তোমার তথ্য শুধু তোমার ডিভাইসের হিসাবেই থাকছে।",
+    note: "তোমার হিসাব নিরাপদে জমা থাকছে, শুধু তুমিই দেখতে পাবে।",
   },
   signup: {
     title: "শুরু করা যাক",
@@ -31,7 +32,7 @@ const copy: Record<
 
 const panelId = "auth-panel";
 
-export function AuthScreen() {
+export function AuthScreen({ notice }: { notice?: string }) {
   const [mode, setMode] = useState<AuthMode>("login");
   const { title, subtitle, cta, note } = copy[mode];
 
@@ -42,6 +43,8 @@ export function AuthScreen() {
 
         <div className="flex flex-col gap-5 px-[22px] py-8 sm:px-[34px] md:pt-10 md:pb-9">
           <Logo className="md:hidden" />
+
+          <FormError message={notice} />
 
           <AuthTabs mode={mode} onChange={setMode} panelId={panelId} />
 

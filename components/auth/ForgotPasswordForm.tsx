@@ -5,14 +5,16 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/Input";
-import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Button } from "@/components/ui/Button";
 import { FormError } from "@/components/ui/FormError";
-import { signUpSchema, type SignUpValues } from "@/lib/validation/auth";
-import { signUp } from "@/app/actions/auth";
+import {
+  forgotPasswordSchema,
+  type ForgotPasswordValues,
+} from "@/lib/validation/auth";
+import { requestPasswordReset } from "@/app/actions/password-reset";
 import { requestFailedError } from "@/lib/auth/messages";
 
-export function SignUpForm({ cta }: { cta: string }) {
+export function ForgotPasswordForm() {
   const router = useRouter();
   const [navigating, startNavigation] = useTransition();
   const {
@@ -20,19 +22,19 @@ export function SignUpForm({ cta }: { cta: string }) {
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<SignUpValues>({
-    resolver: zodResolver(signUpSchema),
-    defaultValues: { name: "", email: "", password: "", confirmPassword: "" },
+  } = useForm<ForgotPasswordValues>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: { email: "" },
   });
 
-  const onSubmit = async (values: SignUpValues) => {
+  const onSubmit = async (values: ForgotPasswordValues) => {
     try {
-      const result = await signUp(values);
+      const result = await requestPasswordReset(values);
       if (result.error) {
         setError("root", { message: result.error });
         return;
       }
-      startNavigation(() => router.replace("/home"));
+      startNavigation(() => router.push("/forgot-password/verify"));
     } catch {
       setError("root", { message: requestFailedError });
     }
@@ -45,14 +47,6 @@ export function SignUpForm({ cta }: { cta: string }) {
       className="flex flex-col gap-[14px]"
     >
       <Input
-        label="তোমার নাম"
-        autoComplete="name"
-        placeholder="যেমন, রাকিব"
-        error={errors.name?.message}
-        {...register("name")}
-      />
-
-      <Input
         label="ইমেইল"
         type="email"
         inputMode="email"
@@ -62,22 +56,6 @@ export function SignUpForm({ cta }: { cta: string }) {
         {...register("email")}
       />
 
-      <PasswordInput
-        label="পাসওয়ার্ড"
-        autoComplete="new-password"
-        placeholder="অন্তত ৬ অক্ষর"
-        error={errors.password?.message}
-        {...register("password")}
-      />
-
-      <PasswordInput
-        label="পাসওয়ার্ড আবার লেখো"
-        autoComplete="new-password"
-        placeholder="আগেরটার মতোই"
-        error={errors.confirmPassword?.message}
-        {...register("confirmPassword")}
-      />
-
       <FormError message={errors.root?.message} />
 
       <Button
@@ -85,7 +63,7 @@ export function SignUpForm({ cta }: { cta: string }) {
         loading={isSubmitting || navigating}
         className="mt-[6px]"
       >
-        {cta}
+        কোড পাঠাও
       </Button>
     </form>
   );
