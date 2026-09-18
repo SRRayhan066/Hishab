@@ -6,4 +6,6 @@ export type {
   SignInValues,
   SignUpValues,
   SetPasswordValues,
+  ForgotPasswordValues,
+  ResetCodeValues,
 } from "@/lib/validation/auth";

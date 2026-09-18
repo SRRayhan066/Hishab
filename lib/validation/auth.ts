@@ -47,6 +47,27 @@ export const setPasswordSchema = z
     passwordsMustMatch,
   );
 
+export const forgotPasswordSchema = z.object({ email });
+
+const banglaDigits = "০১২৩৪৫৬৭৮৯";
+
+function toEnglishDigits(value: string) {
+  return value.replace(/[০-৯]/g, (digit) =>
+    String(banglaDigits.indexOf(digit)),
+  );
+}
+
+export const resetCodeSchema = z.object({
+  code: z
+    .string()
+    .trim()
+    .min(1, "কোডটা লিখে দাও।")
+    .transform(toEnglishDigits)
+    .pipe(z.string().regex(/^\d{6}$/, "কোডটা ৬ অঙ্কের হবে।")),
+});
+
 export type SignInValues = z.infer<typeof signInSchema>;
+export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
+export type ResetCodeValues = z.input<typeof resetCodeSchema>;
 export type SignUpValues = z.infer<typeof signUpSchema>;
 export type SetPasswordValues = z.infer<typeof setPasswordSchema>;

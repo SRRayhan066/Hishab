@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -67,12 +68,12 @@ export function SignInForm({ cta }: { cta: string }) {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Checkbox label="মনে রাখো" {...register("remember")} />
-        <a
-          href="#reset"
+        <Link
+          href="/forgot-password"
           className="text-primary hover:text-primary-dark focus-visible:outline-primary rounded-sm text-[15px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2"
         >
           পাসওয়ার্ড ভুলে গেছি
-        </a>
+        </Link>
       </div>
 
       <FormError message={errors.root?.message} />

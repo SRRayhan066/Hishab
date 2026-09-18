@@ -11,8 +11,8 @@ The parts you must do by hand are in **[Part 5](#part-5--what-you-do-by-hand)**.
 | Task | What it covers | Status |
 |---|---|---|
 | **Task 1 — Sign up** | Email sign-up, Google sign-up with "set password" page, auto login, locked pages, sign out | ✅ Built |
-| **Task 2 — Sign in** | Email + password login, "মনে রাখো", clear error message | ✅ Built — waiting for your test |
-| **Task 3 — Forgot password** | Email → OTP → new password, OTP sent by Gmail | ⏳ Next, after Task 2 is OK |
+| **Task 2 — Sign in** | Email + password login, "মনে রাখো", clear error message | ✅ Built |
+| **Task 3 — Forgot password** | Email → OTP → new password, OTP sent by Gmail | ✅ Built — waiting for your test |
 
 After each task you test by hand. The next task starts only after you say OK.
 
@@ -123,6 +123,10 @@ We do **not** store Google's access tokens. We only use Google to confirm who yo
 | [app/api/auth/callback/google/route.ts](app/api/auth/callback/google/route.ts) | Where Google sends you back |
 | [app/(auth)/signup/complete/page.tsx](app/(auth)/signup/complete/page.tsx) | The "set password" page |
 | [proxy.ts](proxy.ts) | Locks the pages |
+| [lib/auth/password-reset.ts](lib/auth/password-reset.ts) | Make, check and use up OTP codes |
+| [lib/email/mailer.ts](lib/email/mailer.ts) | Sends the OTP email through Gmail |
+| [app/actions/password-reset.ts](app/actions/password-reset.ts) | Send code, resend, check code, save new password |
+| [app/(auth)/forgot-password/](app/(auth)/forgot-password/) | The three forgot-password screens |
 
 ### A note about your budget data
 
@@ -212,9 +216,7 @@ AUTH_GOOGLE_SECRET=""
 
 **Never put these values in a normal file, a screenshot, or a chat message.**
 
-### Step 5 — Gmail App password (for Task 3)
-
-Not needed until Task 3 starts.
+### Step 5 — Gmail App password ✅ Done
 
 1. Choose the Gmail that will send the codes. A new Gmail made only for the app is a good idea.
 2. Go to **myaccount.google.com** → **Security** → turn on **2-Step Verification**. App passwords do not exist without it.
@@ -257,6 +259,7 @@ npx prisma migrate dev --name what_changed
 - [x] `.env.local` filled in
 - [x] Tables created in Neon
 - [x] Task 1 — Sign up
-- [ ] Task 2 — Sign in, tested by you
-- [ ] Gmail App password in `.env.local`
-- [ ] Task 3 — Forgot password
+- [x] Task 2 — Sign in
+- [x] Gmail App password in `.env.local`
+- [x] `PasswordResetOtp` table created in Neon
+- [ ] Task 3 — Forgot password, tested by you

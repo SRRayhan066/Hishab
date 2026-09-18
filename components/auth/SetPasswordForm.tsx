@@ -11,10 +11,16 @@ import {
   setPasswordSchema,
   type SetPasswordValues,
 } from "@/lib/validation/auth";
-import { completeGoogleSignUp } from "@/app/actions/auth";
 import { requestFailedError } from "@/lib/auth/messages";
+import type { AuthActionResult } from "@/types/auth";
 
-export function SetPasswordForm({ email }: { email: string }) {
+type SetPasswordFormProps = {
+  email: string;
+  cta: string;
+  action: (values: SetPasswordValues) => Promise<AuthActionResult>;
+};
+
+export function SetPasswordForm({ email, cta, action }: SetPasswordFormProps) {
   const router = useRouter();
   const [navigating, startNavigation] = useTransition();
   const {
@@ -29,7 +35,7 @@ export function SetPasswordForm({ email }: { email: string }) {
 
   const onSubmit = async (values: SetPasswordValues) => {
     try {
-      const result = await completeGoogleSignUp(values);
+      const result = await action(values);
       if (result.error) {
         setError("root", { message: result.error });
         return;
@@ -78,7 +84,7 @@ export function SetPasswordForm({ email }: { email: string }) {
         loading={isSubmitting || navigating}
         className="mt-[6px]"
       >
-        সাইন ইন
+        {cta}
       </Button>
     </form>
   );
