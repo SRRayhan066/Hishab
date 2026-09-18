@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { Prisma } from "@/lib/generated/prisma/client";
-import { hashPassword } from "@/lib/auth/password";
+import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { createSession, deleteSession } from "@/lib/auth/session";
 import {
   clearPendingGoogleSignUp,
@@ -14,11 +14,17 @@ import {
   emailTakenError,
   googleExpiredError,
   invalidFormError,
+  wrongCredentialsError,
 } from "@/lib/auth/messages";
-import { setPasswordSchema, signUpSchema } from "@/lib/validation/auth";
+import {
+  setPasswordSchema,
+  signInSchema,
+  signUpSchema,
+} from "@/lib/validation/auth";
 import type {
   AuthActionResult,
   SetPasswordValues,
+  SignInValues,
   SignUpValues,
 } from "@/types/auth";
 
@@ -27,6 +33,27 @@ function isUniqueViolation(error: unknown) {
     error instanceof Prisma.PrismaClientKnownRequestError &&
     error.code === "P2002"
   );
+}
+
+export async function signIn(values: SignInValues): Promise<AuthActionResult> {
+  const parsed = signInSchema.safeParse(values);
+  if (!parsed.success) return { error: wrongCredentialsError };
+
+  const { email, password, remember } = parsed.data;
+
+  const user = await db.user.findUnique({
+    where: { email },
+    select: { id: true, passwordHash: true },
+  });
+
+  const passwordMatches = await verifyPassword(
+    password,
+    user?.passwordHash ?? null,
+  );
+  if (!user || !passwordMatches) return { error: wrongCredentialsError };
+
+  await createSession(user.id, remember);
+  return {};
 }
 
 export async function signUp(values: SignUpValues): Promise<AuthActionResult> {

@@ -1,323 +1,262 @@
 # Login Plan — টাকার হিসাব
 
-This file explains how we turn the current fake login screen into a real one using **Auth.js v5** and **Neon Postgres**.
+This file explains how login works in the app, what is finished, and what is left.
 
-Read it top to bottom. The parts you must do by hand are in **[Part 5](#part-5--what-you-do-by-hand)**. Everything else I will write in code.
-
----
-
-## Part 1 — What we have right now
-
-The login screen looks finished, but nothing behind it is real.
-
-| File | What it does now | Problem |
-|---|---|---|
-| [SignInForm.tsx](components/auth/SignInForm.tsx) | Waits, then `console.log` | Nobody actually signs in |
-| [SignUpForm.tsx](components/auth/SignUpForm.tsx) | Waits, then `console.log` | No account is created |
-| [GoogleButton.tsx](components/auth/GoogleButton.tsx) | Waits, then `console.log` | Google is not connected |
-| [login/page.tsx](app/(auth)/login/page.tsx) | Shows the screen | Fine, no change needed |
-
-The form validation in [lib/validation/auth.ts](lib/validation/auth.ts) is good and we keep it as is.
-
-### Five gaps in the design
-
-**1. The app has no lock on the door.**
-Anyone can open `/home`, `/budget`, `/savings`, `/history`, `/add` without logging in. Right now that is harmless because the data is fake. Once the data is real, this is the most serious hole.
-
-**2. There is no way to sign out.**
-No logout button exists anywhere in the app. We need one.
-
-**3. "পাসওয়ার্ড ভুলে গেছি" goes nowhere.**
-In [SignInForm.tsx](components/auth/SignInForm.tsx) the link is `href="#reset"`. That is a dead link. A real password reset needs a database table and an email service.
-
-**4. "মনে রাখো" does nothing.**
-The checkbox value is collected and thrown away. Auth.js uses one fixed session length for everybody, so making this checkbox real takes a small piece of custom code.
-
-**5. The privacy line will become a lie.**
-[AuthScreen.tsx](components/auth/AuthScreen.tsx) says *"তোমার তথ্য শুধু তোমার ডিভাইসের হিসাবেই থাকছে।"* — "your data stays only on your device."
-
-Once we add a database, the data lives on a server. We must change this line. Suggested replacement:
-
-> তোমার হিসাব নিরাপদে জমা থাকছে, শুধু তুমিই দেখতে পাবে।
+The parts you must do by hand are in **[Part 5](#part-5--what-you-do-by-hand)**.
 
 ---
 
-## Part 2 — Three decisions, and what I picked
+## Part 1 — Where we are
 
-### Decision 1: How do we remember a logged-in user?
+| Task | What it covers | Status |
+|---|---|---|
+| **Task 1 — Sign up** | Email sign-up, Google sign-up with "set password" page, auto login, locked pages, sign out | ✅ Built |
+| **Task 2 — Sign in** | Email + password login, "মনে রাখো", clear error message | ✅ Built — waiting for your test |
+| **Task 3 — Forgot password** | Email → OTP → new password, OTP sent by Gmail | ⏳ Next, after Task 2 is OK |
 
-Auth.js has two ways. **Database sessions** store a row per login. **JWT sessions** store a signed cookie in the browser and no row at all.
-
-**I picked JWT.** Not really a choice — Auth.js does not support email/password login with database sessions. Since your screen has an email/password form, JWT is the only option.
-
-*What this costs you:* logging out on one device does not log out the other devices instantly. For a personal budget app that is fine.
-
-### Decision 2: Same email, two ways to log in
-
-Someone signs up with `rakib@gmail.com` and a password. Next month they forget, and click "গুগল দিয়ে সাইন ইন" with the same Gmail.
-
-By default Auth.js **refuses** and shows an ugly `OAuthAccountNotLinked` error. It does this on purpose, to stop a stranger from stealing an account by registering the same email with Google.
-
-**I picked: allow the link, but only when Google confirms the email is verified.** Google checks its own users' emails, so this is safe, and your user just gets in instead of hitting a wall.
-
-### Decision 3: How long does a login last?
-
-**I picked: 30 days if "মনে রাখো" is ticked, 1 day if not.**
+After each task you test by hand. The next task starts only after you say OK.
 
 ---
 
-## Part 3 — The database design
+## Part 2 — The rules we agreed on
 
-We use **Prisma** to talk to Neon Postgres. Five tables.
+### Rule 1: Every user has a password
 
-Four of them are required by Auth.js and their column names **cannot be changed** — Auth.js looks for these exact names, including the odd `snake_case` ones like `access_token`. The fifth one is ours.
+Even people who sign up with Google. So everybody can log in **both ways** — with Google, or with email and password.
 
-### Table 1: `User` — one row per person
+### Rule 2: Google sign-up saves nothing until the password is set
 
-| Column | Type | Meaning |
-|---|---|---|
-| `id` | String | Unique ID, auto-generated |
-| `name` | String? | From the signup form, or from Google |
-| `email` | String | **Unique.** No two users share an email |
-| `emailVerified` | DateTime? | When they confirmed their email |
-| `image` | String? | Profile picture URL from Google |
-| `passwordHash` | String? | The scrambled password |
-| `createdAt` | DateTime | When they joined |
-| `updatedAt` | DateTime | Last change |
+1. You click the Google button and pick your account.
+2. Google tells us your name and email.
+3. We keep that in a **secure temporary cookie for 15 minutes**. Nothing goes into the database yet.
+4. The **"আর একটু বাকি"** page asks for a password and confirm password.
+5. Only now is the account created, and you are logged in.
 
-Two things worth understanding:
+If you press **বাতিল করো**, or wait more than 15 minutes, nothing is saved.
 
-- **`passwordHash` can be empty.** A user who only ever used Google has no password. That is normal, not a bug.
-- **We never store the real password.** We store a scrambled version made by `bcrypt`. Even I cannot read it back. When someone logs in, we scramble what they typed and compare the two scrambles.
+### Rule 3: The Google button works the same on both tabs
 
-`passwordHash` is our own addition — Auth.js does not manage passwords for you.
+- No account yet → you go to the "set password" page.
+- Account already exists → you are logged straight in.
+- Account was made with email and password → Google gets linked to it the first time. This happens only when Google says the email is **verified**, so a stranger cannot take over your account this way.
 
-### Table 2: `Account` — one row per Google connection
+### Rule 4: How long a login lasts
 
-This table only fills up when someone uses Google. Email/password users get no row here.
-
-| Column | Type | Meaning |
-|---|---|---|
-| `id` | String | Unique ID |
-| `userId` | String | Which user this belongs to |
-| `type` | String | Always `"oauth"` for Google |
-| `provider` | String | `"google"` |
-| `providerAccountId` | String | The user's ID **inside Google** |
-| `refresh_token` | String? | Google's tokens |
-| `access_token` | String? | |
-| `expires_at` | Int? | |
-| `token_type` | String? | |
-| `scope` | String? | |
-| `id_token` | String? | |
-| `session_state` | String? | |
-
-Rule: `provider` + `providerAccountId` together must be unique. One Google account cannot attach to two users.
-
-### Table 3: `Session` — required, but unused
-
-Auth.js's Prisma adapter insists this table exists. Because we chose JWT, **it will always stay empty.** Leave it. It costs nothing and it means we can switch strategies later without a migration.
-
-| Column | Type |
+| How you logged in | How long it lasts |
 |---|---|
-| `id` | String |
-| `sessionToken` | String, unique |
-| `userId` | String |
-| `expires` | DateTime |
+| Sign up (email or Google) | 30 days |
+| Google login | 30 days |
+| Email login, **মনে রাখো ticked** | 30 days |
+| Email login, **মনে রাখো not ticked** | Until you close the browser, and 1 day at most |
 
-### Table 4: `VerificationToken` — for email confirmation links
+### Rule 5: Wrong login never says which part was wrong
 
-| Column | Type | Meaning |
-|---|---|---|
-| `identifier` | String | The email address |
-| `token` | String | Unique random string in the link |
-| `expires` | DateTime | When the link dies |
+A wrong email and a wrong password show the same message: **"ইমেইল বা পাসওয়ার্ড মিলছে না।"** Both also take the same time to answer. This way nobody can use the login form to find out which emails have an account.
 
-### Table 5: `PasswordResetToken` — ours, for "forgot password"
+---
 
-| Column | Type | Meaning |
-|---|---|---|
-| `id` | String | Unique ID |
-| `email` | String | Who asked |
-| `token` | String | Unique random string in the link |
-| `expires` | DateTime | We will use 1 hour |
-| `usedAt` | DateTime? | Stamped once used, so a link works only once |
+## Part 3 — How it is built
 
-### How they connect
+### Libraries
 
-```
-User (1) ──────< Account       one user, many login methods
-User (1) ──────< Session       stays empty for us
+| Library | Job |
+|---|---|
+| `jose` | Makes and checks the signed login cookie |
+| `arctic` | Talks to Google for login |
+| `bcryptjs` | Scrambles passwords. We never store the real password |
+| `prisma` + `@prisma/adapter-pg` | Talks to the Neon database |
 
-PasswordResetToken             stands alone, matched by email
-VerificationToken              stands alone, matched by email
-```
+**Why not Auth.js?** Rule 2 (no account until the password is set) and Rule 4 (different login lengths) do not fit how Auth.js works. Making it fit would need workarounds. Doing it ourselves with `jose` and `arctic` is less code, and it is the way the Next.js 16 docs recommend.
 
-Deleting a `User` deletes their `Account` and `Session` rows automatically (`onDelete: Cascade`).
+### The login cookie
+
+- Name: `hishabi_session`.
+- It holds only your user ID, signed with `AUTH_SECRET`. Nobody can change it without the secret.
+- `httpOnly` — JavaScript in the browser cannot read it.
+
+### Locked pages
+
+[proxy.ts](proxy.ts) runs before every page.
+
+- Logged out and opening `/home`, `/budget`, `/savings`, `/history` or `/add` → sent to `/login`.
+- Logged in and opening `/login` or `/signup/...` → sent to `/home`.
+
+⚠️ In Next.js 16 this file **must** be called `proxy.ts`. The old name `middleware.ts` is silently ignored.
+
+### Database tables
+
+**`User`** — one row per person
+
+| Column | Meaning |
+|---|---|
+| `id` | Unique ID |
+| `name` | From the sign-up form, or from Google |
+| `email` | Unique, always saved in lowercase |
+| `passwordHash` | The scrambled password. Never empty |
+| `image` | Google profile picture, if any |
+| `createdAt`, `updatedAt` | Dates |
+
+**`Account`** — one row per Google connection
+
+| Column | Meaning |
+|---|---|
+| `userId` | Which user it belongs to |
+| `provider` | Always `"google"` for now |
+| `providerAccountId` | Your ID inside Google |
+
+One Google account can belong to only one user. Deleting a user deletes their `Account` rows too.
+
+We do **not** store Google's access tokens. We only use Google to confirm who you are.
+
+### Where the code lives
+
+| File | What it does |
+|---|---|
+| [prisma/schema.prisma](prisma/schema.prisma) | The tables |
+| [lib/db.ts](lib/db.ts) | One shared database connection |
+| [lib/auth/token.ts](lib/auth/token.ts) | Sign and check tokens |
+| [lib/auth/session.ts](lib/auth/session.ts) | Create, read and delete the login cookie |
+| [lib/auth/google.ts](lib/auth/google.ts) | Google login and the 15-minute temporary cookie |
+| [lib/auth/password.ts](lib/auth/password.ts) | Scramble and check passwords |
+| [app/actions/auth.ts](app/actions/auth.ts) | Sign up, sign in, finish Google sign-up, sign out |
+| [app/api/auth/google/route.ts](app/api/auth/google/route.ts) | Sends you to Google |
+| [app/api/auth/callback/google/route.ts](app/api/auth/callback/google/route.ts) | Where Google sends you back |
+| [app/(auth)/signup/complete/page.tsx](app/(auth)/signup/complete/page.tsx) | The "set password" page |
+| [proxy.ts](proxy.ts) | Locks the pages |
 
 ### A note about your budget data
 
-Your money tables — income, fixed costs, categories, entries — come in a later task. When they do, **every single one needs a `userId` column**, and every query must filter by the logged-in user. Otherwise one user sees another's হিসাব. I am flagging it now so the shape is not a surprise later.
+Budget, savings and history still show sample data. When the real money tables come, **every one of them needs a `userId` column**, and every query must filter by the logged-in user. Otherwise one person could see another person's হিসাব.
 
 ---
 
-## Part 4 — What I will build
+## Part 4 — Task 3: Forgot password
 
-### Phase 1 — Database ready
+### The three screens
 
-1. Install `prisma`, `@prisma/client`, `@auth/prisma-adapter`, `next-auth@beta`, `bcryptjs`.
-2. Write `prisma/schema.prisma` with the five tables above.
-3. Write `lib/db.ts` — a single shared Prisma connection. This avoids a common dev bug where hot reload opens hundreds of database connections.
+**Screen 1 — Email.** Type the email of your account.
 
-### Phase 2 — Email and password login
+The next screen always says *"If this email has an account, we have sent a code."* We say this even when no account exists, so nobody can use this page to find out who has an account.
 
-4. Write `auth.config.ts` and `auth.ts`.
+**Screen 2 — OTP.** Type the 6-digit code from your email.
 
-   Two files instead of one because the lightweight file (`auth.config.ts`) can run in the route-checking layer without dragging the whole database library along with it.
+**Screen 3 — New password.** New password and confirm password. After saving, you are logged in and taken to `/home`.
 
-5. Write `app/api/auth/[...nextauth]/route.ts`. Three lines. This is the address Google and the login forms talk to.
-6. Write `app/actions/auth.ts` — the signup function. Auth.js does **not** do signup, only login, so this part is ours: check the email is free, scramble the password, create the `User` row.
-7. Rewire [SignInForm.tsx](components/auth/SignInForm.tsx) to call `signIn("credentials", ...)`, and show a real error when the password is wrong.
-8. Rewire [SignUpForm.tsx](components/auth/SignUpForm.tsx) to create the account, then log in immediately and go to `/home`.
+The **"পাসওয়ার্ড ভুলে গেছি"** link on the sign-in form will open Screen 1.
 
-### Phase 3 — Google
+### OTP rules
 
-9. Add the Google provider, with the safe email-verified linking from Decision 2.
-10. Rewire [GoogleButton.tsx](components/auth/GoogleButton.tsx) to call `signIn("google")`.
+| Rule | Value |
+|---|---|
+| Code length | 6 digits |
+| Works for | 10 minutes |
+| Wrong tries allowed | 5, then the code dies |
+| Ask for a new code | After 60 seconds |
+| Codes alive at once | Only one — a new code kills the old one |
+| How it is stored | Scrambled, like passwords |
+| After use | Dies at once, cannot be used again |
 
-### Phase 4 — Lock the door
+### New table: `PasswordResetOtp`
 
-11. Write **`proxy.ts`** in the project root.
+| Column | Meaning |
+|---|---|
+| `id` | Unique ID |
+| `userId` | Whose code it is |
+| `codeHash` | The scrambled code |
+| `expiresAt` | 10 minutes after sending |
+| `attempts` | How many wrong tries so far |
+| `usedAt` | Set once the code is used |
+| `createdAt` | When it was sent |
 
-    ⚠️ **Important for this Next.js version.** In older tutorials this file is called `middleware.ts`. Next.js 16 renamed it to `proxy.ts`. If we name it the old way, **the file is silently ignored and every page stays unprotected with no error message.** Also, `export const runtime` must not appear inside it — that now throws.
+### Sending the email
 
-12. Send logged-out visitors from `/home`, `/budget`, `/savings`, `/history`, `/add` to `/login`.
-13. Send already-logged-in visitors away from `/login`.
-14. Add a sign-out button to the app header.
-
-### Phase 5 — Loose ends
-
-15. Make "মনে রাখো" real (30 days vs 1 day).
-16. Build the forgot-password pages and connect an email service.
-17. Fix the privacy line in [AuthScreen.tsx](components/auth/AuthScreen.tsx).
-
-**Phases 1–4 give you a working login.** Phase 5 can wait.
+We use **Gmail** with the `nodemailer` library. It is free and can send to anyone, up to 500 emails a day. You need to make a Gmail **App password** — see [Step 5](#step-5--gmail-app-password-for-task-3).
 
 ---
 
 ## Part 5 — What you do by hand
 
-I cannot do these. They need your accounts and your passwords. Do them in order.
+### Step 1 — Neon database ✅ Done
 
-### Step 1 — Create the database (5 minutes)
+Your `.env.local` has `DATABASE_URL` (the one with `-pooler`) and `DATABASE_URL_UNPOOLED` (the direct one).
 
-1. Go to **https://neon.com** and sign up (GitHub login is quickest).
-2. Click **New Project**.
-3. Name it `hishab`. Pick the region closest to Bangladesh — **Singapore** is usually the best choice.
-4. Click **Create**.
-5. You land on a page showing a connection string. You need **two versions** of it:
-   - Find the **Pooled connection** string. It has `-pooler` in the middle of the address. Copy it.
-   - Find the toggle or checkbox for **Direct connection** (sometimes labelled "unpooled"). Copy that one too.
-6. Paste both into a scratch file for a moment. Step 4 needs them.
+The app uses the pooled one. Table changes use the direct one.
 
-> **Why two?** The normal one is for the app. The direct one is only for changing the table structure, because the pooled connection cannot do that. Using the wrong one causes confusing errors later.
+### Step 2 — Google login keys ✅ Done
 
-### Step 2 — Get Google login keys (10 minutes)
+Google renamed its screens. For reference:
 
-1. Go to **https://console.cloud.google.com**.
-2. Top bar → project dropdown → **New Project**. Name it `Hishab`. Create it, then make sure it is selected in the top bar.
-3. Left menu → **APIs & Services** → **OAuth consent screen**.
-   - User type: **External** → Create.
-   - App name: `টাকার হিসাব` (or `Hishab`).
-   - Support email: your email.
-   - Developer contact: your email.
-   - Save and continue through the next screens. You can skip "Scopes".
-   - On **Test users**, click **Add users** and add your own Gmail. **Do not skip this** — while the app is unpublished, only emails listed here can log in.
-4. Left menu → **Credentials** → **Create Credentials** → **OAuth client ID**.
-5. Application type: **Web application**. Name: `Hishab Web`.
-6. Under **Authorised JavaScript origins**, click Add URI:
-   ```
-   http://localhost:3000
-   ```
-7. Under **Authorised redirect URIs**, click Add URI and paste this **exactly**:
-   ```
-   http://localhost:3000/api/auth/callback/google
-   ```
-   One wrong character here gives a `redirect_uri_mismatch` error at login. Check it twice.
-8. Click **Create**. A box shows your **Client ID** and **Client Secret**. Copy both now — the secret is hard to see again later.
+1. **console.cloud.google.com** → your `Hishab` project → **Google Auth Platform**.
+2. **Clients** → **Create client** → type **Web application**.
+3. **Authorized JavaScript origins:** `http://localhost:3000`
+4. **Authorized redirect URIs:** `http://localhost:3000/api/auth/callback/google`
+5. **Audience** → **Test users** → add every Gmail that should be able to log in. While the app is in **Testing** mode, other Gmails are blocked.
 
-### Step 3 — Make a secret key (30 seconds)
+Google shows the **Client secret only once**, when you create it. If you lose it, make a new secret.
 
-Open a terminal in the project folder and run:
+### Step 3 — Secret key ✅ Done
+
+`AUTH_SECRET` in `.env.local`, made with `openssl rand -base64 32`.
+
+### Step 4 — The `.env.local` file ✅ Done
+
+[.env.example](.env.example) lists the names. The real values live only in `.env.local`, which git ignores.
 
 ```bash
-openssl rand -base64 32
+DATABASE_URL=""
+DATABASE_URL_UNPOOLED=""
+AUTH_SECRET=""
+AUTH_GOOGLE_ID=""
+AUTH_GOOGLE_SECRET=""
 ```
 
-Copy the line it prints. This is what signs the login cookie.
+**Never put these values in a normal file, a screenshot, or a chat message.**
 
-### Step 4 — Create the `.env.local` file
+### Step 5 — Gmail App password (for Task 3)
 
-Make a new file named `.env.local` in the project root and fill in the five values you just collected:
+Not needed until Task 3 starts.
+
+1. Choose the Gmail that will send the codes. A new Gmail made only for the app is a good idea.
+2. Go to **myaccount.google.com** → **Security** → turn on **2-Step Verification**. App passwords do not exist without it.
+3. At the top of the page, search for **"App passwords"**.
+4. Name it `Hishab` → **Create**.
+5. Google shows a 16-letter code. Copy it now; it is shown only once.
+6. Add two lines to `.env.local`:
 
 ```bash
-# From Step 1 — the one WITH -pooler
-DATABASE_URL="postgresql://...-pooler.../hishab?sslmode=require"
-
-# From Step 1 — the one WITHOUT -pooler
-DATABASE_URL_UNPOOLED="postgresql://.../hishab?sslmode=require"
-
-# From Step 3
-AUTH_SECRET="paste-the-random-line-here"
-
-# From Step 2
-AUTH_GOOGLE_ID="paste-client-id-here"
-AUTH_GOOGLE_SECRET="paste-client-secret-here"
+GMAIL_USER="the-sending-address@gmail.com"
+GMAIL_APP_PASSWORD="the-16-letter-code"
 ```
-
-The names must be spelled exactly like this. Auth.js finds `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` on its own — no extra wiring needed.
-
-✅ Your [.gitignore](.gitignore) already ignores `.env*`, so this file will not be committed. Good. **Never put these values in a normal file, a screenshot, or a chat message.**
-
-### Step 5 — Tell me you are ready
-
-Once Steps 1–4 are done, say so. Then I write the code from Part 4, and you run one command to create the tables:
-
-```bash
-npx prisma migrate dev --name init_auth
-```
-
-You should see the five tables appear in the Neon dashboard under **Tables**.
 
 ### Step 6 — Later, when you deploy to Vercel
 
-Not needed yet. Written down so it is not forgotten:
+1. Vercel → your project → **Settings** → **Environment Variables** → add every value from `.env.local`.
+2. Google Cloud → **Clients** → your client → add the live address **next to** the localhost one. Google needs the exact address; it has no "root URL only" option.
+   - **Authorized JavaScript origins:** `https://your-app.vercel.app`
+   - **Authorized redirect URIs:** `https://your-app.vercel.app/api/auth/callback/google`
+3. Changes can take from 5 minutes to a few hours to start working.
+4. Google login works only on the main address and on localhost. **Preview deployments** get a new random address each time, so Google login fails there. Email login works everywhere.
+5. To let any Gmail log in, not just test users: **Audience** → **Publish app**.
+6. If you buy your own domain later, add its address as a third pair in step 2.
 
-1. In Vercel → your project → **Settings** → **Environment Variables**, add all five values from Step 4.
-2. Go back to Google Cloud → Credentials → your OAuth client, and **add a second redirect URI** for the live site:
-   ```
-   https://your-real-domain.com/api/auth/callback/google
-   ```
-   Keep the localhost one too, so local development keeps working.
-3. If you want Google login open to anyone and not just your test users, go to **OAuth consent screen** and click **Publish App**.
+### Changing the tables
 
-### Step 7 — Even later, for "forgot password"
+Whenever the tables change, this command updates Neon:
 
-Only needed for Phase 5. Sending email requires an email service — **https://resend.com** has a free tier. Sign up, get an API key, and add it as `RESEND_API_KEY`. Do not bother with this until Phases 1–4 work.
+```bash
+npx prisma migrate dev --name what_changed
+```
 
 ---
 
-## Quick checklist
+## Checklist
 
-Tick these off as you go.
-
-- [ ] Neon account made, project created
-- [ ] Pooled connection string copied
-- [ ] Direct (unpooled) connection string copied
-- [ ] Google Cloud project made
-- [ ] OAuth consent screen filled in
-- [ ] Your own Gmail added as a test user
-- [ ] Redirect URI added, spelled exactly right
-- [ ] Client ID and Client Secret copied
-- [ ] `AUTH_SECRET` generated
-- [ ] `.env.local` created with all five values
-- [ ] Told Claude to start writing code
+- [x] Neon project and both connection strings
+- [x] Google client, redirect URI, test users
+- [x] `AUTH_SECRET`
+- [x] `.env.local` filled in
+- [x] Tables created in Neon
+- [x] Task 1 — Sign up
+- [ ] Task 2 — Sign in, tested by you
+- [ ] Gmail App password in `.env.local`
+- [ ] Task 3 — Forgot password

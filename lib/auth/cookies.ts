@@ -1,6 +1,6 @@
 import "server-only";
 
-export function secureCookieOptions(expires: Date) {
+export function secureCookieOptions(expires?: Date) {
   return {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

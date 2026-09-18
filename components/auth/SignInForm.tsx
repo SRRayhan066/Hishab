@@ -1,5 +1,7 @@
 "use client";
 
+import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/Input";
@@ -8,12 +10,17 @@ import { Checkbox } from "@/components/ui/Checkbox";
 import { Button } from "@/components/ui/Button";
 import { FormError } from "@/components/ui/FormError";
 import { signInSchema, type SignInValues } from "@/lib/validation/auth";
-import { fakeRequest } from "@/lib/utils";
+import { signIn } from "@/app/actions/auth";
+import { requestFailedError } from "@/lib/auth/messages";
 
 export function SignInForm({ cta }: { cta: string }) {
+  const router = useRouter();
+  const [navigating, startNavigation] = useTransition();
   const {
     register,
     handleSubmit,
+    setError,
+    resetField,
     formState: { errors, isSubmitting },
   } = useForm<SignInValues>({
     resolver: zodResolver(signInSchema),
@@ -21,8 +28,17 @@ export function SignInForm({ cta }: { cta: string }) {
   });
 
   const onSubmit = async (values: SignInValues) => {
-    await fakeRequest();
-    console.log("sign in", values);
+    try {
+      const result = await signIn(values);
+      if (result.error) {
+        resetField("password");
+        setError("root", { message: result.error });
+        return;
+      }
+      startNavigation(() => router.replace("/home"));
+    } catch {
+      setError("root", { message: requestFailedError });
+    }
   };
 
   return (
@@ -61,7 +77,11 @@ export function SignInForm({ cta }: { cta: string }) {
 
       <FormError message={errors.root?.message} />
 
-      <Button type="submit" loading={isSubmitting} className="mt-[6px]">
+      <Button
+        type="submit"
+        loading={isSubmitting || navigating}
+        className="mt-[6px]"
+      >
         {cta}
       </Button>
     </form>
