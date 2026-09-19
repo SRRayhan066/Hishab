@@ -13,8 +13,8 @@ export const metadata: Metadata = {
   description: "এই মাসে আর কত খরচ করা যাবে, এক নজরে।",
 };
 
-export default function HomePage() {
-  const { summary, monthLabel, savingsLabel } = getCurrentMonthView();
+export default async function HomePage() {
+  const { summary, monthLabel, savingsLabel } = await getCurrentMonthView();
 
   return (
     <AppShell

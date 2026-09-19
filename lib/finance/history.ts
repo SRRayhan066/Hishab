@@ -2,6 +2,8 @@ import { formatTaka } from "./format";
 import type { PastMonth } from "./types";
 
 export type MonthResult = {
+  /** Stable key — a Bengali month name alone repeats across years. */
+  id: string;
   month: string;
   spent: number;
   budget: number;
@@ -27,7 +29,8 @@ export function buildMonthResults(history: PastMonth[]): MonthResult[] {
       const amount = deltas[index];
 
       return {
-        month: month.month,
+        id: `${month.year}-${month.month}`,
+        month: month.label,
         spent: month.spent,
         budget: month.budget,
         amount,

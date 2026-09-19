@@ -10,6 +10,7 @@ type CategoryChipsProps = {
   selected: string;
   onSelect: (id: string) => void;
   onCreate: (name: string, budget: number) => void;
+  busy?: boolean;
 };
 
 export function CategoryChips({
@@ -17,6 +18,7 @@ export function CategoryChips({
   selected,
   onSelect,
   onCreate,
+  busy = false,
 }: CategoryChipsProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -164,7 +166,8 @@ export function CategoryChips({
               <button
                 type="button"
                 onClick={create}
-                className="bg-primary hover:bg-primary-dark focus-visible:outline-primary min-h-[46px] cursor-pointer rounded-[12px] px-4 text-[15px] font-bold text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+                disabled={busy}
+                className="bg-primary hover:bg-primary-dark focus-visible:outline-primary min-h-[46px] cursor-pointer rounded-[12px] px-4 text-[15px] font-bold text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 যোগ করো
               </button>

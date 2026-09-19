@@ -1,19 +1,15 @@
 "use client";
 
-import { useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState, useTransition } from "react";
+import { addCategoryRow } from "@/app/actions/budget";
+import { addExpense, removeExpense } from "@/app/actions/expense";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { FormError } from "@/components/ui/FormError";
 import { Input } from "@/components/ui/Input";
-import {
-  addCategory,
-  addEntry,
-  listEntries,
-  removeEntry,
-  spentOnDay,
-} from "@/lib/finance/entries";
-import { buildMonthSummary } from "@/lib/finance/summary";
-import type { MonthData } from "@/lib/finance/types";
+import { listEntries, spentOnDay } from "@/lib/finance/entries";
+import { saveFailedError } from "@/lib/finance/messages";
+import type { MonthData, MonthSummary } from "@/lib/finance/types";
 import { cn } from "@/lib/utils";
 import { CategoryChips } from "./CategoryChips";
 import { RecentEntries } from "./RecentEntries";
@@ -26,7 +22,8 @@ type Reference = {
 };
 
 type AddExpenseScreenProps = {
-  initialData: MonthData;
+  data: MonthData;
+  summary: MonthSummary;
   reference: Reference;
 };
 
@@ -39,41 +36,49 @@ function quickDays(today: number) {
 }
 
 export function AddExpenseScreen({
-  initialData,
+  data,
+  summary,
   reference,
 }: AddExpenseScreenProps) {
   const amountId = useId();
   const amountRef = useRef<HTMLInputElement>(null);
 
-  const [data, setData] = useState(initialData);
   const [amount, setAmount] = useState("");
-  const [categoryId, setCategoryId] = useState(
-    initialData.variable[0]?.id ?? "",
-  );
+  const [categoryId, setCategoryId] = useState(data.variable[0]?.id ?? "");
   const [day, setDay] = useState(reference.day);
   const [error, setError] = useState("");
+  const [busy, startTransition] = useTransition();
 
-  const summary = useMemo(
-    () =>
-      buildMonthSummary(
-        data,
-        new Date(reference.year, reference.monthIndex, reference.day),
-      ),
-    [data, reference.year, reference.monthIndex, reference.day],
-  );
-
+  // Spending is saved on the server, so the lists below come straight from
+  // props — `refresh()` inside each action re-renders this page with the
+  // new numbers.
   const entries = useMemo(() => listEntries(data), [data]);
   const selected = summary.categories.find((item) => item.id === categoryId);
   const todaySpent = spentOnDay(data, reference.day);
 
   const month = `${reference.year}-${pad(reference.monthIndex + 1)}`;
 
+  // A category deleted on the budget screen, or a month that just rolled
+  // over, can leave the selection pointing at nothing.
+  useEffect(() => {
+    if (!data.variable.some((category) => category.id === categoryId)) {
+      setCategoryId(data.variable[0]?.id ?? "");
+    }
+  }, [data.variable, categoryId]);
+
   const handleCreateCategory = (name: string, budget: number) => {
-    const id = `c${Date.now()}`;
-    setData((current) => addCategory(current, { id, name, budget }));
-    setCategoryId(id);
     setError("");
-    amountRef.current?.focus();
+    startTransition(async () => {
+      const result = await addCategoryRow({ name, budget });
+
+      if (result.error || !result.id) {
+        setError(result.error ?? saveFailedError);
+        return;
+      }
+
+      setCategoryId(result.id);
+      amountRef.current?.focus();
+    });
   };
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -92,9 +97,24 @@ export function AddExpenseScreen({
     }
 
     setError("");
-    setData((current) => addEntry(current, categoryId, day, value));
-    setAmount("");
-    amountRef.current?.focus();
+    startTransition(async () => {
+      const result = await addExpense({ categoryId, day, amount });
+
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+
+      setAmount("");
+      amountRef.current?.focus();
+    });
+  };
+
+  const handleRemove = (id: string) => {
+    startTransition(async () => {
+      const result = await removeExpense(id);
+      if (result.error) setError(result.error);
+    });
   };
 
   return (
@@ -167,6 +187,7 @@ export function AddExpenseScreen({
             selected={categoryId}
             onSelect={setCategoryId}
             onCreate={handleCreateCategory}
+            busy={busy}
           />
 
           {error && (
@@ -175,8 +196,13 @@ export function AddExpenseScreen({
             </div>
           )}
 
-          <Button type="submit" variant="dark" className="mt-[26px] w-full">
-            খরচ যোগ করো
+          <Button
+            type="submit"
+            variant="dark"
+            className="mt-[26px] w-full"
+            disabled={busy}
+          >
+            {busy ? "সেভ হচ্ছে…" : "খরচ যোগ করো"}
           </Button>
 
           <p className="text-ink-faint mt-3 text-center text-[14px]">
@@ -196,9 +222,7 @@ export function AddExpenseScreen({
         <RecentEntries
           entries={entries}
           monthName={summary.monthName}
-          onRemove={(id) =>
-            setData((current) => removeEntry(current, id))
-          }
+          onRemove={handleRemove}
         />
       </div>
     </div>
