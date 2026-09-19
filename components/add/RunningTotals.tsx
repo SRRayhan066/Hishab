@@ -33,7 +33,7 @@ export function RunningTotals({
 
         <div>
           <dt className="text-ink-muted text-[14px] font-medium">
-মুক্ত টাকা
+            বাড়তি টাকা (এই মাসের)
           </dt>
           <dd
             className="font-display mt-0.5 text-[24px] font-bold"

@@ -21,7 +21,7 @@ export function BalanceCard({ summary }: { summary: MonthSummary }) {
   const sentence = short
     ? `পরিকল্পনার সব খরচ মেটাতে আরও ${formatTaka(-freeToSpend)} লাগবে। কোনো খাত কমাতে হবে।`
     : daysLeft > 0
-      ? `বাঁধা খরচগুলো সরিয়ে রাখলে দিনে প্রায় ${formatTaka(perDay)} করে খরচ করা যায়।`
+      ? `ফিক্সড খরচগুলো সরিয়ে রাখলে দিনে প্রায় ${formatTaka(perDay)} করে খরচ করতে পারো।`
       : "আজই মাসের শেষ দিন।";
 
   return (
@@ -47,7 +47,7 @@ export function BalanceCard({ summary }: { summary: MonthSummary }) {
             short ? "bg-danger-bg" : "bg-panel"
           }`}
         >
-          <dt className="text-ink-soft text-[14px]">মুক্ত টাকা</dt>
+          <dt className="text-ink-soft text-[14px]">বাড়তি টাকা (এই মাসের)</dt>
           <dd
             className={`font-display mt-0.5 text-[22px] font-bold ${
               short ? "text-danger-ink" : "text-primary-dark"
@@ -76,7 +76,7 @@ export function BalanceCard({ summary }: { summary: MonthSummary }) {
         </div>
         <div className="text-ink-muted mt-2.5 flex justify-between gap-3 text-[14px]">
           <span>খরচ হয়েছে {formatTaka(spentTotal)}</span>
-          <span>আজ পর্যন্ত থাকা উচিত</span>
+          <span>আজকের হিসাবে এখানে থাকার কথা</span>
           <span>পরিকল্পনা {formatTaka(plannedTotal)}</span>
         </div>
       </div>
