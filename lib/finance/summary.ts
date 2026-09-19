@@ -1,4 +1,5 @@
 import { BENGALI_MONTHS, formatTaka } from "./format";
+import { monthSaving } from "./history";
 import type {
   Burndown,
   BurndownPoint,
@@ -128,9 +129,9 @@ export function buildMonthSummary(
   const safeToSpend = adjustedBudget - spentVariable;
   const perDay = daysLeft > 0 ? safeToSpend / daysLeft : safeToSpend;
 
-  const pastSaved = sum(
-    data.history.map((month) => month.budget - month.spent),
-  );
+  // Real money left over per month, not just the unspent hand cash — this is
+  // the same definition the savings screen uses.
+  const pastSaved = sum(data.history.map(monthSaving));
   const totalSavings = data.openingSavings + pastSaved;
 
   const cumulative: number[] = [];

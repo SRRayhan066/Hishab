@@ -30,8 +30,14 @@ export type PastMonth = {
   month: number;
   /** Bengali month name, for display. */
   label: string;
-  spent: number;
+  /** Total that came in that month. */
+  income: number;
+  /** Total of the costs that go out every month. */
+  fixed: number;
+  /** Hand-cash limit set for the month. */
   budget: number;
+  /** Hand-cash actually spent. */
+  spent: number;
 };
 
 export type MonthData = {

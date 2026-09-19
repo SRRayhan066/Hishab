@@ -157,6 +157,8 @@ async function loadHistory(
     select: {
       year: true,
       month: true,
+      incomes: { select: { amount: true } },
+      fixedCosts: { select: { amount: true } },
       categories: {
         select: { budget: true, expenses: { select: { amount: true } } },
       },
@@ -168,6 +170,8 @@ async function loadHistory(
       year: month.year,
       month: month.month,
       label: periodLabel(month),
+      income: month.incomes.reduce((total, row) => total + row.amount, 0),
+      fixed: month.fixedCosts.reduce((total, row) => total + row.amount, 0),
       budget: month.categories.reduce((total, c) => total + c.budget, 0),
       spent: month.categories.reduce(
         (total, c) => total + c.expenses.reduce((sum, e) => sum + e.amount, 0),
@@ -176,7 +180,13 @@ async function loadHistory(
     }))
     // A month the user never set up would otherwise show as a flat ৳0 bar and
     // drag the history chart down with nothing to say.
-    .filter((month) => month.budget > 0 || month.spent > 0)
+    .filter(
+      (month) =>
+        month.income > 0 ||
+        month.fixed > 0 ||
+        month.budget > 0 ||
+        month.spent > 0,
+    )
     .reverse();
 }
 

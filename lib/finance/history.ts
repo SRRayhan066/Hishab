@@ -17,16 +17,35 @@ export type MonthResult = {
 export const signedTaka = (value: number) =>
   `${value >= 0 ? "+" : "−"}${formatTaka(Math.abs(value))}`;
 
-export function buildMonthResults(history: PastMonth[]): MonthResult[] {
-  const deltas = history.map((month) => month.budget - month.spent);
+/**
+ * How much money the month actually left behind: what came in, less the costs
+ * that go out every month, less what was really spent by hand. This is the
+ * figure that adds to savings.
+ */
+export const monthSaving = (month: PastMonth) =>
+  month.income - month.fixed - month.spent;
+
+/**
+ * Whether the hand-cash limit was respected. A different question from
+ * `monthSaving` — a month can stay inside its limit and still lose money.
+ */
+export const monthUnderBudget = (month: PastMonth) => month.budget - month.spent;
+
+function buildResults(
+  history: PastMonth[],
+  amountOf: (month: PastMonth) => number,
+  good: string,
+  bad: string,
+): MonthResult[] {
+  const amounts = history.map(amountOf);
 
   // Bars are drawn against the biggest month either way, so a heavy overspend
   // reads as loud as a good month.
-  const widest = Math.max(...deltas.map((delta) => Math.abs(delta)), 1);
+  const widest = Math.max(...amounts.map((amount) => Math.abs(amount)), 1);
 
   return history
     .map((month, index) => {
-      const amount = deltas[index];
+      const amount = amounts[index];
 
       return {
         id: `${month.year}-${month.month}`,
@@ -35,10 +54,20 @@ export function buildMonthResults(history: PastMonth[]): MonthResult[] {
         budget: month.budget,
         amount,
         label: signedTaka(amount),
-        word: amount >= 0 ? "বেঁচেছে" : "বেশি খরচ",
+        word: amount >= 0 ? good : bad,
         tone: amount >= 0 ? ("good" as const) : ("over" as const),
         percent: Math.min(100, (Math.abs(amount) / widest) * 100),
       };
     })
     .reverse();
+}
+
+/** For the history screen: did the hand-cash budget hold? */
+export function buildMonthResults(history: PastMonth[]): MonthResult[] {
+  return buildResults(history, monthUnderBudget, "বেঁচেছে", "বেশি খরচ");
+}
+
+/** For the savings screen: how much did each month actually put away? */
+export function buildSavingsResults(history: PastMonth[]): MonthResult[] {
+  return buildResults(history, monthSaving, "জমেছে", "কমেছে");
 }
