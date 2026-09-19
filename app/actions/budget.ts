@@ -6,10 +6,7 @@ import {
   currentMonthForSession,
   nextSortOrder,
 } from "@/lib/finance/month-store";
-import {
-  replaceCategorySection,
-  replaceFixedSection,
-} from "@/lib/finance/section-store";
+import { replaceCategorySection } from "@/lib/finance/section-store";
 import { invalidRowError, signedOutError } from "@/lib/finance/messages";
 import {
   newCategorySchema,
@@ -22,26 +19,7 @@ import type {
   SectionSaveResult,
 } from "@/types/finance";
 
-/** Saves the whole "যা প্রতি মাসেই যায়" section in one request. */
-export async function saveFixedSection(
-  rows: PlanRowValues[],
-): Promise<SectionSaveResult> {
-  const parsed = planSectionSchema.safeParse(rows);
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? invalidRowError };
-  }
-
-  const monthId = await currentMonthForSession();
-  if (!monthId) return { error: signedOutError };
-
-  const result = await replaceFixedSection(monthId, parsed.data);
-  if (result.error) return result;
-
-  refresh();
-  return { rows: result.rows };
-}
-
-/** Saves the whole "হাতখরচের ভাগ" section in one request. */
+/** Saves the whole month plan — every category — in one request. */
 export async function saveCategorySection(
   rows: PlanRowValues[],
 ): Promise<SectionSaveResult> {

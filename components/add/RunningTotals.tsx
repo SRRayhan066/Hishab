@@ -33,15 +33,15 @@ export function RunningTotals({
 
         <div>
           <dt className="text-ink-muted text-[14px] font-medium">
-            এই মাসে আর খরচ করা যাবে
+মুক্ত টাকা
           </dt>
           <dd
             className="font-display mt-0.5 text-[24px] font-bold"
             style={{
-              color: summary.safeToSpend < 0 ? "var(--color-over)" : undefined,
+              color: summary.freeToSpend < 0 ? "var(--color-over)" : undefined,
             }}
           >
-            {formatTaka(summary.safeToSpend)}
+            {formatTaka(summary.freeToSpend)}
           </dd>
         </div>
 

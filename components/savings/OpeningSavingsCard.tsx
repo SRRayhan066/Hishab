@@ -28,14 +28,14 @@ export function OpeningSavingsCard({
     <Card className="px-[22px] pt-[22px] pb-6">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <h2 className="font-display text-[18px] font-bold">
-          <label htmlFor={id}>আগে থেকে জমানো টাকা</label>
+          <label htmlFor={id}>শুরুর ব্যালেন্স</label>
         </h2>
         <SaveStatus state={state} error={error} dirty={dirty} />
       </div>
 
       <p className="text-ink-muted mt-0.5 text-[14px] leading-[1.55]">
-        ব্যাংকে বা হাতে যা আছে, এখানে বসিয়ে দাও। এরপর প্রতি মাসের বাঁচানো টাকা
-        নিজে নিজেই এর সাথে যোগ হবে।
+        এই অ্যাপ শুরু করার দিন ব্যাংকে ও হাতে যা ছিল, সেটা বসিয়ে দাও। এরপর প্রতি
+        মাসের আয় এর সাথে যোগ হবে আর প্রতিটা খরচ বাদ যাবে।
       </p>
 
       <div className="mt-3 flex max-w-[420px] flex-wrap items-center gap-2">

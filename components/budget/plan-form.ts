@@ -1,4 +1,4 @@
-import type { FixedCost, IncomeSource, VariableCategory } from "@/lib/finance/types";
+import type { Category, IncomeSource } from "@/lib/finance/types";
 
 /** One editable line. `id` is empty until the row has been saved once. */
 export type PlanRowField = {
@@ -9,7 +9,6 @@ export type PlanRowField = {
 
 export type PlanFormValues = {
   income: PlanRowField[];
-  fixed: PlanRowField[];
   categories: PlanRowField[];
 };
 
@@ -17,9 +16,7 @@ export type PlanSectionName = keyof PlanFormValues;
 
 export const blankRow = (): PlanRowField => ({ id: "", name: "", amount: "" });
 
-export function toRowFields(
-  items: (IncomeSource | FixedCost)[],
-): PlanRowField[] {
+export function toIncomeFields(items: IncomeSource[]): PlanRowField[] {
   return items.map((item) => ({
     id: item.id,
     name: item.name,
@@ -27,9 +24,7 @@ export function toRowFields(
   }));
 }
 
-export function toCategoryFields(
-  categories: VariableCategory[],
-): PlanRowField[] {
+export function toCategoryFields(categories: Category[]): PlanRowField[] {
   return categories.map((category) => ({
     id: category.id,
     name: category.name,
@@ -37,9 +32,7 @@ export function toCategoryFields(
   }));
 }
 
-export function spentByCategory(
-  categories: VariableCategory[],
-): Record<string, number> {
+export function spentByCategory(categories: Category[]): Record<string, number> {
   return Object.fromEntries(
     categories.map((category) => [
       category.id,

@@ -88,40 +88,6 @@ export async function replaceIncomeSection(
   return { rows: asRows(saved) };
 }
 
-export async function replaceFixedSection(
-  monthId: string,
-  rows: PlanRow[],
-): Promise<SectionResult> {
-  const existing = await db.fixedCost.findMany({
-    where: { monthId },
-    select: { id: true },
-  });
-  const { updates, creates, deletes } = planChanges(
-    existing.map((row) => row.id),
-    rows,
-  );
-
-  await db.$transaction([
-    ...(deletes.length
-      ? [db.fixedCost.deleteMany({ where: { monthId, id: { in: deletes } } })]
-      : []),
-    ...updates.map(({ id, ...data }) =>
-      db.fixedCost.update({ where: { id }, data }),
-    ),
-    ...creates.map((data) =>
-      db.fixedCost.create({ data: { monthId, ...data } }),
-    ),
-  ]);
-
-  const saved = await db.fixedCost.findMany({
-    where: { monthId },
-    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-    select: { id: true, name: true, amount: true },
-  });
-
-  return { rows: asRows(saved) };
-}
-
 export async function replaceCategorySection(
   monthId: string,
   rows: PlanRow[],

@@ -6,23 +6,23 @@ import type { Burndown } from "@/lib/finance/types";
 
 type BurndownChartProps = {
   burndown: Burndown;
-  isUnderBudget: boolean;
+  isUnderPlan: boolean;
   monthName: string;
 };
 
 export function BurndownChart({
   burndown,
-  isUnderBudget,
+  isUnderPlan,
   monthName,
 }: BurndownChartProps) {
   const { width, height, points, grid, xLabels, today } = burndown;
   const plotRef = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState<number | null>(null);
 
-  const lineColor = isUnderBudget
+  const lineColor = isUnderPlan
     ? "var(--color-primary)"
     : "var(--color-danger)";
-  const areaFill = isUnderBudget
+  const areaFill = isUnderPlan
     ? "rgba(79,122,74,0.10)"
     : "rgba(192,71,44,0.09)";
 

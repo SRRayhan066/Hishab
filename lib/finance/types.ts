@@ -4,12 +4,6 @@ export type IncomeSource = {
   amount: number;
 };
 
-export type FixedCost = {
-  id: string;
-  name: string;
-  amount: number;
-};
-
 export type ExpenseEntry = {
   id: string;
   day: number;
@@ -17,7 +11,12 @@ export type ExpenseEntry = {
   addedAt?: number;
 };
 
-export type VariableCategory = {
+/**
+ * One planned line of spending — rent, groceries, transport, all the same
+ * kind of thing. `budget` is only a forecast; money moves when an expense is
+ * entered against it.
+ */
+export type Category = {
   id: string;
   name: string;
   budget: number;
@@ -32,19 +31,17 @@ export type PastMonth = {
   label: string;
   /** Total that came in that month. */
   income: number;
-  /** Total of the costs that go out every month. */
-  fixed: number;
-  /** Hand-cash limit set for the month. */
+  /** What the plan said the month would cost. */
   budget: number;
-  /** Hand-cash actually spent. */
+  /** What was actually spent. */
   spent: number;
 };
 
 export type MonthData = {
-  openingSavings: number;
+  /** What was in the wallet before the app started tracking anything. */
+  openingBalance: number;
   income: IncomeSource[];
-  fixed: FixedCost[];
-  variable: VariableCategory[];
+  categories: Category[];
   history: PastMonth[];
 };
 
@@ -100,19 +97,29 @@ export type MonthSummary = {
   daysInMonth: number;
   daysLeft: number;
   elapsedFraction: number;
+
+  /** Money in, this month. */
   incomeTotal: number;
-  fixedTotal: number;
-  variableBudget: number;
-  spentVariable: number;
-  overCarry: number;
-  adjustedBudget: number;
-  idealSoFar: number;
-  delta: number;
-  isUnderBudget: boolean;
-  projected: number;
-  safeToSpend: number;
+  /** What the plan says this month should cost, in total. */
+  plannedTotal: number;
+  /** What has actually been paid out this month. */
+  spentTotal: number;
+  /** Of the plan, what is still unpaid — bills yet to come. */
+  remainingPlanned: number;
+
+  /** The real wallet figure: opening balance, plus all income, less all spending. */
+  balance: number;
+  /** Balance that is not already promised to the rest of the plan. */
+  freeToSpend: number;
+  /** Free money spread across the days left. */
   perDay: number;
-  totalSavings: number;
+
+  /** Where this month's spending lands if the current pace holds. */
+  projected: number;
+  isUnderPlan: boolean;
+  /** How far off the plan's pace the spending is, today. */
+  paceDelta: number;
+
   spentPercent: number;
   idealPercent: number;
   categories: CategoryStat[];

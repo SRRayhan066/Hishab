@@ -18,16 +18,14 @@ export const signedTaka = (value: number) =>
   `${value >= 0 ? "+" : "−"}${formatTaka(Math.abs(value))}`;
 
 /**
- * How much money the month actually left behind: what came in, less the costs
- * that go out every month, less what was really spent by hand. This is the
- * figure that adds to savings.
+ * How much money the month actually left behind: what came in, less every
+ * taka that really went out. This is what moves the balance.
  */
-export const monthSaving = (month: PastMonth) =>
-  month.income - month.fixed - month.spent;
+export const monthSaving = (month: PastMonth) => month.income - month.spent;
 
 /**
- * Whether the hand-cash limit was respected. A different question from
- * `monthSaving` — a month can stay inside its limit and still lose money.
+ * Whether the month's plan was respected. A different question from
+ * `monthSaving` — a month can keep to its plan and still lose money.
  */
 export const monthUnderBudget = (month: PastMonth) => month.budget - month.spent;
 

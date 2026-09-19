@@ -14,11 +14,10 @@ export default async function SavingsPage() {
 
   return (
     <SavingsScreen
-      openingSavings={data.openingSavings}
+      openingBalance={data.openingBalance}
       history={data.history}
-      thisMonthSaving={
-        summary.incomeTotal - summary.fixedTotal - summary.projected
-      }
+      thisMonthNet={summary.incomeTotal - summary.spentTotal}
+      projectedNet={summary.incomeTotal - summary.projected}
       monthLabel={monthLabel}
     />
   );

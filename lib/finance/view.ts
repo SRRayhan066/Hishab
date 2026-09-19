@@ -12,6 +12,7 @@ export type MonthView = {
   data: MonthData;
   summary: MonthSummary;
   monthLabel: string;
+  /** The wallet figure shown in every screen's header. */
   savingsLabel: string;
 };
 
@@ -34,6 +35,6 @@ export async function getCurrentMonthView(): Promise<MonthView> {
     data,
     summary,
     monthLabel: `${summary.monthName} ${summary.year} · ${summary.daysLeft} দিন বাকি`,
-    savingsLabel: formatTaka(summary.totalSavings),
+    savingsLabel: formatTaka(summary.balance),
   };
 }

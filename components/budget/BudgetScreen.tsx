@@ -2,10 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
-import {
-  saveCategorySection,
-  saveFixedSection,
-} from "@/app/actions/budget";
+import { saveCategorySection } from "@/app/actions/budget";
 import { saveIncomeSection } from "@/app/actions/income";
 import { formatTaka } from "@/lib/finance/format";
 import { buildBudgetPlan } from "@/lib/finance/budget";
@@ -19,7 +16,7 @@ import {
   fieldsTotal,
   spentByCategory,
   toCategoryFields,
-  toRowFields,
+  toIncomeFields,
   type PlanFormValues,
   type PlanRowField,
   type PlanSectionName,
@@ -40,7 +37,6 @@ const savers: Record<
   (rows: PlanRowValues[]) => Promise<SectionSaveResult>
 > = {
   income: saveIncomeSection,
-  fixed: saveFixedSection,
   categories: saveCategorySection,
 };
 
@@ -51,15 +47,13 @@ export function BudgetScreen({
 }: BudgetScreenProps) {
   const { control, register, getValues } = useForm<PlanFormValues>({
     defaultValues: {
-      income: toRowFields(initialData.income),
-      fixed: toRowFields(initialData.fixed),
-      categories: toCategoryFields(initialData.variable),
+      income: toIncomeFields(initialData.income),
+      categories: toCategoryFields(initialData.categories),
     },
   });
 
   // `id` is our own database id, so the array's React key lives on `key`.
   const income = useFieldArray({ control, name: "income", keyName: "key" });
-  const fixed = useFieldArray({ control, name: "fixed", keyName: "key" });
   const categories = useFieldArray({
     control,
     name: "categories",
@@ -68,7 +62,6 @@ export function BudgetScreen({
 
   const [status, setStatus] = useState<Record<PlanSectionName, SectionState>>({
     income: idle,
-    fixed: idle,
     categories: idle,
   });
   // Which section just gained a row, and where — so its name box takes focus.
@@ -80,12 +73,11 @@ export function BudgetScreen({
 
   const watched = useWatch({ control });
   const incomeTotal = fieldsTotal(watched.income);
-  const fixedTotal = fieldsTotal(watched.fixed);
-  const variableBudget = fieldsTotal(watched.categories);
+  const plannedTotal = fieldsTotal(watched.categories);
 
   const plan = useMemo(
-    () => buildBudgetPlan(incomeTotal, fixedTotal, variableBudget, daysInMonth),
-    [incomeTotal, fixedTotal, variableBudget, daysInMonth],
+    () => buildBudgetPlan(incomeTotal, plannedTotal, daysInMonth),
+    [incomeTotal, plannedTotal, daysInMonth],
   );
 
   const unsaved = Object.values(status).some((section) => section.dirty);
@@ -154,8 +146,8 @@ export function BudgetScreen({
     focus?.section === name ? focus.index : null;
 
   const spent = useMemo(
-    () => spentByCategory(initialData.variable),
-    [initialData.variable],
+    () => spentByCategory(initialData.categories),
+    [initialData.categories],
   );
 
   const categoryNotes: Record<string, RowNote> = useMemo(() => {
@@ -197,68 +189,43 @@ export function BudgetScreen({
     <div className="flex flex-col gap-4">
       <PlanSummary plan={plan} monthName={monthName} />
 
-      <div className="grid items-start gap-4 [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
-        <BudgetSection
-          name="income"
-          title="যা আসে"
-          hint="বেতন, টিউশন, ভাড়া — যেখান থেকেই আসুক। পরের মাসে এগুলো নিজে নিজেই চলে আসবে।"
-          fields={income.fields}
-          notes={{}}
-          register={register}
-          remove={income.remove}
-          namePlaceholder="আয়ের নাম"
-          emptyLabel="এখনো কোনো আয়ের খাত লেখা হয়নি।"
-          addLabel="আয়ের খাত যোগ করো"
-          totalLabel="মোট আয়"
-          total={incomeTotal}
-          accent
-          focusIndex={focusIndex("income")}
-          dirty={status.income.dirty}
-          busy={busy}
-          state={status.income.state}
-          error={status.income.error}
-          onAdd={() => addRow(income.append, "income")}
-          onSave={() => save("income", income.replace)}
-          onDirty={() => markDirty("income")}
-        />
-
-        <BudgetSection
-          name="fixed"
-          title="যা প্রতি মাসেই যায়"
-          hint="পরিবারকে পাঠানো, বাসা ভাড়া, রান্নার আপা, বিল।"
-          fields={fixed.fields}
-          notes={{}}
-          register={register}
-          remove={fixed.remove}
-          namePlaceholder="খরচের নাম"
-          emptyLabel="এখনো কোনো বাঁধা খরচ লেখা হয়নি।"
-          addLabel="বাঁধা খরচ যোগ করো"
-          totalLabel="মোট বাঁধা খরচ"
-          total={fixedTotal}
-          focusIndex={focusIndex("fixed")}
-          dirty={status.fixed.dirty}
-          busy={busy}
-          state={status.fixed.state}
-          error={status.fixed.error}
-          onAdd={() => addRow(fixed.append, "fixed")}
-          onSave={() => save("fixed", fixed.replace)}
-          onDirty={() => markDirty("fixed")}
-        />
-      </div>
+      <BudgetSection
+        name="income"
+        title="যা আসে"
+        hint="বেতন, টিউশন, ভাড়া — যেখান থেকেই আসুক। পরের মাসে এগুলো নিজে নিজেই চলে আসবে।"
+        fields={income.fields}
+        notes={{}}
+        register={register}
+        remove={income.remove}
+        namePlaceholder="আয়ের নাম"
+        emptyLabel="এখনো কোনো আয়ের খাত লেখা হয়নি।"
+        addLabel="আয়ের খাত যোগ করো"
+        totalLabel="মোট আয়"
+        total={incomeTotal}
+        accent
+        focusIndex={focusIndex("income")}
+        dirty={status.income.dirty}
+        busy={busy}
+        state={status.income.state}
+        error={status.income.error}
+        onAdd={() => addRow(income.append, "income")}
+        onSave={() => save("income", income.replace)}
+        onDirty={() => markDirty("income")}
+      />
 
       <BudgetSection
         name="categories"
-        title="হাতখরচের ভাগ"
-        hint="প্রতি খাতে এই মাসে সর্বোচ্চ কত খরচ করবে।"
+        title="মাসের খরচের পরিকল্পনা"
+        hint="বাসা ভাড়া, বাজার, যাওয়া-আসা — সব খাত এখানে। এটা শুধু পরিকল্পনা; টাকা কাটবে যখন খরচের পাতায় এন্ট্রি দেবে।"
         fields={categories.fields}
         notes={categoryNotes}
         register={register}
         remove={categories.remove}
         namePlaceholder="খাতের নাম"
-        emptyLabel="এখনো কোনো খাত লেখা হয়নি।"
-        addLabel="খাত যোগ করো"
-        totalLabel="মোট হাতখরচ"
-        total={variableBudget}
+        emptyLabel="এখনো কোনো খরচের খাত লেখা হয়নি।"
+        addLabel="খরচের খাত যোগ করো"
+        totalLabel="মোট পরিকল্পনা"
+        total={plannedTotal}
         focusIndex={focusIndex("categories")}
         dirty={status.categories.dirty}
         busy={busy}
