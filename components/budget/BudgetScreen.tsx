@@ -165,7 +165,7 @@ export function BudgetScreen({
             return [
               id,
               {
-                note: `এই মাসে এখনই ${formatTaka(alreadySpent)} খরচ হয়ে গেছে — সীমার চেয়ে ${formatTaka(alreadySpent - budget)} বেশি।`,
+                note: `এ মাসে এরই মধ্যে ${formatTaka(alreadySpent)} খরচ হয়ে গেছে, বাজেটের চেয়ে ${formatTaka(alreadySpent - budget)} বেশি।`,
                 noteTone: "warn",
               } satisfies RowNote,
             ];
@@ -192,13 +192,13 @@ export function BudgetScreen({
       <BudgetSection
         name="income"
         title="যা আসে"
-        hint="বেতন, টিউশন, ভাড়া — যেখান থেকেই আসুক। পরের মাসে এগুলো নিজে নিজেই চলে আসবে।"
+        hint="বেতন, টিউশন, ভাড়া — যেখান থেকেই আসুক। পরের মাসেও এগুলো আপনা-আপনি বসে যাবে, আবার লিখতে হবে না।"
         fields={income.fields}
         notes={{}}
         register={register}
         remove={income.remove}
         namePlaceholder="আয়ের নাম"
-        emptyLabel="এখনো কোনো আয়ের খাত লেখা হয়নি।"
+        emptyLabel="এখনো কোনো আয় যোগ করোনি।"
         addLabel="আয়ের খাত যোগ করো"
         totalLabel="মোট আয়"
         total={incomeTotal}
@@ -216,15 +216,15 @@ export function BudgetScreen({
       <BudgetSection
         name="categories"
         title="মাসের খরচের পরিকল্পনা"
-        hint="বাসা ভাড়া, বাজার, যাওয়া-আসা — সব খাত এখানে। এটা শুধু পরিকল্পনা; টাকা কাটবে যখন খরচের পাতায় এন্ট্রি দেবে।"
+        hint="বাসা ভাড়া, বাজার, যাওয়া-আসা — সব খাত এখানে। এটা শুধু পরিকল্পনা; খরচ লিখলে তবেই টাকা কাটবে।"
         fields={categories.fields}
         notes={categoryNotes}
         register={register}
         remove={categories.remove}
         namePlaceholder="খাতের নাম"
-        emptyLabel="এখনো কোনো খরচের খাত লেখা হয়নি।"
+        emptyLabel="এখনো কোনো খরচের খাত যোগ করোনি।"
         addLabel="খরচের খাত যোগ করো"
-        totalLabel="মোট পরিকল্পনা"
+        totalLabel="মোট বাজেট"
         total={plannedTotal}
         focusIndex={focusIndex("categories")}
         dirty={status.categories.dirty}

@@ -39,7 +39,7 @@ export function buildBudgetPlan(
     splitPlanned: (plannedTotal / base) * 100,
     splitLeftOver: (Math.max(leftOver, 0) / base) * 100,
     note: isBalanced
-      ? `হিসাব মিলেছে। পরিকল্পনা মতো চললে মাস শেষে ${formatTaka(leftOver)} থেকে যাবে।`
-      : `আয়ের চেয়ে পরিকল্পনা ${formatTaka(-leftOver)} বেশি ধরা হয়েছে। কোনো খাত একটু কমাতে হবে।`,
+      ? `সব মিলে গেছে! বাজেট মেনে চললে মাস শেষে ${formatTaka(leftOver)} হাতে থাকবে।`
+      : `আয়ের চেয়ে ${formatTaka(-leftOver)} বেশি খরচ ধরে ফেলেছো। কোথাও একটু কাটছাঁট করো।`,
   };
 }

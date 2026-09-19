@@ -22,16 +22,16 @@ export function PlanSummary({ plan, monthName }: PlanSummaryProps) {
   return (
     <Card className="px-[22px] pt-6 pb-[26px]">
       <h2 className="font-display text-[19px] font-bold">
-        {monthName} মাসের পরিকল্পনা
+        {monthName} মাসের বাজেট
       </h2>
       <p className="text-ink-muted mt-[3px] text-[15px] leading-[1.55]">
-        এই পাতাটা শুধু পরিকল্পনার। এখানে টাকা বসালে খরচ হয়ে যায় না — আসল খরচ
-        লিখবে খরচের পাতায়।
+        এখানে শুধু ঠিক করছো কোথায় কত যাবে। আসল খরচ লিখবে &ldquo;খরচ&rdquo;
+        ট্যাবে।
       </p>
 
       <div
         role="img"
-        aria-label={`আয়ের ভাগ — পরিকল্পিত খরচ ${formatTaka(plannedTotal)}, থাকবে ${formatTaka(Math.max(leftOver, 0))}`}
+        aria-label={`আয়ের ভাগ — মোট বাজেট ${formatTaka(plannedTotal)}, থাকবে ${formatTaka(Math.max(leftOver, 0))}`}
         className="mt-5 flex h-[22px] gap-[2px] overflow-hidden rounded-full bg-[#f2eee5]"
       >
         <span
@@ -61,7 +61,7 @@ export function PlanSummary({ plan, monthName }: PlanSummaryProps) {
               className="h-[11px] w-[11px] flex-none rounded-[4px]"
               style={{ background: "var(--color-warn)" }}
             />
-            <span className="text-ink-muted text-[14px]">পরিকল্পিত খরচ</span>
+            <span className="text-ink-muted text-[14px]">মোট বাজেট</span>
           </dt>
           <dd className="font-display mt-0.5 text-[21px] font-bold">
             {formatTaka(plannedTotal)}
