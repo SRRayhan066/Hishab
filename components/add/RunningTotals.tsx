@@ -21,12 +21,12 @@ export function RunningTotals({
 }: RunningTotalsProps) {
   return (
     <Card className="px-[22px] py-5">
-      <dl className="flex flex-wrap gap-x-8 gap-y-4">
+      <dl className="grid gap-x-4 gap-y-3.5 [grid-template-columns:repeat(auto-fit,minmax(116px,1fr))]">
         <div>
           <dt className="text-ink-muted text-[14px] font-medium">
             আজকের খরচ
           </dt>
-          <dd className="font-display mt-0.5 text-[24px] font-bold">
+          <dd className="font-display mt-0.5 text-[21px] font-bold">
             {formatTaka(todaySpent)}
           </dd>
         </div>
@@ -36,7 +36,7 @@ export function RunningTotals({
             বাড়তি টাকা (এই মাসের)
           </dt>
           <dd
-            className="font-display mt-0.5 text-[24px] font-bold"
+            className="font-display mt-0.5 text-[21px] font-bold"
             style={{
               color: summary.freeToSpend < 0 ? "var(--color-over)" : undefined,
             }}
@@ -51,7 +51,7 @@ export function RunningTotals({
               {category.name}
             </dt>
             <dd
-              className="font-display mt-0.5 text-[24px] font-bold"
+              className="font-display mt-0.5 text-[21px] font-bold"
               style={{ color: toneInk[category.tone] }}
             >
               {category.leftLabel}

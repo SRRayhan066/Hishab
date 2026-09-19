@@ -1,12 +1,18 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState, useTransition } from "react";
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useOptimistic,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { addCategoryRow } from "@/app/actions/budget";
 import { addExpense, removeExpense } from "@/app/actions/expense";
-import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { FormError } from "@/components/ui/FormError";
-import { Input } from "@/components/ui/Input";
 import { listEntries, spentOnDay } from "@/lib/finance/entries";
 import { saveFailedError } from "@/lib/finance/messages";
 import type { MonthData, MonthSummary } from "@/lib/finance/types";
@@ -41,6 +47,7 @@ export function AddExpenseScreen({
   reference,
 }: AddExpenseScreenProps) {
   const amountId = useId();
+  const dateId = useId();
   const amountRef = useRef<HTMLInputElement>(null);
 
   const [amount, setAmount] = useState("");
@@ -48,11 +55,19 @@ export function AddExpenseScreen({
   const [day, setDay] = useState(reference.day);
   const [error, setError] = useState("");
   const [busy, startTransition] = useTransition();
+  // Removing gets its own transition so it never puts the add form into its
+  // saving state.
+  const [, startRemoval] = useTransition();
 
   // Spending is saved on the server, so the lists below come straight from
   // props — `refresh()` inside each action re-renders this page with the
   // new numbers.
   const entries = useMemo(() => listEntries(data), [data]);
+  // A removed row disappears at once and comes back if the delete fails.
+  const [visibleEntries, hideEntry] = useOptimistic(
+    entries,
+    (current, id: string) => current.filter((entry) => entry.id !== id),
+  );
   const selected = summary.categories.find((item) => item.id === categoryId);
   const todaySpent = spentOnDay(data, reference.day);
 
@@ -111,7 +126,9 @@ export function AddExpenseScreen({
   };
 
   const handleRemove = (id: string) => {
-    startTransition(async () => {
+    setError("");
+    startRemoval(async () => {
+      hideEntry(id);
       const result = await removeExpense(id);
       if (result.error) setError(result.error);
     });
@@ -119,7 +136,7 @@ export function AddExpenseScreen({
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start">
-      <Card className="px-6 pt-[26px] pb-7 lg:sticky lg:top-4">
+      <Card className="px-[22px] pt-[22px] pb-6 sm:px-6 sm:pt-[26px] sm:pb-7 lg:sticky lg:top-4">
         <form onSubmit={handleSubmit} noValidate>
           <label
             htmlFor={amountId}
@@ -128,8 +145,8 @@ export function AddExpenseScreen({
             কত টাকা খরচ হলো?
           </label>
 
-          <div className="border-line-soft mt-1.5 flex items-center gap-1.5 border-b-2 pb-3">
-            <span className="font-display text-ink-faint text-[clamp(34px,8vw,48px)] font-semibold">
+          <div className="border-line-soft mt-1.5 flex items-center gap-1.5 border-b-2 pb-2.5">
+            <span className="font-display text-ink-faint text-[clamp(28px,7vw,48px)] font-semibold">
               ৳
             </span>
             <input
@@ -143,26 +160,32 @@ export function AddExpenseScreen({
               placeholder="0"
               value={amount}
               onChange={(event) => setAmount(event.target.value)}
-              className="font-display text-ink placeholder:text-ink-faint w-full min-w-[60px] flex-1 border-none bg-transparent text-[clamp(40px,10vw,60px)] font-bold tracking-[-0.02em] outline-none"
+              className="font-display text-ink placeholder:text-ink-faint w-full min-w-[60px] flex-1 border-none bg-transparent text-[clamp(34px,9vw,60px)] font-bold tracking-[-0.02em] outline-none"
             />
           </div>
 
-          <div className="mt-[22px] flex flex-wrap items-end gap-3">
-            <div className="w-[190px]">
-              <Input
-                label="কবে খরচ হলো?"
-                type="date"
-                value={`${month}-${pad(day)}`}
-                min={`${month}-01`}
-                max={`${month}-${pad(reference.day)}`}
-                onChange={(event) => {
-                  const picked = Number(event.target.value.slice(8, 10));
-                  if (picked >= 1 && picked <= reference.day) setDay(picked);
-                }}
-              />
-            </div>
+          <label
+            htmlFor={dateId}
+            className="text-ink-muted mt-5 block text-[15px] font-medium"
+          >
+            কবে খরচ হলো?
+          </label>
 
-            <div className="flex gap-2 pb-0.5">
+          <div className="mt-2.5 flex flex-wrap gap-2">
+            <input
+              id={dateId}
+              type="date"
+              value={`${month}-${pad(day)}`}
+              min={`${month}-01`}
+              max={`${month}-${pad(reference.day)}`}
+              onChange={(event) => {
+                const picked = Number(event.target.value.slice(8, 10));
+                if (picked >= 1 && picked <= reference.day) setDay(picked);
+              }}
+              className="bg-field border-line rounded-field text-ink focus:border-primary focus:bg-surface min-h-[46px] min-w-[150px] flex-1 border-[1.5px] px-[14px] text-[15px] outline-none transition-colors"
+            />
+
+            <div className="flex gap-2">
               {quickDays(reference.day).map((option) => (
                 <button
                   key={option.label}
@@ -196,14 +219,13 @@ export function AddExpenseScreen({
             </div>
           )}
 
-          <Button
+          <button
             type="submit"
-            variant="dark"
-            className="mt-[26px] w-full"
             disabled={busy}
+            className="bg-ink font-display focus-visible:outline-primary mt-6 min-h-[50px] w-full cursor-pointer rounded-[12px] px-4 text-[16px] font-bold text-white transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {busy ? "সেভ হচ্ছে…" : "খরচ যোগ করো"}
-          </Button>
+          </button>
 
           <p className="text-ink-faint mt-3 text-center text-[14px]">
             {day === reference.day
@@ -220,7 +242,7 @@ export function AddExpenseScreen({
           category={selected}
         />
         <RecentEntries
-          entries={entries}
+          entries={visibleEntries}
           monthName={summary.monthName}
           onRemove={handleRemove}
         />

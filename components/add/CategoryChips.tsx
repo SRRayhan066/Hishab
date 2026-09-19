@@ -72,12 +72,12 @@ export function CategoryChips({
   };
 
   return (
-    <fieldset className="mt-[22px]">
+    <fieldset className="mt-5">
       <legend className="text-ink-muted text-[15px] font-medium">
         কোন খাতে?
       </legend>
 
-      <div className="mt-3 flex flex-wrap gap-2.5">
+      <div className="mt-2.5 flex flex-wrap gap-2">
         {categories.map((category) => {
           const active = category.id === selected;
 
@@ -85,7 +85,7 @@ export function CategoryChips({
             <label
               key={category.id}
               className={cn(
-                "has-[:focus-visible]:outline-primary flex min-h-[46px] cursor-pointer items-center rounded-full border-[1.5px] px-5 text-[15px] font-semibold transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2",
+                "has-[:focus-visible]:outline-primary flex min-h-[46px] cursor-pointer items-center rounded-full border-[1.5px] px-4 text-[15px] font-semibold transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2",
                 active
                   ? "border-ink bg-ink text-white"
                   : "border-line bg-field text-ink hover:border-line-strong",
@@ -108,7 +108,7 @@ export function CategoryChips({
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="text-ink-soft hover:border-line-strong hover:text-ink focus-visible:outline-primary flex min-h-[46px] cursor-pointer items-center gap-1.5 rounded-full border-[1.5px] border-dashed border-[#d8d2c4] px-5 text-[15px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+            className="text-ink-soft hover:border-line-strong hover:text-ink focus-visible:outline-primary flex min-h-[46px] cursor-pointer items-center gap-1.5 rounded-full border-[1.5px] border-dashed border-[#d8d2c4] px-4 text-[15px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             <Plus className="h-4 w-4" />
             নতুন খাত
@@ -117,9 +117,9 @@ export function CategoryChips({
       </div>
 
       {open && (
-        <div className="bg-field border-line mt-3 rounded-[14px] border p-[14px]">
-          <div className="flex flex-wrap items-end gap-2.5">
-            <div className="flex min-w-[160px] flex-1 flex-col gap-[7px]">
+        <div className="bg-field border-line @container mt-3 rounded-[14px] border p-[14px]">
+          <div className="flex flex-col gap-2.5 @md:flex-row @md:items-end">
+            <div className="flex min-w-0 flex-col gap-[7px] @md:flex-1">
               <label
                 htmlFor="new-category-name"
                 className="text-ink-soft text-[14px] font-semibold"
@@ -137,7 +137,7 @@ export function CategoryChips({
               />
             </div>
 
-            <div className="flex w-[150px] flex-col gap-[7px]">
+            <div className="flex flex-col gap-[7px] @md:w-[140px]">
               <label
                 htmlFor="new-category-budget"
                 className="text-ink-soft text-[14px] font-semibold"
@@ -167,7 +167,7 @@ export function CategoryChips({
                 type="button"
                 onClick={create}
                 disabled={busy}
-                className="bg-primary hover:bg-primary-dark focus-visible:outline-primary min-h-[46px] cursor-pointer rounded-[12px] px-4 text-[15px] font-bold text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="bg-primary hover:bg-primary-dark focus-visible:outline-primary min-h-[46px] flex-1 cursor-pointer @md:flex-none rounded-[12px] px-4 text-[15px] font-bold text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 যোগ করো
               </button>
