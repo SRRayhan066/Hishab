@@ -44,7 +44,7 @@ export function AddExpenseScreen({
   const amountRef = useRef<HTMLInputElement>(null);
 
   const [amount, setAmount] = useState("");
-  const [categoryId, setCategoryId] = useState(data.variable[0]?.id ?? "");
+  const [categoryId, setCategoryId] = useState(data.categories[0]?.id ?? "");
   const [day, setDay] = useState(reference.day);
   const [error, setError] = useState("");
   const [busy, startTransition] = useTransition();
@@ -61,10 +61,10 @@ export function AddExpenseScreen({
   // A category deleted on the budget screen, or a month that just rolled
   // over, can leave the selection pointing at nothing.
   useEffect(() => {
-    if (!data.variable.some((category) => category.id === categoryId)) {
-      setCategoryId(data.variable[0]?.id ?? "");
+    if (!data.categories.some((category) => category.id === categoryId)) {
+      setCategoryId(data.categories[0]?.id ?? "");
     }
-  }, [data.variable, categoryId]);
+  }, [data.categories, categoryId]);
 
   const handleCreateCategory = (name: string, budget: number) => {
     setError("");

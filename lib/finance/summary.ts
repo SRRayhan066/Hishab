@@ -19,19 +19,19 @@ const sum = (values: number[]) => values.reduce((total, n) => total + n, 0);
 
 function buildBurndown(
   cumulative: number[],
-  adjustedBudget: number,
+  plannedTotal: number,
   daysInMonth: number,
   today: number,
   projected: number,
 ): Burndown {
-  const projectedRemaining = adjustedBudget - projected;
+  const projectedRemaining = plannedTotal - projected;
   const lowest = Math.min(
     0,
-    adjustedBudget - cumulative[today],
+    plannedTotal - cumulative[today],
     projectedRemaining,
   );
   const minY = lowest < 0 ? lowest * 1.15 : 0;
-  const maxY = Math.max(adjustedBudget, 1) * 1.04;
+  const maxY = Math.max(plannedTotal, 1) * 1.04;
 
   const toX = (day: number) =>
     PAD_LEFT + (day / daysInMonth) * (CHART_WIDTH - PAD_LEFT - PAD_RIGHT);
@@ -42,7 +42,7 @@ function buildBurndown(
 
   const points: BurndownPoint[] = [];
   for (let day = 0; day <= today; day += 1) {
-    const remaining = adjustedBudget - cumulative[day];
+    const remaining = plannedTotal - cumulative[day];
     points.push({ day, remaining, x: toX(day), y: toY(remaining) });
   }
 
@@ -69,7 +69,7 @@ function buildBurndown(
     height: CHART_HEIGHT,
     points,
     actualPoints,
-    idealPoints: `${toX(0).toFixed(1)},${toY(adjustedBudget).toFixed(1)} ${toX(daysInMonth).toFixed(1)},${toY(0).toFixed(1)}`,
+    idealPoints: `${toX(0).toFixed(1)},${toY(plannedTotal).toFixed(1)} ${toX(daysInMonth).toFixed(1)},${toY(0).toFixed(1)}`,
     projectionPoints: `${last.x.toFixed(1)},${last.y.toFixed(1)} ${toX(daysInMonth).toFixed(1)},${toY(projectedRemaining).toFixed(1)}`,
     areaPoints: `${toX(0).toFixed(1)},${baseY} ${actualPoints} ${last.x.toFixed(1)},${baseY}`,
     today: { x: last.x, y: last.y },
@@ -108,36 +108,40 @@ export function buildMonthSummary(
   const elapsedFraction = day / daysInMonth;
 
   const incomeTotal = sum(data.income.map((item) => item.amount));
-  const fixedTotal = sum(data.fixed.map((item) => item.amount));
-  const variableBudget = sum(data.variable.map((item) => item.budget));
+  const plannedTotal = sum(data.categories.map((item) => item.budget));
 
-  const spentByCategory = data.variable.map((category) =>
+  const spentByCategory = data.categories.map((category) =>
     sum(category.entries.map((entry) => entry.amount)),
   );
-  const spentVariable = sum(spentByCategory);
+  const spentTotal = sum(spentByCategory);
 
-  const lastMonth = data.history.at(-1);
-  const carry = lastMonth ? lastMonth.budget - lastMonth.spent : 0;
-  const overCarry = carry < 0 ? -carry : 0;
-  const adjustedBudget = Math.max(variableBudget - overCarry, 0);
-
-  const idealSoFar = adjustedBudget * elapsedFraction;
-  const delta = idealSoFar - spentVariable;
-  const isUnderBudget = delta >= 0;
-  const projected = day > 0 ? (spentVariable / day) * daysInMonth : 0;
-  const safeToSpend = adjustedBudget - spentVariable;
-  const perDay = daysLeft > 0 ? safeToSpend / daysLeft : safeToSpend;
-
-  const pastSaved = sum(
-    data.history.map((month) => month.budget - month.spent),
+  // Only the unpaid part of each line is still owed. A category that went
+  // over its plan does not lend its overspend back to the others.
+  const remainingPlanned = sum(
+    data.categories.map((category, index) =>
+      Math.max(category.budget - spentByCategory[index], 0),
+    ),
   );
-  const totalSavings = data.openingSavings + pastSaved;
+
+  // The wallet: what was there to begin with, plus everything that has come
+  // in, less everything that has actually gone out. Planned-but-unpaid costs
+  // are deliberately not subtracted — they have not left the wallet yet.
+  const pastNet = sum(data.history.map((month) => month.income - month.spent));
+  const balance =
+    data.openingBalance + pastNet + (incomeTotal - spentTotal);
+
+  const freeToSpend = balance - remainingPlanned;
+
+  const idealSoFar = plannedTotal * elapsedFraction;
+  const paceDelta = idealSoFar - spentTotal;
+  const isUnderPlan = paceDelta >= 0;
+  const projected = day > 0 ? (spentTotal / day) * daysInMonth : 0;
 
   const cumulative: number[] = [];
   let running = 0;
   for (let d = 0; d <= daysInMonth; d += 1) {
     if (d > 0) {
-      data.variable.forEach((category) =>
+      data.categories.forEach((category) =>
         category.entries.forEach((entry) => {
           if (entry.day === d) running += entry.amount;
         }),
@@ -146,7 +150,7 @@ export function buildMonthSummary(
     cumulative.push(running);
   }
 
-  const categories: CategoryStat[] = data.variable.map((category, index) => {
+  const categories: CategoryStat[] = data.categories.map((category, index) => {
     const spent = spentByCategory[index];
     const left = category.budget - spent;
     const aheadOfPace =
@@ -163,9 +167,7 @@ export function buildMonthSummary(
           : 0,
       idealPercent: Math.min(100, elapsedFraction * 100),
       leftLabel:
-        left >= 0
-          ? `${formatTaka(left)} বাকি`
-          : `${formatTaka(-left)} বেশি`,
+        left >= 0 ? `${formatTaka(left)} বাকি` : `${formatTaka(-left)} বেশি`,
       detail:
         category.budget > 0
           ? `${formatTaka(category.budget)} এর মধ্যে ${formatTaka(spent)} খরচ`
@@ -183,27 +185,22 @@ export function buildMonthSummary(
     daysLeft,
     elapsedFraction,
     incomeTotal,
-    fixedTotal,
-    variableBudget,
-    spentVariable,
-    overCarry,
-    adjustedBudget,
-    idealSoFar,
-    delta,
-    isUnderBudget,
+    plannedTotal,
+    spentTotal,
+    remainingPlanned,
+    balance,
+    freeToSpend,
+    perDay: daysLeft > 0 ? freeToSpend / daysLeft : freeToSpend,
     projected,
-    safeToSpend,
-    perDay,
-    totalSavings,
+    isUnderPlan,
+    paceDelta,
     spentPercent:
-      adjustedBudget > 0
-        ? Math.min(100, (spentVariable / adjustedBudget) * 100)
-        : 0,
+      plannedTotal > 0 ? Math.min(100, (spentTotal / plannedTotal) * 100) : 0,
     idealPercent: elapsedFraction * 100,
     categories,
     burndown: buildBurndown(
       cumulative,
-      adjustedBudget,
+      plannedTotal,
       daysInMonth,
       Math.min(day, daysInMonth),
       projected,

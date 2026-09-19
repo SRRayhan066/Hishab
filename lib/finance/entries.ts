@@ -8,10 +8,11 @@ export type RecentEntry = {
   amount: number;
 };
 
+/** Every expense of the month, newest day first. */
 export function listEntries(data: MonthData): RecentEntry[] {
   const rows: (RecentEntry & { addedAt: number })[] = [];
 
-  data.variable.forEach((category) =>
+  data.categories.forEach((category) =>
     category.entries.forEach((entry) =>
       rows.push({
         id: entry.id,
@@ -27,51 +28,8 @@ export function listEntries(data: MonthData): RecentEntry[] {
   return rows.sort((a, b) => b.day - a.day || b.addedAt - a.addedAt);
 }
 
-export function addEntry(
-  data: MonthData,
-  categoryId: string,
-  day: number,
-  amount: number,
-): MonthData {
-  const entry = {
-    id: `n${Date.now()}`,
-    day,
-    amount,
-    addedAt: Date.now(),
-  };
-
-  return {
-    ...data,
-    variable: data.variable.map((category) =>
-      category.id === categoryId
-        ? { ...category, entries: [...category.entries, entry] }
-        : category,
-    ),
-  };
-}
-
-export function addCategory(
-  data: MonthData,
-  category: { id: string; name: string; budget: number },
-): MonthData {
-  return {
-    ...data,
-    variable: [...data.variable, { ...category, entries: [] }],
-  };
-}
-
-export function removeEntry(data: MonthData, entryId: string): MonthData {
-  return {
-    ...data,
-    variable: data.variable.map((category) => ({
-      ...category,
-      entries: category.entries.filter((entry) => entry.id !== entryId),
-    })),
-  };
-}
-
 export function spentOnDay(data: MonthData, day: number): number {
-  return data.variable.reduce(
+  return data.categories.reduce(
     (total, category) =>
       total +
       category.entries

@@ -8,7 +8,7 @@ export function SavingsSummary({ view }: { view: SavingsView }) {
 
   return (
     <Card className="px-6 pt-[26px] pb-7">
-      <p className="text-ink-muted text-[15px] font-medium">সব মিলিয়ে জমা</p>
+      <p className="text-ink-muted text-[15px] font-medium">সব মিলিয়ে হাতে আছে</p>
       <p className="font-display mt-1 text-[clamp(46px,11vw,74px)] leading-[1.05] font-bold tracking-[-0.02em]">
         {formatTaka(total)}
       </p>
@@ -18,7 +18,7 @@ export function SavingsSummary({ view }: { view: SavingsView }) {
 
       <dl className="mt-6 grid gap-3.5 [grid-template-columns:repeat(auto-fit,minmax(160px,1fr))]">
         <div className="bg-field rounded-[16px] px-[18px] py-4">
-          <dt className="text-ink-muted text-[14px]">আগে থেকে ছিল</dt>
+          <dt className="text-ink-muted text-[14px]">শুরুতে ছিল</dt>
           <dd className="font-display mt-0.5 text-[22px] font-bold">
             {formatTaka(opening)}
           </dd>
@@ -36,7 +36,7 @@ export function SavingsSummary({ view }: { view: SavingsView }) {
             gaining ? "bg-panel" : "bg-danger-bg"
           }`}
         >
-          <dt className="text-ink-soft text-[14px]">এই মাসে জমছে</dt>
+          <dt className="text-ink-soft text-[14px]">এই মাসে এ পর্যন্ত</dt>
           <dd
             className={`font-display mt-0.5 text-[22px] font-bold ${
               gaining ? "text-primary-dark" : "text-danger-ink"

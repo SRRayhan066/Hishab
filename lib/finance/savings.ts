@@ -1,13 +1,17 @@
 import { formatTaka } from "./format";
-import { buildMonthResults, signedTaka, type MonthResult } from "./history";
+import { buildSavingsResults, monthSaving, signedTaka, type MonthResult } from "./history";
 import type { PastMonth } from "./types";
 
 export type SavingsView = {
   opening: number;
   pastSaved: number;
   pastSavedLabel: string;
+  /** Opening + every past month + this month so far. The wallet, in other words. */
   total: number;
+  /** Actually banked this month: what came in, less what has gone out. */
   thisMonth: number;
+  /** Where this month lands if the current spending pace holds. */
+  projected: number;
   sentence: string;
   months: MonthResult[];
 };
@@ -15,10 +19,12 @@ export type SavingsView = {
 export function buildSavingsView(
   opening: number,
   history: PastMonth[],
-  thisMonthSaving: number,
+  thisMonth: number,
+  projected: number,
 ): SavingsView {
+  // What each past month really left over: income less everything spent.
   const pastSaved = history.reduce(
-    (total, month) => total + (month.budget - month.spent),
+    (total, month) => total + monthSaving(month),
     0,
   );
 
@@ -26,12 +32,15 @@ export function buildSavingsView(
     opening,
     pastSaved,
     pastSavedLabel: signedTaka(pastSaved),
-    total: opening + pastSaved,
-    thisMonth: thisMonthSaving,
+    // Deliberately the same three parts the balance is built from, so the
+    // headline here and the one in the header can never disagree.
+    total: opening + pastSaved + thisMonth,
+    thisMonth,
+    projected,
     sentence:
-      thisMonthSaving >= 0
-        ? `প্রতি মাসে যা বেঁচে যায় সেটা এর সাথে যোগ হয়। এই মাসে এখনকার খরচের গতি ধরলে ${formatTaka(thisMonthSaving)} যোগ হবে।`
-        : `প্রতি মাসে যা বেঁচে যায় সেটা এর সাথে যোগ হয়। তবে এখনকার খরচের গতি ধরলে এই মাসে জমার বদলে ${formatTaka(-thisMonthSaving)} কমে যাবে।`,
-    months: buildMonthResults(history),
+      projected >= 0
+        ? `প্রতি মাসে যা বেঁচে যায় সেটা এর সাথে যোগ হয়। এই মাসে এখনকার খরচের গতি ধরলে মাস শেষে ${formatTaka(projected)} থাকবে।`
+        : `প্রতি মাসে যা বেঁচে যায় সেটা এর সাথে যোগ হয়। তবে এখনকার খরচের গতি ধরলে এই মাসে জমার বদলে ${formatTaka(-projected)} কমে যাবে।`,
+    months: buildSavingsResults(history),
   };
 }

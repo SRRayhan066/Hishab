@@ -13,22 +13,24 @@ import { SavingsHistory } from "./SavingsHistory";
 import { SavingsSummary } from "./SavingsSummary";
 
 type SavingsScreenProps = {
-  openingSavings: number;
+  openingBalance: number;
   history: PastMonth[];
-  thisMonthSaving: number;
+  thisMonthNet: number;
+  projectedNet: number;
   monthLabel: string;
 };
 
 type OpeningForm = { opening: string };
 
 export function SavingsScreen({
-  openingSavings,
+  openingBalance,
   history,
-  thisMonthSaving,
+  thisMonthNet,
+  projectedNet,
   monthLabel,
 }: SavingsScreenProps) {
   const { control, register, getValues } = useForm<OpeningForm>({
-    defaultValues: { opening: String(openingSavings) },
+    defaultValues: { opening: String(openingBalance) },
   });
 
   const [state, setState] = useState<SaveState>("idle");
@@ -37,7 +39,12 @@ export function SavingsScreen({
   const [busy, startTransition] = useTransition();
 
   const opening = useWatch({ control, name: "opening" });
-  const view = buildSavingsView(Number(opening) || 0, history, thisMonthSaving);
+  const view = buildSavingsView(
+    Number(opening) || 0,
+    history,
+    thisMonthNet,
+    projectedNet,
+  );
 
   const save = () => {
     setState("saving");
@@ -67,7 +74,7 @@ export function SavingsScreen({
 
   return (
     <AppShell
-      title="জমানো টাকা"
+      title="জমা ও ব্যালেন্স"
       monthLabel={monthLabel}
       savingsLabel={formatTaka(view.total)}
     >

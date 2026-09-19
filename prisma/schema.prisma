@@ -13,7 +13,9 @@ model User {
   email             String             @unique
   passwordHash      String
   image             String?
-  openingSavings    Int                @default(0)
+  /// What was in the wallet/bank the day the app was first used. Every
+  /// month's income is added on top and every expense taken off.
+  openingBalance    Int                @default(0)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   accounts          Account[]
@@ -61,7 +63,6 @@ model BudgetMonth {
   seededFrom BudgetMonth?    @relation("MonthSeed", fields: [seededFromId], references: [id], onDelete: SetNull)
   seeded     BudgetMonth[]   @relation("MonthSeed")
   incomes    IncomeSource[]
-  fixedCosts FixedCost[]
   categories SpendCategory[]
 
   @@unique([userId, year, month])
@@ -73,22 +74,6 @@ model IncomeSource {
   monthId   String
   /// Stays the same when the row is copied forward, so one source can be
   /// followed across months even after a rename.
-  lineageId String   @default(cuid())
-  name      String
-  amount    Int      @default(0)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  month BudgetMonth @relation(fields: [monthId], references: [id], onDelete: Cascade)
-
-  @@index([monthId])
-  @@index([lineageId])
-}
-
-model FixedCost {
-  id        String   @id @default(cuid())
-  monthId   String
   lineageId String   @default(cuid())
   name      String
   amount    Int      @default(0)

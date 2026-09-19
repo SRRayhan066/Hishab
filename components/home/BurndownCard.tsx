@@ -3,7 +3,7 @@ import type { MonthSummary } from "@/lib/finance/types";
 import { BurndownChart } from "./BurndownChart";
 
 export function BurndownCard({ summary }: { summary: MonthSummary }) {
-  const lineColor = summary.isUnderBudget
+  const lineColor = summary.isUnderPlan
     ? "var(--color-primary)"
     : "var(--color-danger)";
 
@@ -21,7 +21,7 @@ export function BurndownCard({ summary }: { summary: MonthSummary }) {
         <div className="text-ink-soft flex gap-4 text-[14px] font-medium">
           <span className="flex items-center gap-[7px]">
             <span className="inline-block w-4 border-t-2 border-dashed border-[#b8b1a1]" />
-            মাপা খরচ
+            পরিকল্পনা
           </span>
           <span className="flex items-center gap-[7px]">
             <span
@@ -35,7 +35,7 @@ export function BurndownCard({ summary }: { summary: MonthSummary }) {
 
       <BurndownChart
         burndown={summary.burndown}
-        isUnderBudget={summary.isUnderBudget}
+        isUnderPlan={summary.isUnderPlan}
         monthName={summary.monthName}
       />
 

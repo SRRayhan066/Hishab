@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { BottomNav } from "./BottomNav";
-import { SignOutButton } from "./SignOutButton";
+import { AccountMenu } from "./AccountMenu";
+import { SavingsChip } from "./SavingsChip";
 
 type AppShellProps = {
   title: string;
@@ -18,20 +19,18 @@ export function AppShell({
   return (
     <div className="flex flex-1 flex-col px-4 pt-[22px]">
       <div className="mx-auto flex w-full max-w-[1060px] flex-1 flex-col gap-4">
-        <header className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-ink-muted text-[14px] font-medium">
-              {monthLabel}
-            </p>
-            <h1 className="font-display mt-px text-[27px] leading-[1.25] font-bold tracking-[-0.01em]">
+        <header>
+          <p className="text-ink-muted text-[14px] font-medium">
+            {monthLabel}
+          </p>
+          <div className="mt-px flex items-center justify-between gap-3">
+            <h1 className="font-display min-w-0 text-[27px] leading-[1.25] font-bold tracking-[-0.01em]">
               {title}
             </h1>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="bg-surface border-line-soft text-ink-soft rounded-full border px-[18px] py-[10px] text-[14px] font-semibold">
-              জমা আছে {savingsLabel}
-            </p>
-            <SignOutButton />
+            <div className="flex flex-none items-center gap-2">
+              <SavingsChip label={savingsLabel} />
+              <AccountMenu />
+            </div>
           </div>
         </header>
 

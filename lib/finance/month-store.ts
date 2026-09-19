@@ -23,10 +23,6 @@ const planSelect = {
     select: { id: true, name: true, amount: true },
     orderBy: byOrder,
   },
-  fixedCosts: {
-    select: { id: true, name: true, amount: true },
-    orderBy: byOrder,
-  },
   categories: {
     select: {
       id: true,
@@ -79,10 +75,6 @@ function findSeedMonth(userId: string, period: Period) {
         select: { lineageId: true, name: true, amount: true, sortOrder: true },
         orderBy: byOrder,
       },
-      fixedCosts: {
-        select: { lineageId: true, name: true, amount: true, sortOrder: true },
-        orderBy: byOrder,
-      },
       categories: {
         select: { lineageId: true, name: true, budget: true, sortOrder: true },
         orderBy: byOrder,
@@ -117,9 +109,6 @@ export async function ensureCurrentMonth(
         month: period.month,
         seededFromId: seed?.id ?? null,
         incomes: seed?.incomes.length ? { create: seed.incomes } : undefined,
-        fixedCosts: seed?.fixedCosts.length
-          ? { create: seed.fixedCosts }
-          : undefined,
         categories: seed?.categories.length
           ? { create: seed.categories }
           : undefined,
@@ -157,6 +146,7 @@ async function loadHistory(
     select: {
       year: true,
       month: true,
+      incomes: { select: { amount: true } },
       categories: {
         select: { budget: true, expenses: { select: { amount: true } } },
       },
@@ -168,6 +158,7 @@ async function loadHistory(
       year: month.year,
       month: month.month,
       label: periodLabel(month),
+      income: month.incomes.reduce((total, row) => total + row.amount, 0),
       budget: month.categories.reduce((total, c) => total + c.budget, 0),
       spent: month.categories.reduce(
         (total, c) => total + c.expenses.reduce((sum, e) => sum + e.amount, 0),
@@ -176,7 +167,12 @@ async function loadHistory(
     }))
     // A month the user never set up would otherwise show as a flat ৳0 bar and
     // drag the history chart down with nothing to say.
-    .filter((month) => month.budget > 0 || month.spent > 0)
+    .filter(
+      (month) =>
+        month.income > 0 ||
+        month.budget > 0 ||
+        month.spent > 0,
+    )
     .reverse();
 }
 
@@ -194,7 +190,7 @@ export async function loadMonthSnapshot(
     }),
     db.user.findUniqueOrThrow({
       where: { id: userId },
-      select: { openingSavings: true },
+      select: { openingBalance: true },
     }),
     loadHistory(userId, period),
   ]);
@@ -203,10 +199,9 @@ export async function loadMonthSnapshot(
     monthId,
     period,
     data: {
-      openingSavings: user.openingSavings,
+      openingBalance: user.openingBalance,
       income: month.incomes,
-      fixed: month.fixedCosts,
-      variable: month.categories.map((category) => ({
+      categories: month.categories.map((category) => ({
         id: category.id,
         name: category.name,
         budget: category.budget,
@@ -233,7 +228,7 @@ export async function currentMonthForSession(): Promise<string | null> {
   return ensureCurrentMonth(userId);
 }
 
-export type BudgetSection = "income" | "fixed" | "category";
+export type BudgetSection = "income" | "category";
 
 /** Next `sortOrder` for a new row, so it lands at the bottom of its section. */
 export async function nextSortOrder(
@@ -245,9 +240,7 @@ export async function nextSortOrder(
   const result =
     section === "income"
       ? await db.incomeSource.aggregate(args)
-      : section === "fixed"
-        ? await db.fixedCost.aggregate(args)
-        : await db.spendCategory.aggregate(args);
+      : await db.spendCategory.aggregate(args);
 
   return (result._max.sortOrder ?? -1) + 1;
 }
