@@ -13,10 +13,12 @@ model User {
   email             String             @unique
   passwordHash      String
   image             String?
+  openingSavings    Int                @default(0)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   accounts          Account[]
   passwordResetOtps PasswordResetOtp[]
+  budgetMonths      BudgetMonth[]
 }
 
 model PasswordResetOtp {
@@ -42,4 +44,90 @@ model Account {
 
   @@unique([provider, providerAccountId])
   @@index([userId])
+}
+
+/// One row per user per calendar month. A fresh month is created by copying the
+/// newest earlier month, so the plan carries forward until the user edits it.
+model BudgetMonth {
+  id           String   @id @default(cuid())
+  userId       String
+  year         Int
+  month        Int
+  seededFromId String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  seededFrom BudgetMonth?    @relation("MonthSeed", fields: [seededFromId], references: [id], onDelete: SetNull)
+  seeded     BudgetMonth[]   @relation("MonthSeed")
+  incomes    IncomeSource[]
+  fixedCosts FixedCost[]
+  categories SpendCategory[]
+
+  @@unique([userId, year, month])
+  @@index([userId, year, month])
+}
+
+model IncomeSource {
+  id        String   @id @default(cuid())
+  monthId   String
+  /// Stays the same when the row is copied forward, so one source can be
+  /// followed across months even after a rename.
+  lineageId String   @default(cuid())
+  name      String
+  amount    Int      @default(0)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  month BudgetMonth @relation(fields: [monthId], references: [id], onDelete: Cascade)
+
+  @@index([monthId])
+  @@index([lineageId])
+}
+
+model FixedCost {
+  id        String   @id @default(cuid())
+  monthId   String
+  lineageId String   @default(cuid())
+  name      String
+  amount    Int      @default(0)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  month BudgetMonth @relation(fields: [monthId], references: [id], onDelete: Cascade)
+
+  @@index([monthId])
+  @@index([lineageId])
+}
+
+model SpendCategory {
+  id        String   @id @default(cuid())
+  monthId   String
+  lineageId String   @default(cuid())
+  name      String
+  budget    Int      @default(0)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  month    BudgetMonth @relation(fields: [monthId], references: [id], onDelete: Cascade)
+  expenses Expense[]
+
+  @@index([monthId])
+  @@index([lineageId])
+}
+
+model Expense {
+  id         String   @id @default(cuid())
+  categoryId String
+  day        Int
+  amount     Int
+  note       String?
+  createdAt  DateTime @default(now())
+
+  category SpendCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([categoryId])
 }

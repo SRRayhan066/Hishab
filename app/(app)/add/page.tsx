@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { AppShell } from "@/components/app/AppShell";
 import { AddExpenseScreen } from "@/components/add/AddExpenseScreen";
-import { getMockMonthData } from "@/lib/mock/month";
-import { buildMonthSummary } from "@/lib/finance/summary";
-import { formatTaka } from "@/lib/finance/format";
+import { getCurrentMonthView } from "@/lib/finance/view";
 
 export const dynamic = "force-dynamic";
 
@@ -12,19 +10,19 @@ export const metadata: Metadata = {
   description: "আজকের খরচ এক জায়গায় লিখে রাখো।",
 };
 
-export default function AddExpensePage() {
-  const now = new Date();
-  const data = getMockMonthData(now);
-  const summary = buildMonthSummary(data, now);
+export default async function AddExpensePage() {
+  const { data, summary, monthLabel, savingsLabel } =
+    await getCurrentMonthView();
 
   return (
     <AppShell
       title="খরচ যোগ করা"
-      monthLabel={`${summary.monthName} ${summary.year} · ${summary.daysLeft} দিন বাকি`}
-      savingsLabel={formatTaka(summary.totalSavings)}
+      monthLabel={monthLabel}
+      savingsLabel={savingsLabel}
     >
       <AddExpenseScreen
-        initialData={data}
+        data={data}
+        summary={summary}
         reference={{
           year: summary.year,
           monthIndex: summary.monthIndex,

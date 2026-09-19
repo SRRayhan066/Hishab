@@ -25,7 +25,11 @@ export type VariableCategory = {
 };
 
 export type PastMonth = {
-  month: string;
+  year: number;
+  /** 1–12. */
+  month: number;
+  /** Bengali month name, for display. */
+  label: string;
   spent: number;
   budget: number;
 };

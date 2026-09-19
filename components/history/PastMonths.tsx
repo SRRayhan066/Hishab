@@ -23,7 +23,7 @@ export function PastMonths({ months }: { months: MonthResult[] }) {
         <ul className="mt-2">
           {months.map((month) => (
             <li
-              key={month.month}
+              key={month.id}
               className="flex items-center gap-3.5 border-b-[1.5px] border-[#f4f0e7] py-4 last:border-b-0"
             >
               <div className="min-w-0 flex-1">

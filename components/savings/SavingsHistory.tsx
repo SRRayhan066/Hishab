@@ -22,7 +22,7 @@ export function SavingsHistory({ months }: { months: MonthResult[] }) {
         <ul className="mt-1">
           {months.map((month) => (
             <li
-              key={month.month}
+              key={month.id}
               className="flex items-center gap-3 border-b-[1.5px] border-[#f4f0e7] py-3.5 last:border-b-0"
             >
               <span className="w-[84px] flex-none text-[16px] font-semibold">
