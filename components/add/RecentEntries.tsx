@@ -36,14 +36,16 @@ export function RecentEntries({
             {visible.map((entry) => (
               <li
                 key={entry.id}
-                className="flex items-center gap-3 border-b-[1.5px] border-[#f4f0e7] py-[13px]"
+                className="flex items-center gap-3 border-b-[1.5px] border-[#f4f0e7] py-2.5"
               >
-                <span className="text-ink-faint w-[62px] flex-none text-[14px] font-medium">
-                  {entry.day} {monthName.slice(0, 4)}
-                </span>
-                <span className="min-w-0 flex-1 truncate text-[16px] font-semibold">
-                  {entry.categoryName}
-                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[16px] font-semibold">
+                    {entry.categoryName}
+                  </p>
+                  <p className="text-ink-muted mt-px text-[14px]">
+                    {entry.day} {monthName}
+                  </p>
+                </div>
                 <span className="text-ink-soft text-[16px] font-semibold">
                   {formatTaka(entry.amount)}
                 </span>
@@ -51,7 +53,7 @@ export function RecentEntries({
                   type="button"
                   onClick={() => onRemove(entry.id)}
                   aria-label={`${entry.categoryName} খাতের ${formatTaka(entry.amount)} খরচ মুছে ফেলো`}
-                  className="text-line-strong hover:text-danger focus-visible:outline-primary cursor-pointer rounded-md py-1 pl-2.5 text-[19px] leading-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+                  className="text-line-strong hover:text-danger focus-visible:outline-primary -mr-2.5 flex h-11 w-11 flex-none cursor-pointer items-center justify-center rounded-[12px] text-[20px] leading-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
                 >
                   ×
                 </button>
@@ -63,7 +65,7 @@ export function RecentEntries({
             <button
               type="button"
               onClick={() => setExpanded((current) => !current)}
-              className="text-primary hover:text-primary-dark focus-visible:outline-primary mt-3.5 cursor-pointer self-start rounded-md text-[15px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2"
+              className="text-primary hover:text-primary-dark focus-visible:outline-primary mt-1.5 min-h-[44px] cursor-pointer self-start rounded-md text-[15px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2"
             >
               {expanded ? "কম দেখাও" : `আরও ${hidden}টি দেখাও`}
             </button>
