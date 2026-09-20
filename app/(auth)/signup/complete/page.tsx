@@ -4,7 +4,7 @@ import { readPendingGoogleSignUp } from "@/lib/auth/google";
 import { CompleteSignUpScreen } from "@/components/auth/CompleteSignUpScreen";
 
 export const metadata: Metadata = {
-  title: "পাসওয়ার্ড ঠিক করো — টাকার হিসাব",
+  title: "পাসওয়ার্ড ঠিক করো",
   description: "গুগল দিয়ে হিসাব খোলার শেষ ধাপ।",
 };
 
