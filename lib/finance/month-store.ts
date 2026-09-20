@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { getSessionUserId } from "@/lib/auth/session";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { currentPeriod, periodLabel, type Period } from "./period";
-import type { MonthData, PastMonth } from "./types";
+import type { ExpenseEntry, MonthData, PastMonth } from "./types";
 
 /** How many earlier months feed the history list and the savings total. */
 const HISTORY_LIMIT = 12;
@@ -14,28 +14,6 @@ const byOrder = [
   { sortOrder: "asc" },
   { createdAt: "asc" },
 ] satisfies Prisma.IncomeSourceOrderByWithRelationInput[];
-
-const planSelect = {
-  id: true,
-  year: true,
-  month: true,
-  incomes: {
-    select: { id: true, name: true, amount: true },
-    orderBy: byOrder,
-  },
-  categories: {
-    select: {
-      id: true,
-      name: true,
-      budget: true,
-      expenses: {
-        select: { id: true, day: true, amount: true, createdAt: true },
-        orderBy: { createdAt: "asc" },
-      },
-    },
-    orderBy: byOrder,
-  },
-} satisfies Prisma.BudgetMonthSelect;
 
 export type MonthSnapshot = {
   monthId: string;
@@ -129,42 +107,63 @@ export async function ensureCurrentMonth(
   }
 }
 
+type HistoryRow = {
+  year: number;
+  month: number;
+  income: number;
+  budget: number;
+  spent: number;
+};
+
+/**
+ * Past months, as totals only.
+ *
+ * Every screen needs these three numbers per month — the header's wallet
+ * figure is built from them — but nothing needs the rows behind them. Reading
+ * them through the ORM meant four queries and every expense row of the last
+ * year crossing the wire on every page view; Postgres adds them up in one
+ * round trip instead, which is the whole cost of the query on a mobile
+ * connection.
+ */
 async function loadHistory(
   userId: string,
   period: Period,
 ): Promise<PastMonth[]> {
-  const months = await db.budgetMonth.findMany({
-    where: {
-      userId,
-      OR: [
-        { year: { lt: period.year } },
-        { year: period.year, month: { lt: period.month } },
-      ],
-    },
-    orderBy: [{ year: "desc" }, { month: "desc" }],
-    take: HISTORY_LIMIT,
-    select: {
-      year: true,
-      month: true,
-      incomes: { select: { amount: true } },
-      categories: {
-        select: { budget: true, expenses: { select: { amount: true } } },
-      },
-    },
-  });
+  const months = await db.$queryRaw<HistoryRow[]>`
+    SELECT
+      m."year",
+      m."month",
+      COALESCE(income.total, 0)::int AS income,
+      COALESCE(plan.total, 0)::int   AS budget,
+      COALESCE(spend.total, 0)::int  AS spent
+    FROM "BudgetMonth" m
+    LEFT JOIN LATERAL (
+      SELECT SUM(i."amount") AS total
+      FROM "IncomeSource" i
+      WHERE i."monthId" = m."id"
+    ) income ON TRUE
+    LEFT JOIN LATERAL (
+      SELECT SUM(c."budget") AS total
+      FROM "SpendCategory" c
+      WHERE c."monthId" = m."id"
+    ) plan ON TRUE
+    LEFT JOIN LATERAL (
+      SELECT SUM(e."amount") AS total
+      FROM "Expense" e
+      JOIN "SpendCategory" c ON c."id" = e."categoryId"
+      WHERE c."monthId" = m."id"
+    ) spend ON TRUE
+    WHERE m."userId" = ${userId}
+      AND (
+        m."year" < ${period.year}
+        OR (m."year" = ${period.year} AND m."month" < ${period.month})
+      )
+    ORDER BY m."year" DESC, m."month" DESC
+    LIMIT ${HISTORY_LIMIT}
+  `;
 
   return months
-    .map((month) => ({
-      year: month.year,
-      month: month.month,
-      label: periodLabel(month),
-      income: month.incomes.reduce((total, row) => total + row.amount, 0),
-      budget: month.categories.reduce((total, c) => total + c.budget, 0),
-      spent: month.categories.reduce(
-        (total, c) => total + c.expenses.reduce((sum, e) => sum + e.amount, 0),
-        0,
-      ),
-    }))
+    .map((month) => ({ ...month, label: periodLabel(month) }))
     // A month the user never set up would otherwise show as a flat ৳0 bar and
     // drag the history chart down with nothing to say.
     .filter(
@@ -176,18 +175,21 @@ async function loadHistory(
     .reverse();
 }
 
-/** Everything the screens need for the current month, in one object. */
+/**
+ * Everything the screens need for the current month, in one object.
+ *
+ * The queries are deliberately flat rather than one nested read: Prisma
+ * resolves each level of a nested `select` with its own round trip, so the
+ * nested version cost six trips in a row. These go out in two waves — the
+ * rows that only need `userId`, then the rows that need the month's id — and
+ * on a phone the round trips, not the work, are what the user waits for.
+ */
 export async function loadMonthSnapshot(
   userId: string,
   period: Period = currentPeriod(),
 ): Promise<MonthSnapshot> {
-  const monthId = await ensureCurrentMonth(userId, period);
-
-  const [month, user, history] = await Promise.all([
-    db.budgetMonth.findUniqueOrThrow({
-      where: { id: monthId },
-      select: planSelect,
-    }),
+  const [monthId, user, history] = await Promise.all([
+    ensureCurrentMonth(userId, period),
     db.user.findUniqueOrThrow({
       where: { id: userId },
       select: { openingBalance: true },
@@ -195,22 +197,55 @@ export async function loadMonthSnapshot(
     loadHistory(userId, period),
   ]);
 
+  const [income, categories, expenses] = await Promise.all([
+    db.incomeSource.findMany({
+      where: { monthId },
+      select: { id: true, name: true, amount: true },
+      orderBy: byOrder,
+    }),
+    db.spendCategory.findMany({
+      where: { monthId },
+      select: { id: true, name: true, budget: true },
+      orderBy: byOrder,
+    }),
+    db.expense.findMany({
+      where: { category: { monthId } },
+      select: {
+        id: true,
+        categoryId: true,
+        day: true,
+        amount: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "asc" },
+    }),
+  ]);
+
+  // One pass instead of a `filter` per category, which is O(categories ×
+  // expenses) by the end of a busy month.
+  const entriesByCategory = new Map<string, ExpenseEntry[]>();
+  for (const expense of expenses) {
+    const entry: ExpenseEntry = {
+      id: expense.id,
+      day: expense.day,
+      amount: expense.amount,
+      addedAt: expense.createdAt.getTime(),
+    };
+
+    const existing = entriesByCategory.get(expense.categoryId);
+    if (existing) existing.push(entry);
+    else entriesByCategory.set(expense.categoryId, [entry]);
+  }
+
   return {
     monthId,
     period,
     data: {
       openingBalance: user.openingBalance,
-      income: month.incomes,
-      categories: month.categories.map((category) => ({
-        id: category.id,
-        name: category.name,
-        budget: category.budget,
-        entries: category.expenses.map((expense) => ({
-          id: expense.id,
-          day: expense.day,
-          amount: expense.amount,
-          addedAt: expense.createdAt.getTime(),
-        })),
+      income,
+      categories: categories.map((category) => ({
+        ...category,
+        entries: entriesByCategory.get(category.id) ?? [],
       })),
       history,
     },
