@@ -3,9 +3,7 @@
 import { useState, useTransition } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { saveOpeningSavings } from "@/app/actions/savings";
-import { AppShell } from "@/components/app/AppShell";
 import type { SaveState } from "@/components/budget/SaveStatus";
-import { formatTaka } from "@/lib/finance/format";
 import { buildSavingsView } from "@/lib/finance/savings";
 import type { PastMonth } from "@/lib/finance/types";
 import { OpeningSavingsCard } from "./OpeningSavingsCard";
@@ -17,7 +15,6 @@ type SavingsScreenProps = {
   history: PastMonth[];
   thisMonthNet: number;
   projectedNet: number;
-  monthLabel: string;
 };
 
 type OpeningForm = { opening: string };
@@ -27,7 +24,6 @@ export function SavingsScreen({
   history,
   thisMonthNet,
   projectedNet,
-  monthLabel,
 }: SavingsScreenProps) {
   const { control, register, getValues } = useForm<OpeningForm>({
     defaultValues: { opening: String(openingBalance) },
@@ -73,11 +69,7 @@ export function SavingsScreen({
   });
 
   return (
-    <AppShell
-      title="জমা ও ব্যালেন্স"
-      monthLabel={monthLabel}
-      savingsLabel={formatTaka(view.total)}
-    >
+    <>
       <SavingsSummary view={view} />
       <OpeningSavingsCard
         field={field}
@@ -88,6 +80,6 @@ export function SavingsScreen({
         onSave={save}
       />
       <SavingsHistory months={view.months} />
-    </AppShell>
+    </>
   );
 }

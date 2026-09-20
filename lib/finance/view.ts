@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { getSessionUserId } from "@/lib/auth/session";
 import { formatTaka } from "./format";
@@ -20,8 +21,12 @@ export type MonthView = {
  * Every app screen starts here: it resolves the signed-in user, makes sure
  * this month exists (carrying last month's plan forward on the first visit),
  * and returns both the raw rows and the numbers built from them.
+ *
+ * `cache` scopes the result to one request, so the layout's header and the
+ * page below it — which both need these numbers — share a single read of the
+ * database instead of each paying for their own.
  */
-export async function getCurrentMonthView(): Promise<MonthView> {
+export const getCurrentMonthView = cache(async function getCurrentMonthView(): Promise<MonthView> {
   const userId = await getSessionUserId();
   // `proxy.ts` already redirects signed-out visitors, but a page must never
   // rely on that alone before reading somebody's money.
@@ -37,4 +42,4 @@ export async function getCurrentMonthView(): Promise<MonthView> {
     monthLabel: `${summary.monthName} ${summary.year} · ${summary.daysLeft} দিন বাকি`,
     savingsLabel: formatTaka(summary.balance),
   };
-}
+});

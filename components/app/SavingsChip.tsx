@@ -3,13 +3,26 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PiggyBank } from "lucide-react";
+import { Skeleton } from "@/components/ui/Skeleton";
+
+// The savings screen already shows this figure large; a link to the page you
+// are on is just noise. The placeholder has to make the same call, or the
+// savings screen flashes a chip-shaped gap that nothing ever fills.
+function useHidden() {
+  return usePathname() === "/savings";
+}
+
+/** Stands in for the chip while the month's figures are still loading. */
+export function SavingsChipFallback() {
+  const hidden = useHidden();
+  if (hidden) return null;
+
+  return <Skeleton className="h-11 w-[104px] sm:w-[150px]" />;
+}
 
 export function SavingsChip({ label }: { label: string }) {
-  const pathname = usePathname();
-
-  // The savings screen already shows this figure large; a link to the page
-  // you are on is just noise.
-  if (pathname === "/savings") return null;
+  const hidden = useHidden();
+  if (hidden) return null;
 
   return (
     <Link
