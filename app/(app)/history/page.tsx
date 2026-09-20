@@ -8,7 +8,7 @@ import { getCurrentMonthView } from "@/lib/finance/view";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "আগের হিসাব — টাকার হিসাব",
+  title: "আগের হিসাব",
   description: "কোন মাসে কত বেঁচেছে, আর এই মাসে কোন খাতে কত গেলো।",
 };
 

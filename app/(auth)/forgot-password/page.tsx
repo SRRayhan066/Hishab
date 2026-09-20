@@ -7,7 +7,7 @@ import {
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
 
 export const metadata: Metadata = {
-  title: "পাসওয়ার্ড ভুলে গেছি — টাকার হিসাব",
+  title: "পাসওয়ার্ড ভুলে গেছি",
   description: "ইমেইলে কোড নিয়ে নতুন পাসওয়ার্ড ঠিক করো।",
 };
 

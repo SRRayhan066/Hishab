@@ -15,7 +15,7 @@ import {
 } from "@/lib/auth/password-reset";
 
 export const metadata: Metadata = {
-  title: "কোড মিলাও — টাকার হিসাব",
+  title: "কোড মিলাও",
   description: "ইমেইলে পাওয়া ৬ অঙ্কের কোডটা লেখো।",
 };
 

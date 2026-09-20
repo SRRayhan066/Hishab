@@ -3,7 +3,7 @@ import { AuthScreen } from "@/components/auth/AuthScreen";
 import { loginNotices } from "@/lib/auth/messages";
 
 export const metadata: Metadata = {
-  title: "সাইন ইন — টাকার হিসাব",
+  title: "সাইন ইন",
   description: "হিসাব যেখানে রেখেছিলে, সেখান থেকেই চলবে।",
 };
 

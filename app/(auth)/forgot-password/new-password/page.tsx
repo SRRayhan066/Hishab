@@ -7,7 +7,7 @@ import { resetPassword } from "@/app/actions/password-reset";
 import { db } from "@/lib/db";
 
 export const metadata: Metadata = {
-  title: "নতুন পাসওয়ার্ড — টাকার হিসাব",
+  title: "নতুন পাসওয়ার্ড",
   description: "নতুন পাসওয়ার্ড ঠিক করো।",
 };
 

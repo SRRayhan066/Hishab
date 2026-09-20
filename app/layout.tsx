@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Anek_Bangla, Hind_Siliguri } from "next/font/google";
 import "./globals.css";
 
@@ -16,8 +16,23 @@ const anekBangla = Anek_Bangla({
 });
 
 export const metadata: Metadata = {
-  title: "টাকার হিসাব",
+  title: {
+    default: "টাকার হিসাব",
+    template: "%s — টাকার হিসাব",
+  },
   description: "মাসের শুরুতে হিসাব, মাস শেষে স্বস্তি।",
+  applicationName: "টাকার হিসাব",
+  openGraph: {
+    title: "টাকার হিসাব",
+    description: "মাসের শুরুতে হিসাব, মাস শেষে স্বস্তি।",
+    siteName: "টাকার হিসাব",
+    locale: "bn_BD",
+    type: "website",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#f7f4ee",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
