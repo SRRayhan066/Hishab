@@ -24,7 +24,7 @@ export async function saveOpeningSavings(
 
   await db.user.update({
     where: { id: userId },
-    data: { openingSavings: parsed.data.amount },
+    data: { openingBalance: parsed.data.amount },
   });
 
   refresh();
