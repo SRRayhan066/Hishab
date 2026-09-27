@@ -92,8 +92,12 @@ export async function replaceCategorySection(
   monthId: string,
   rows: PlanRow[],
 ): Promise<SectionResult> {
+  // Temporary categories never reach the budget form, so they are left out
+  // here too — otherwise every save would read them as deleted.
+  const planned = { monthId, temporary: false };
+
   const existing = await db.spendCategory.findMany({
-    where: { monthId },
+    where: planned,
     select: { id: true, _count: { select: { expenses: true } } },
   });
   const { updates, creates, deletes } = planChanges(
@@ -110,7 +114,7 @@ export async function replaceCategorySection(
     // Nothing is written, so send the untouched section back — otherwise the
     // form keeps showing a row as deleted when it is still there.
     const current = await db.spendCategory.findMany({
-      where: { monthId },
+      where: planned,
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
       select: { id: true, name: true, budget: true },
     });
@@ -131,7 +135,7 @@ export async function replaceCategorySection(
     ...(deletes.length
       ? [
           db.spendCategory.deleteMany({
-            where: { monthId, id: { in: deletes } },
+            where: { ...planned, id: { in: deletes } },
           }),
         ]
       : []),
@@ -149,7 +153,7 @@ export async function replaceCategorySection(
   ]);
 
   const saved = await db.spendCategory.findMany({
-    where: { monthId },
+    where: planned,
     orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     select: { id: true, name: true, budget: true },
   });

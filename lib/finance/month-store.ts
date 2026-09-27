@@ -53,7 +53,9 @@ function findSeedMonth(userId: string, period: Period) {
         select: { lineageId: true, name: true, amount: true, sortOrder: true },
         orderBy: byOrder,
       },
+      // A temporary category was for that month alone.
       categories: {
+        where: { temporary: false },
         select: { lineageId: true, name: true, budget: true, sortOrder: true },
         orderBy: byOrder,
       },
@@ -64,7 +66,7 @@ function findSeedMonth(userId: string, period: Period) {
 /**
  * Returns this month's id, creating the month the first time the user opens the
  * app in it. A new month is a copy of the previous one — names, amounts and
- * order carry forward, spending does not.
+ * order carry forward, spending and temporary categories do not.
  */
 export async function ensureCurrentMonth(
   userId: string,
@@ -205,7 +207,7 @@ export async function loadMonthSnapshot(
     }),
     db.spendCategory.findMany({
       where: { monthId },
-      select: { id: true, name: true, budget: true },
+      select: { id: true, name: true, budget: true, temporary: true },
       orderBy: byOrder,
     }),
     db.expense.findMany({

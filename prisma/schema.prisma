@@ -93,6 +93,9 @@ model SpendCategory {
   lineageId String   @default(cuid())
   name      String
   budget    Int      @default(0)
+  /// Added on the fly from the add-expense screen. Belongs to this month only:
+  /// it has no budget, stays off the plan and is not copied into the next month.
+  temporary Boolean  @default(false)
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

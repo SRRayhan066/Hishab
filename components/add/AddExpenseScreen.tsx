@@ -81,10 +81,10 @@ export function AddExpenseScreen({
     }
   }, [data.categories, categoryId]);
 
-  const handleCreateCategory = (name: string, budget: number) => {
+  const handleCreateCategory = (name: string) => {
     setError("");
     startTransition(async () => {
-      const result = await addCategoryRow({ name, budget });
+      const result = await addCategoryRow({ name });
 
       if (result.error || !result.id) {
         setError(result.error ?? saveFailedError);

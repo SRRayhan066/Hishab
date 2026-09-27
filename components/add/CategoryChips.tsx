@@ -9,7 +9,7 @@ type CategoryChipsProps = {
   categories: CategoryStat[];
   selected: string;
   onSelect: (id: string) => void;
-  onCreate: (name: string, budget: number) => void;
+  onCreate: (name: string) => void;
   busy?: boolean;
 };
 
@@ -22,7 +22,6 @@ export function CategoryChips({
 }: CategoryChipsProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
-  const [budget, setBudget] = useState("");
   const [error, setError] = useState("");
   const nameRef = useRef<HTMLInputElement>(null);
 
@@ -33,7 +32,6 @@ export function CategoryChips({
   const close = () => {
     setOpen(false);
     setName("");
-    setBudget("");
     setError("");
   };
 
@@ -50,13 +48,7 @@ export function CategoryChips({
       return;
     }
 
-    const value = Number(budget);
-    if (!Number.isFinite(value) || value <= 0) {
-      setError("এই খাতে মাসে কত খরচ করতে চাও লিখে দাও।");
-      return;
-    }
-
-    onCreate(trimmed, value);
+    onCreate(trimmed);
     close();
   };
 
@@ -137,31 +129,6 @@ export function CategoryChips({
               />
             </div>
 
-            <div className="flex flex-col gap-[7px] @md:w-[140px]">
-              <label
-                htmlFor="new-category-budget"
-                className="text-ink-soft text-[14px] font-semibold"
-              >
-                মাসে কত?
-              </label>
-              <div className="bg-surface border-line rounded-field focus-within:border-primary flex min-h-[46px] items-center gap-1.5 border-[1.5px] px-[14px]">
-                <span className="text-ink-faint text-[16px] font-semibold">
-                  ৳
-                </span>
-                <input
-                  id="new-category-budget"
-                  type="number"
-                  inputMode="numeric"
-                  min={0}
-                  value={budget}
-                  onChange={(event) => setBudget(event.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="1000"
-                  className="text-ink placeholder:text-ink-faint w-full min-w-0 border-none bg-transparent text-[15px] font-semibold outline-none"
-                />
-              </div>
-            </div>
-
             <div className="flex gap-2">
               <button
                 type="button"
@@ -187,7 +154,7 @@ export function CategoryChips({
             </p>
           ) : (
             <p className="text-ink-faint mt-2.5 text-[14px]">
-              নতুন খাত এই মাসের বাজেটে যোগ হবে।
+              এই খাতটা শুধু এই মাসের জন্য, বাজেটে যোগ হবে না।
             </p>
           )}
         </div>

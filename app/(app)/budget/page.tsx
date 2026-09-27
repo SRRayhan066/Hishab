@@ -15,7 +15,11 @@ export default async function BudgetPage() {
       // Remounts when the month rolls over, so the carried-forward plan
       // replaces whatever was being edited on a tab left open overnight.
       key={`${summary.year}-${summary.monthIndex}`}
-      initialData={data}
+      // Temporary categories belong to this month's spending, not the plan.
+      initialData={{
+        ...data,
+        categories: data.categories.filter((category) => !category.temporary),
+      }}
       monthName={summary.monthName}
       daysInMonth={summary.daysInMonth}
     />

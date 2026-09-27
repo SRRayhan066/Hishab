@@ -40,7 +40,8 @@ export async function saveCategorySection(
 
 /**
  * Creates a single category straight away. Used by the "নতুন খাত" box on the
- * add-expense screen, which needs a real id to attach the expense to.
+ * add-expense screen, which needs a real id to attach the expense to. It is a
+ * temporary category: this month only, no budget, and kept off the plan.
  */
 export async function addCategoryRow(
   values: NewCategoryValues,
@@ -57,7 +58,7 @@ export async function addCategoryRow(
     data: {
       monthId,
       name: parsed.data.name,
-      budget: parsed.data.budget,
+      temporary: true,
       sortOrder: await nextSortOrder("category", monthId),
     },
     select: { id: true },

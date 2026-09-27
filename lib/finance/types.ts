@@ -20,6 +20,8 @@ export type Category = {
   id: string;
   name: string;
   budget: number;
+  /** Added for this month only — no budget, not part of the plan. */
+  temporary: boolean;
   entries: ExpenseEntry[];
 };
 
@@ -49,6 +51,7 @@ export type CategoryStat = {
   id: string;
   name: string;
   budget: number;
+  temporary: boolean;
   spent: number;
   percent: number;
   idealPercent: number;

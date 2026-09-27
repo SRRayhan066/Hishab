@@ -37,19 +37,22 @@ export function CategoryBreakdown({ summary }: { summary: MonthSummary }) {
               </span>
             </div>
 
-            <div className="relative h-[9px] rounded-full bg-[#f2eee5]">
-              <div
-                className="absolute top-0 bottom-0 left-0 rounded-full"
-                style={{
-                  width: `${category.percent}%`,
-                  background: barColor[category.tone],
-                }}
-              />
-              <div
-                className="absolute -top-[3px] -bottom-[3px] w-[2px] rounded-[2px] bg-[#c6bfae]"
-                style={{ left: `${category.idealPercent}%` }}
-              />
-            </div>
+            {/* A temporary category has no budget, so there is no pace to show. */}
+            {!category.temporary && (
+              <div className="relative h-[9px] rounded-full bg-[#f2eee5]">
+                <div
+                  className="absolute top-0 bottom-0 left-0 rounded-full"
+                  style={{
+                    width: `${category.percent}%`,
+                    background: barColor[category.tone],
+                  }}
+                />
+                <div
+                  className="absolute -top-[3px] -bottom-[3px] w-[2px] rounded-[2px] bg-[#c6bfae]"
+                  style={{ left: `${category.idealPercent}%` }}
+                />
+              </div>
+            )}
 
             <p className="text-ink-muted text-[14px]">{category.detail}</p>
           </li>

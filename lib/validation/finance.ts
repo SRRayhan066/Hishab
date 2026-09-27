@@ -35,7 +35,6 @@ export const planSectionSchema = z.array(planRowSchema).max(80);
 
 export const newCategorySchema = z.object({
   name: z.string().trim().min(1, categoryNameError).max(60, nameTooLongError),
-  budget: money,
 });
 
 export const expenseSchema = z.object({
