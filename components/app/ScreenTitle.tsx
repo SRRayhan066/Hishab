@@ -14,6 +14,7 @@ const titles: Record<string, string> = {
   "/budget": "মাসের বাজেট",
   "/accounts": "অ্যাকাউন্ট ও ব্যালেন্স",
   "/history": "আগের হিসাব",
+  "/profile": "প্রোফাইল",
 };
 
 export function ScreenTitle() {

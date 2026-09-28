@@ -47,6 +47,21 @@ export const setPasswordSchema = z
     passwordsMustMatch,
   );
 
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "এখনকার পাসওয়ার্ডটা লিখে দাও।"),
+    password,
+    confirmPassword,
+  })
+  .refine(
+    (values) => values.password === values.confirmPassword,
+    passwordsMustMatch,
+  )
+  .refine((values) => values.password !== values.currentPassword, {
+    error: "নতুন পাসওয়ার্ডটা আগেরটার থেকে আলাদা হতে হবে।",
+    path: ["password"],
+  });
+
 export const forgotPasswordSchema = z.object({ email });
 
 const banglaDigits = "০১২৩৪৫৬৭৮৯";
@@ -71,3 +86,4 @@ export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 export type ResetCodeValues = z.input<typeof resetCodeSchema>;
 export type SignUpValues = z.infer<typeof signUpSchema>;
 export type SetPasswordValues = z.infer<typeof setPasswordSchema>;
+export type ChangePasswordValues = z.infer<typeof changePasswordSchema>;
