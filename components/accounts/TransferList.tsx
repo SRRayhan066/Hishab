@@ -4,8 +4,9 @@ import { useMemo, useOptimistic, useState, useTransition } from "react";
 import { removeTransfer } from "@/app/actions/accounts";
 import { Card } from "@/components/ui/Card";
 import { FormError } from "@/components/ui/FormError";
-import { accountNames } from "@/lib/finance/accounts";
+import { accountNames, overdrawnAccount } from "@/lib/finance/accounts";
 import { formatTaka } from "@/lib/finance/format";
+import { balanceBelowZeroError } from "@/lib/finance/messages";
 import type { MoneyAccount, TransferEntry } from "@/lib/finance/types";
 
 type TransferListProps = {
@@ -32,6 +33,16 @@ export function TransferList({
   const [, startRemoval] = useTransition();
 
   const handleRemove = (id: string) => {
+    const transfer = transfers.find((item) => item.id === id);
+    const target = overdrawnAccount(
+      accounts,
+      new Map(transfer ? [[transfer.toId, -transfer.amount]] : []),
+    );
+    if (target) {
+      setError(balanceBelowZeroError(target.name));
+      return;
+    }
+
     setError("");
     startRemoval(async () => {
       hide(id);

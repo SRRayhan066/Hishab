@@ -1,8 +1,11 @@
 import "server-only";
 import { db } from "@/lib/db";
+import { lockBalances, moneyTransaction } from "./account-store";
+import { incomeChanges, openingChanges, overdrawnAccount } from "./accounts";
 import {
   accountGoneError,
   accountInUseError,
+  balanceBelowZeroError,
   categoryHasExpensesError,
   lastAccountError,
 } from "./messages";
@@ -91,6 +94,7 @@ function planChanges(
 }
 
 export async function replaceIncomeSection(
+  userId: string,
   monthId: string,
   accountIds: string[],
   rows: PlanRow[],
@@ -100,14 +104,6 @@ export async function replaceIncomeSection(
     return { error: accountGoneError };
   }
 
-  const existing = await db.incomeSource.findMany({
-    where: { monthId },
-    select: { id: true },
-  });
-  const { updates, creates, deletes } = planChanges(
-    existing.map((row) => row.id),
-    rows,
-  );
   const withAccount = ({ name, amount, sortOrder, accountId }: RowData) => ({
     name,
     amount,
@@ -115,17 +111,39 @@ export async function replaceIncomeSection(
     accountId: accountId ?? accountIds[0],
   });
 
-  await db.$transaction([
-    ...(deletes.length
-      ? [db.incomeSource.deleteMany({ where: { monthId, id: { in: deletes } } })]
-      : []),
-    ...updates.map(({ id, ...data }) =>
-      db.incomeSource.update({ where: { id }, data: withAccount(data) }),
-    ),
-    ...creates.map((data) =>
-      db.incomeSource.create({ data: { monthId, ...withAccount(data) } }),
-    ),
-  ]);
+  const overdrawn = await moneyTransaction(async (tx) => {
+    const accounts = await lockBalances(tx, userId);
+    const existing = await tx.incomeSource.findMany({
+      where: { monthId },
+      select: { id: true, amount: true, accountId: true },
+    });
+    const { updates, creates, deletes } = planChanges(
+      existing.map((row) => row.id),
+      rows,
+    );
+
+    const found = overdrawnAccount(
+      accounts,
+      incomeChanges(existing, [...updates, ...creates].map(withAccount)),
+    );
+    if (found) return found;
+
+    if (deletes.length) {
+      await tx.incomeSource.deleteMany({
+        where: { monthId, id: { in: deletes } },
+      });
+    }
+    for (const { id, ...data } of updates) {
+      await tx.incomeSource.update({ where: { id }, data: withAccount(data) });
+    }
+    if (creates.length) {
+      await tx.incomeSource.createMany({
+        data: creates.map((data) => ({ monthId, ...withAccount(data) })),
+      });
+    }
+    return undefined;
+  });
+  if (overdrawn) return { error: balanceBelowZeroError(overdrawn.name) };
 
   // Hand the rows back so the form picks up the ids of everything just
   // created — otherwise a second save would create them all over again.
@@ -266,22 +284,35 @@ export async function replaceAccountSection(
     return { error: accountInUseError, rows: await savedAccountRows(userId) };
   }
 
-  await db.$transaction([
-    ...(deletes.length
-      ? [db.moneyAccount.deleteMany({ where: { userId, id: { in: deletes } } })]
-      : []),
-    ...updates.map(({ id, name, amount, sortOrder, color, icon }) =>
-      db.moneyAccount.update({
+  const overdrawn = await moneyTransaction(async (tx) => {
+    const accounts = await lockBalances(tx, userId);
+    const found = overdrawnAccount(accounts, openingChanges(accounts, updates));
+    if (found) return found;
+
+    if (deletes.length) {
+      await tx.moneyAccount.deleteMany({ where: { userId, id: { in: deletes } } });
+    }
+    for (const { id, name, amount, sortOrder, color, icon } of updates) {
+      await tx.moneyAccount.update({
         where: { id },
         data: { name, openingBalance: amount, sortOrder, color, icon },
-      }),
-    ),
-    ...creates.map(({ name, amount, sortOrder, color, icon }) =>
-      db.moneyAccount.create({
-        data: { userId, name, openingBalance: amount, sortOrder, color, icon },
-      }),
-    ),
-  ]);
+      });
+    }
+    if (creates.length) {
+      await tx.moneyAccount.createMany({
+        data: creates.map(({ name, amount, sortOrder, color, icon }) => ({
+          userId,
+          name,
+          openingBalance: amount,
+          sortOrder,
+          color,
+          icon,
+        })),
+      });
+    }
+    return undefined;
+  });
+  if (overdrawn) return { error: balanceBelowZeroError(overdrawn.name) };
 
   return { rows: await savedAccountRows(userId) };
 }

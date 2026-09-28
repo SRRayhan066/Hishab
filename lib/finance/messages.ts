@@ -1,3 +1,5 @@
+import { formatTaka } from "./format";
+
 export const saveFailedError = "সেভ করা গেলো না। আবার চেষ্টা করো।";
 export const signedOutError = "আবার সাইন ইন করো।";
 export const rowMissingError =
@@ -23,6 +25,10 @@ export const accountGoneError =
 export const accountInUseError =
   "এই অ্যাকাউন্টে আয়, খরচ বা ট্রান্সফার লেখা আছে, তাই মুছে ফেলা যাবে না। চাইলে নাম বদলে দাও।";
 export const lastAccountError = "অন্তত একটা অ্যাকাউন্ট রাখতেই হবে।";
+export const notEnoughBalanceError = (name: string, balance: number) =>
+  `${name}-এ আছে ${formatTaka(balance)}। এর চেয়ে বেশি খরচ বা ট্রান্সফার করা যাবে না।`;
+export const balanceBelowZeroError = (name: string) =>
+  `এতে ${name}-এর টাকা শূন্যের নিচে নেমে যাবে। আগে ওই অ্যাকাউন্টের খরচ বা ট্রান্সফার ঠিক করো।`;
 
 export const transferAmountError = "কত টাকা পাঠাবে লিখে দাও।";
 export const transferSameAccountError =

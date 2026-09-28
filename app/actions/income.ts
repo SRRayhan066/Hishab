@@ -24,6 +24,7 @@ export async function saveIncomeSection(
   if (!session) return { error: signedOutError };
 
   const result = await replaceIncomeSection(
+    session.userId,
     session.monthId,
     await ownedAccountIds(session.userId),
     parsed.data,

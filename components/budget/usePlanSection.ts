@@ -10,6 +10,7 @@ export function usePlanSection(
   initialRows: PlanRowField[],
   saveRows: (rows: PlanRowValues[]) => Promise<SectionSaveResult>,
   newRow: () => PlanRowField,
+  check?: (rows: PlanRowField[]) => string | undefined,
 ) {
   const { control, register, getValues, reset, formState } =
     useForm<PlanSectionValues>({ defaultValues: { rows: initialRows } });
@@ -43,6 +44,13 @@ export function usePlanSection(
   };
 
   const save = () => {
+    const problem = check?.(getValues("rows"));
+    if (problem) {
+      setError(problem);
+      setState("error");
+      return;
+    }
+
     setState("saving");
     setError("");
 

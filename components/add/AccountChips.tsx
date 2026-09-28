@@ -1,25 +1,19 @@
 "use client";
 
-import { formatTaka } from "@/lib/finance/format";
 import type { MoneyAccount } from "@/lib/finance/types";
 import { cn } from "@/lib/utils";
 
 type AccountChipsProps = {
   accounts: MoneyAccount[];
   selected: string;
-  amount: number;
   onSelect: (id: string) => void;
 };
 
 export function AccountChips({
   accounts,
   selected,
-  amount,
   onSelect,
 }: AccountChipsProps) {
-  const account = accounts.find((item) => item.id === selected);
-  const after = account ? account.balance - amount : 0;
-
   return (
     <fieldset className="mt-5">
       <legend className="text-ink-muted text-[15px] font-medium">
@@ -53,13 +47,6 @@ export function AccountChips({
           );
         })}
       </div>
-
-      {account && amount > 0 && after < 0 && (
-        <p className="mt-2.5 text-[14px] font-medium text-[#9a6d12]">
-          {account.name}-এ আছে {formatTaka(account.balance)}। এই খরচের পর{" "}
-          {formatTaka(after)} হয়ে যাবে।
-        </p>
-      )}
     </fieldset>
   );
 }

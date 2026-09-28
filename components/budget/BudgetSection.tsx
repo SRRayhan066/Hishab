@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { Plus, WalletMinimal } from "lucide-react";
 import { Controller } from "react-hook-form";
+import { AmountInput } from "@/components/ui/AmountInput";
 import { Card } from "@/components/ui/Card";
 import { Select, type SelectOption } from "@/components/ui/Select";
 import { formatTaka } from "@/lib/finance/format";
@@ -161,14 +162,10 @@ export function BudgetSection({
                     <span className="text-ink-faint text-[15px] font-semibold">
                       ৳
                     </span>
-                    <input
+                    <AmountInput
                       {...register(`rows.${index}.amount`, {
                         onChange: section.edited,
                       })}
-                      type="number"
-                      inputMode="numeric"
-                      min={0}
-                      step={1}
                       placeholder="0"
                       aria-label={`${namePlaceholder} ${index + 1} — মাসে কত টাকা`}
                       className={cn(

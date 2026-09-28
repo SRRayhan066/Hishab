@@ -11,6 +11,7 @@ import {
 } from "react";
 import { addCategoryRow } from "@/app/actions/budget";
 import { addExpense, removeExpense } from "@/app/actions/expense";
+import { AmountInput } from "@/components/ui/AmountInput";
 import { Card } from "@/components/ui/Card";
 import { FormError } from "@/components/ui/FormError";
 import {
@@ -18,7 +19,7 @@ import {
   listEntries,
   spentOnDay,
 } from "@/lib/finance/entries";
-import { saveFailedError } from "@/lib/finance/messages";
+import { notEnoughBalanceError, saveFailedError } from "@/lib/finance/messages";
 import type { MonthData, MonthSummary } from "@/lib/finance/types";
 import { AccountChips } from "./AccountChips";
 import { CategoryChips } from "./CategoryChips";
@@ -71,6 +72,8 @@ export function AddExpenseScreen({
   const selected = summary.categories.find((item) => item.id === categoryId);
   const account = data.accounts.find((item) => item.id === accountId);
   const todaySpent = spentOnDay(data, reference.day);
+  const value = Math.round(Number(amount)) || 0;
+  const overdraw = account !== undefined && value > 0 && value > account.balance;
 
   // A category deleted on the budget screen, or a month that just rolled
   // over, can leave the selection pointing at nothing.
@@ -103,9 +106,8 @@ export function AddExpenseScreen({
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    const value = Number(amount);
 
-    if (!Number.isFinite(value) || value <= 0) {
+    if (value <= 0) {
       setError("কত টাকা খরচ হলো লিখে দাও।");
       amountRef.current?.focus();
       return;
@@ -118,6 +120,11 @@ export function AddExpenseScreen({
 
     if (!accountId) {
       setError("কোন অ্যাকাউন্ট থেকে খরচ হলো বেছে নাও।");
+      return;
+    }
+
+    if (overdraw) {
+      amountRef.current?.focus();
       return;
     }
 
@@ -159,13 +166,9 @@ export function AddExpenseScreen({
             <span className="font-display text-ink-faint text-[clamp(28px,7vw,48px)] font-semibold">
               ৳
             </span>
-            <input
+            <AmountInput
               id={amountId}
               ref={amountRef}
-              type="number"
-              inputMode="numeric"
-              min={0}
-              step={1}
               autoFocus
               placeholder="0"
               value={amount}
@@ -196,9 +199,14 @@ export function AddExpenseScreen({
             <AccountChips
               accounts={data.accounts}
               selected={accountId}
-              amount={Number(amount) || 0}
               onSelect={setAccountId}
             />
+          )}
+
+          {overdraw && (
+            <p aria-live="polite" className="text-danger mt-2.5 text-[14px] font-medium">
+              {notEnoughBalanceError(account.name, account.balance)}
+            </p>
           )}
 
           {error && (
@@ -209,7 +217,7 @@ export function AddExpenseScreen({
 
           <button
             type="submit"
-            disabled={busy}
+            disabled={busy || overdraw}
             className="bg-ink font-display focus-visible:outline-primary mt-6 min-h-[50px] w-full cursor-pointer rounded-[12px] px-4 text-[16px] font-bold text-white transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {busy ? "সেভ হচ্ছে…" : "খরচ যোগ করো"}

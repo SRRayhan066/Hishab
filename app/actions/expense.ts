@@ -7,11 +7,14 @@ import {
   currentSessionMonth,
 } from "@/lib/finance/month-store";
 import { lastRecordableDay } from "@/lib/finance/period";
+import { lockBalances, moneyTransaction } from "@/lib/finance/account-store";
+import { overdrawnAccount } from "@/lib/finance/accounts";
 import {
   accountGoneError,
   categoryMissingError,
   expenseDayError,
   invalidRowError,
+  notEnoughBalanceError,
   rowMissingError,
   signedOutError,
 } from "@/lib/finance/messages";
@@ -35,22 +38,26 @@ export async function addExpense(
   // recorded for a day that hasn't happened yet in Dhaka.
   if (day > lastRecordableDay()) return { error: expenseDayError };
 
-  const [category, account] = await Promise.all([
-    db.spendCategory.findFirst({
-      where: { id: categoryId, monthId: session.monthId },
-      select: { id: true },
-    }),
-    db.moneyAccount.findFirst({
-      where: { id: accountId, userId: session.userId },
-      select: { id: true },
-    }),
-  ]);
-  if (!category) return { error: categoryMissingError };
-  if (!account) return { error: accountGoneError };
-
-  await db.expense.create({
-    data: { categoryId: category.id, accountId: account.id, day, amount },
+  const category = await db.spendCategory.findFirst({
+    where: { id: categoryId, monthId: session.monthId },
+    select: { id: true },
   });
+  if (!category) return { error: categoryMissingError };
+
+  const result = await moneyTransaction(async (tx) => {
+    const [account] = await lockBalances(tx, session.userId, [accountId]);
+    if (!account) return { error: accountGoneError };
+
+    if (overdrawnAccount([account], new Map([[account.id, -amount]]))) {
+      return { error: notEnoughBalanceError(account.name, account.balance) };
+    }
+
+    await tx.expense.create({
+      data: { categoryId: category.id, accountId: account.id, day, amount },
+    });
+    return {};
+  });
+  if (result.error) return result;
 
   refresh();
   return {};

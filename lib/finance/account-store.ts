@@ -1,9 +1,17 @@
 import "server-only";
 import { db } from "@/lib/db";
+import { Prisma } from "@/lib/generated/prisma/client";
 import type { MoneyAccount } from "./types";
 
-export async function loadAccounts(userId: string): Promise<MoneyAccount[]> {
-  return db.$queryRaw<MoneyAccount[]>`
+export type MoneyTx = Parameters<Parameters<typeof db.$transaction>[0]>[0];
+
+type RawClient = Pick<MoneyTx, "$queryRaw">;
+
+function selectAccounts(
+  client: RawClient,
+  where: Prisma.Sql,
+): Promise<MoneyAccount[]> {
+  return client.$queryRaw<MoneyAccount[]>`
     SELECT
       a."id",
       a."name",
@@ -44,9 +52,41 @@ export async function loadAccounts(userId: string): Promise<MoneyAccount[]> {
       FROM "Transfer" t
       WHERE t."fromId" = a."id"
     ) outgoing ON TRUE
-    WHERE a."userId" = ${userId}
+    WHERE ${where}
     ORDER BY a."sortOrder" ASC, a."createdAt" ASC
   `;
+}
+
+export async function loadAccounts(userId: string): Promise<MoneyAccount[]> {
+  return selectAccounts(db, Prisma.sql`a."userId" = ${userId}`);
+}
+
+export function moneyTransaction<T>(
+  run: (tx: MoneyTx) => Promise<T>,
+): Promise<T> {
+  return db.$transaction(run, { maxWait: 15_000, timeout: 15_000 });
+}
+
+export async function lockBalances(
+  tx: MoneyTx,
+  userId: string,
+  accountIds?: string[],
+): Promise<MoneyAccount[]> {
+  const where = accountIds
+    ? Prisma.sql`a."userId" = ${userId} AND a."id" IN (${Prisma.join(
+        accountIds.length ? [...new Set(accountIds)] : [""],
+      )})`
+    : Prisma.sql`a."userId" = ${userId}`;
+
+  await tx.$queryRaw`
+    SELECT a."id"
+    FROM "MoneyAccount" a
+    WHERE ${where}
+    ORDER BY a."id"
+    FOR UPDATE
+  `;
+
+  return selectAccounts(tx, where);
 }
 
 export async function ownedAccountIds(userId: string): Promise<string[]> {
