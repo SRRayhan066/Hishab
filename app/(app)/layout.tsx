@@ -17,6 +17,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         "accounts",
         "profile",
         "install",
+        "tour",
       ]}
     >
       <AppShell>{children}</AppShell>

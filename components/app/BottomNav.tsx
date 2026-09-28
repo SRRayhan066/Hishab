@@ -46,7 +46,7 @@ export function BottomNav() {
       aria-label={t("label")}
       className="sticky bottom-0 bg-gradient-to-t from-canvas from-64% to-transparent pt-3 pb-[18px]"
     >
-      <div className="bg-surface flex gap-[6px] rounded-[20px] border-[1.5px] border-[#e6e0d4] p-2 shadow-[0_6px_20px_rgba(42,40,37,0.08)]">
+      <div data-tour="nav" className="bg-surface flex gap-[6px] rounded-[20px] border-[1.5px] border-[#e6e0d4] p-2 shadow-[0_6px_20px_rgba(42,40,37,0.08)]">
         {items.map((item) => {
           const active = pathname === item.href;
 

@@ -141,6 +141,7 @@ export function BudgetScreen({
           initialData.accounts.length > 1 ? initialData.accounts : undefined
         }
         accent
+        tour="budgetIncome"
       />
 
       <BudgetSection
@@ -153,6 +154,7 @@ export function BudgetScreen({
         addLabel={t("planAdd")}
         totalLabel={t("planTotal")}
         total={plannedTotal}
+        tour="budgetPlan"
       />
     </div>
   );

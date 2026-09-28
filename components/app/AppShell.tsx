@@ -1,4 +1,6 @@
 import { Suspense, type ReactNode } from "react";
+import { TourProvider } from "@/components/tour/TourProvider";
+import { TourStatus } from "@/components/tour/TourStatus";
 import { BottomNav } from "./BottomNav";
 import { InstallBanner } from "./InstallBanner";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -15,29 +17,37 @@ import { ScreenTitle } from "./ScreenTitle";
  */
 export function AppShell({ children }: { children: ReactNode }) {
   return (
-    <div className="flex flex-1 flex-col px-4 pt-[22px]">
-      <div className="mx-auto flex w-full max-w-[1060px] flex-1 flex-col gap-4">
-        <InstallBanner />
-        <header>
-          <Suspense fallback={<MonthLineFallback />}>
-            <MonthLine />
-          </Suspense>
-          <div className="mt-px flex items-center justify-between gap-3">
-            <ScreenTitle />
-            <div className="flex flex-none items-center gap-2">
-              <Suspense fallback={<SavingsChipFallback />}>
-                <SavingsStatus />
-              </Suspense>
-              <LanguageSwitcher />
-              <ProfileLink />
+    <TourProvider>
+      <div className="flex flex-1 flex-col px-4 pt-[22px]">
+        <div className="mx-auto flex w-full max-w-[1060px] flex-1 flex-col gap-4">
+          <InstallBanner />
+          <header>
+            <Suspense fallback={<MonthLineFallback />}>
+              <MonthLine />
+            </Suspense>
+            <div className="mt-px flex items-center justify-between gap-3">
+              <ScreenTitle />
+              <div
+                data-tour="header"
+                className="flex flex-none items-center gap-2"
+              >
+                <Suspense fallback={<SavingsChipFallback />}>
+                  <SavingsStatus />
+                </Suspense>
+                <LanguageSwitcher />
+                <ProfileLink />
+              </div>
             </div>
-          </div>
-        </header>
+          </header>
 
-        <main className="flex flex-1 flex-col gap-4">{children}</main>
+          <main className="flex flex-1 flex-col gap-4">{children}</main>
 
-        <BottomNav />
+          <BottomNav />
+        </div>
       </div>
-    </div>
+      <Suspense>
+        <TourStatus />
+      </Suspense>
+    </TourProvider>
   );
 }

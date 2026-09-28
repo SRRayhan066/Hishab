@@ -416,4 +416,64 @@ export const en: Dictionary = {
     install: "Install",
     close: "Close",
   },
+  tour: {
+    progress: "{current}/{total}",
+    start: "Show me around",
+    next: "Next",
+    back: "Back",
+    finish: "Let's go",
+    skip: "Skip",
+    later: "Maybe later",
+    replayTitle: "Take the tour",
+    replayHint: "Forgot where something lives? Walk through the whole app again.",
+    replay: "Take the tour again",
+    welcomeTitle: "Welcome to Takar Hishab!",
+    welcomeBody:
+      "Let's take a one-minute walk through the app — what's where, and what each part is for.",
+    balanceTitle: "What you have this month",
+    balanceBody:
+      "See how much money you have right now, how much planned spending is left, and how much you can spend each day to get through the month comfortably.",
+    burndownTitle: "How the month is going",
+    burndownBody:
+      "The dashed line is your plan, and the solid line is the money you actually have left. When the solid line stays above, you're spending less than planned.",
+    categoriesTitle: "Where your money goes",
+    categoriesBody:
+      "How much each category has used and how much is left. A yellow or red category means it's time to slow down there.",
+    headerTitle: "Savings, language and profile",
+    headerBody:
+      "Your savings always show up here. The toggle next to it switches between Bangla and English, and the round icon opens your profile.",
+    navTitle: "Everything is down here",
+    navBody:
+      "Use this menu to log expenses, set your budget, manage accounts and look back at past months. Let's visit each one.",
+    addFormTitle: "Log an expense",
+    addFormBody:
+      "Type the amount, pick the day and category, then save. If you have more than one account, you can pick which one it came from too.",
+    addSummaryTitle: "What went out today",
+    addSummaryBody:
+      "See what you've spent today and this month, plus your latest entries. Made a mistake? Delete it right here.",
+    budgetIncomeTitle: "What's coming in",
+    budgetIncomeBody:
+      "Add your salary, business or any other income here. This is your total money for the month.",
+    budgetPlanTitle: "Where it should go",
+    budgetPlanBody:
+      "Groceries, rent, transport — set how much each category gets. Next month starts with this same plan automatically.",
+    accountListTitle: "Your accounts",
+    accountListBody:
+      "Cash, bank, bKash — add every place you keep money. You'll see how much is in each one.",
+    transfersTitle: "Moving money around",
+    transfersBody:
+      "Withdrew from the bank or sent money to bKash? Log it as a transfer. It doesn't count as spending, it just moves money between accounts.",
+    savingsTitle: "What you've saved",
+    savingsBody:
+      "Month by month, see how much you saved — or lost, if a month went over budget.",
+    historyTitle: "Past months",
+    historyBody:
+      "See how each past month went against its budget — green means you saved, red means you went over. Further down, this month's spending by category.",
+    profileTitle: "Your profile",
+    profileBody:
+      "Change your name and password here. Want this tour again? Just tap this button.",
+    doneTitle: "You're all set!",
+    doneBody:
+      "Start by setting up this month's budget, then log each expense as it happens. The app does the math for you.",
+  },
 };

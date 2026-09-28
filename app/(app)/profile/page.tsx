@@ -5,6 +5,7 @@ import { NameCard } from "@/components/profile/NameCard";
 import { PasswordCard } from "@/components/profile/PasswordCard";
 import { ProfileSummary } from "@/components/profile/ProfileSummary";
 import { SignOutCard } from "@/components/profile/SignOutCard";
+import { TourCard } from "@/components/profile/TourCard";
 import { loadProfile } from "@/lib/auth/profile";
 import { getSessionUserId } from "@/lib/auth/session";
 import { getT } from "@/lib/i18n/server";
@@ -29,6 +30,7 @@ export default async function ProfilePage() {
         <NameCard name={profile.name} email={profile.email} />
         <PasswordCard email={profile.email} />
       </div>
+      <TourCard />
       <ClearDataCard entries={profile.entries} />
       <SignOutCard />
     </>

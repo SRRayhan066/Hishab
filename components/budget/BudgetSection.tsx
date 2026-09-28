@@ -33,6 +33,7 @@ type BudgetSectionProps = {
   accounts?: { id: string; name: string }[];
   accent?: boolean;
   className?: string;
+  tour?: string;
 };
 
 export function BudgetSection({
@@ -48,6 +49,7 @@ export function BudgetSection({
   accounts,
   accent = false,
   className,
+  tour,
 }: BudgetSectionProps) {
   const t = useT("budget");
   const common = useT("common");
@@ -66,7 +68,10 @@ export function BudgetSection({
   }, [focusIndex, fields.length]);
 
   return (
-    <Card className={cn("flex flex-col px-[22px] pt-[22px] pb-6", className)}>
+    <Card
+      data-tour={tour}
+      className={cn("flex flex-col px-[22px] pt-[22px] pb-6", className)}
+    >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <h2 className="font-display text-[18px] font-bold">{title}</h2>

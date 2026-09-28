@@ -11,7 +11,7 @@ export async function PastMonths({ months }: { months: MonthResult[] }) {
   const [t, format] = await Promise.all([getT("history"), getFormat()]);
 
   return (
-    <Card className="px-[22px] pt-6 pb-[26px]">
+    <Card data-tour="history" className="px-[22px] pt-6 pb-[26px]">
       <h2 className="font-display text-[19px] font-bold">{t("pastTitle")}</h2>
       <p className="text-ink-muted mt-[3px] text-[15px]">
         {t("pastHint")}
