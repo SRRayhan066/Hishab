@@ -26,7 +26,7 @@ export async function BalanceCard({ summary }: { summary: MonthSummary }) {
       : t("lastDay");
 
   return (
-    <Card className="px-6 pt-[26px] pb-7">
+    <Card data-tour="balance" className="px-6 pt-[26px] pb-7">
       <p className="text-ink-muted text-[15px] font-medium">
         {t("balanceLabel")}
       </p>

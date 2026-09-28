@@ -18,7 +18,10 @@ export async function CategoryBreakdown({ summary }: { summary: MonthSummary }) 
   const t = await getT("home");
 
   return (
-    <Card className="flex flex-col gap-1 px-[22px] pt-[22px] pb-6">
+    <Card
+      data-tour="categories"
+      className="flex flex-col gap-1 px-[22px] pt-[22px] pb-6"
+    >
       <h2 className="font-display text-[19px] font-bold">
         {t("breakdownTitle")}
       </h2>

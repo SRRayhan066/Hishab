@@ -10,7 +10,7 @@ export async function BurndownCard({ summary }: { summary: MonthSummary }) {
     : "var(--color-danger)";
 
   return (
-    <Card className="px-5 pt-6 pb-4">
+    <Card data-tour="burndown" className="px-5 pt-6 pb-4">
       <div className="flex flex-wrap items-baseline justify-between gap-4 px-1 pb-1">
         <div>
           <h2 className="font-display text-[19px] font-bold">

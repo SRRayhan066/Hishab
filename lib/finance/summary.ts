@@ -1,6 +1,7 @@
 import type { Format } from "@/lib/i18n/format";
 import type { Translator } from "@/lib/i18n/translate";
 import type {
+  AxisLabel,
   Burndown,
   BurndownPoint,
   CategoryStat,
@@ -81,24 +82,46 @@ function buildBurndown(
     areaPoints: `${toX(0).toFixed(1)},${baseY} ${actualPoints} ${last.x.toFixed(1)},${baseY}`,
     today: { x: last.x, y: last.y },
     grid,
-    xLabels: [
-      {
-        xPercent: Number(((toX(1) / CHART_WIDTH) * 100).toFixed(2)),
-        label: t("axisStart"),
-        shift: "0",
-      },
-      {
-        xPercent: Number(((last.x / CHART_WIDTH) * 100).toFixed(2)),
-        label: t("axisToday"),
-        shift: "-50%",
-      },
-      {
-        xPercent: Number(((toX(daysInMonth) / CHART_WIDTH) * 100).toFixed(2)),
-        label: t("axisEnd"),
-        shift: "-100%",
-      },
-    ],
+    xLabels: axisLabels(
+      (toX(1) / CHART_WIDTH) * 100,
+      (last.x / CHART_WIDTH) * 100,
+      (toX(daysInMonth) / CHART_WIDTH) * 100,
+      t,
+    ),
   };
+}
+
+function axisLabels(
+  startPercent: number,
+  todayPercent: number,
+  endPercent: number,
+  t: Translator<"summary">,
+): AxisLabel[] {
+  const labels: AxisLabel[] = [];
+
+  if (todayPercent - startPercent > 24) {
+    labels.push({
+      xPercent: Number(startPercent.toFixed(2)),
+      label: t("axisStart"),
+      shift: "0",
+    });
+  }
+
+  labels.push({
+    xPercent: Number(todayPercent.toFixed(2)),
+    label: t("axisToday"),
+    shift: `-${todayPercent.toFixed(2)}%`,
+  });
+
+  if (endPercent - todayPercent > 30) {
+    labels.push({
+      xPercent: Number(endPercent.toFixed(2)),
+      label: t("axisEnd"),
+      shift: "-100%",
+    });
+  }
+
+  return labels;
 }
 
 export function buildMonthSummary(

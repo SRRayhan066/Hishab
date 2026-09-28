@@ -12,7 +12,7 @@ export function SavingsHistory({ months }: { months: MonthResult[] }) {
   const format = useFormat();
 
   return (
-    <Card className="px-[22px] pt-[22px] pb-4">
+    <Card data-tour="savings" className="px-[22px] pt-[22px] pb-4">
       <h2 className="font-display text-[18px] font-bold">
         {t("savingsTitle")}
       </h2>

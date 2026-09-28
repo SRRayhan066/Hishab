@@ -62,7 +62,10 @@ export function AccountListCard({
   }, [focusIndex, fields.length]);
 
   return (
-    <Card className="flex flex-col px-[22px] pt-[22px] pb-6">
+    <Card
+      data-tour="accountList"
+      className="flex flex-col px-[22px] pt-[22px] pb-6"
+    >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <h2 className="font-display text-[18px] font-bold">{t("listTitle")}</h2>

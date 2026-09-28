@@ -1,14 +1,16 @@
 "use client";
 
 import { Share, X } from "lucide-react";
+import { useTour } from "@/components/tour/TourProvider";
 import { useT } from "@/lib/i18n/client";
 import { dismissInstall, promptInstall, useInstallStatus } from "@/lib/pwa/install";
 
 export function InstallBanner() {
   const status = useInstallStatus();
   const t = useT("install");
+  const tour = useTour();
 
-  if (status === "hidden") return null;
+  if (status === "hidden" || tour.active) return null;
 
   const [beforeShare, afterShare] = t("iosHint").split("{share}");
 

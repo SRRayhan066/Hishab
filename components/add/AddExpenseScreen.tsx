@@ -157,7 +157,10 @@ export function AddExpenseScreen({
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start">
-      <Card className="px-[22px] pt-[22px] pb-6 sm:px-6 sm:pt-[26px] sm:pb-7 lg:sticky lg:top-4">
+      <Card
+        data-tour="addForm"
+        className="px-[22px] pt-[22px] pb-6 sm:px-6 sm:pt-[26px] sm:pb-7 lg:sticky lg:top-4"
+      >
         <form onSubmit={handleSubmit} noValidate>
           <label
             htmlFor={amountId}
@@ -241,7 +244,7 @@ export function AddExpenseScreen({
         </form>
       </Card>
 
-      <div className="flex flex-col gap-4">
+      <div data-tour="addSummary" className="flex flex-col gap-4">
         <RunningTotals
           summary={summary}
           todaySpent={todaySpent}

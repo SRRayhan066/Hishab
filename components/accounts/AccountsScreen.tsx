@@ -162,7 +162,10 @@ export function AccountsScreen({
         onSave={save}
         onEdit={edited}
       />
-      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+      <div
+        data-tour="transfers"
+        className="grid gap-4 lg:grid-cols-2 lg:items-start"
+      >
         <TransferCard accounts={accounts} reference={reference} />
         <TransferList
           accounts={accounts}
