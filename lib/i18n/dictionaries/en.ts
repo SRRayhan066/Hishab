@@ -409,4 +409,11 @@ export const en: Dictionary = {
     signOutHint:
       "You'll be signed out on this device. Your data stays just as it is.",
   },
+  install: {
+    title: "Get the app",
+    body: "Open it from your home screen in one tap, just like an app.",
+    iosHint: "Tap {share} Share, then choose “Add to Home Screen”.",
+    install: "Install",
+    close: "Close",
+  },
 };

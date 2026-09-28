@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Anek_Bangla, Hind_Siliguri } from "next/font/google";
+import Script from "next/script";
+import { ServiceWorkerRegistrar } from "@/components/app/ServiceWorkerRegistrar";
 import { I18nProvider } from "@/lib/i18n/provider";
+import { captureInstallPromptScript } from "@/lib/pwa/capture-install-prompt";
 import { getLocale, getT } from "@/lib/i18n/server";
 import "./globals.css";
 
@@ -29,6 +32,11 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description,
     applicationName: appName,
+    appleWebApp: {
+      capable: true,
+      title: appName,
+      statusBarStyle: "default",
+    },
     openGraph: {
       title: appName,
       description,
@@ -56,6 +64,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         className="bg-canvas text-ink flex min-h-full flex-col font-sans"
       >
         <I18nProvider namespaces={["common", "errors"]}>{children}</I18nProvider>
+        <ServiceWorkerRegistrar />
+        <Script id="capture-install-prompt" strategy="beforeInteractive">
+          {captureInstallPromptScript}
+        </Script>
       </body>
     </html>
   );
