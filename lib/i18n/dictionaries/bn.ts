@@ -403,6 +403,13 @@ export const bn = {
     signOutHint:
       "এই ডিভাইস থেকে বের হয়ে যাবে। তোমার হিসাব যেমন আছে তেমনই থাকবে।",
   },
+  install: {
+    title: "অ্যাপটা ফোনে রাখো",
+    body: "হোম স্ক্রিন থেকে এক ট্যাপেই খুলবে, একদম অ্যাপের মতো।",
+    iosHint: "{share} শেয়ার বাটনে চাপো, তারপর “Add to Home Screen” বেছে নাও।",
+    install: "ইনস্টল",
+    close: "বন্ধ করো",
+  },
 };
 
 export type Dictionary = typeof bn;

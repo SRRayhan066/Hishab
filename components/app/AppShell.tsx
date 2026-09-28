@@ -1,5 +1,6 @@
 import { Suspense, type ReactNode } from "react";
 import { BottomNav } from "./BottomNav";
+import { InstallBanner } from "./InstallBanner";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { ProfileLink } from "./ProfileLink";
 import { MonthLine, MonthLineFallback, SavingsStatus } from "./HeaderStatus";
@@ -16,6 +17,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-1 flex-col px-4 pt-[22px]">
       <div className="mx-auto flex w-full max-w-[1060px] flex-1 flex-col gap-4">
+        <InstallBanner />
         <header>
           <Suspense fallback={<MonthLineFallback />}>
             <MonthLine />
