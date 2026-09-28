@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { resendPasswordResetCode } from "@/app/actions/password-reset";
-import { requestFailedError } from "@/lib/auth/messages";
+import { useFormat, useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 
 type Status = { tone: "info" | "error"; text: string };
@@ -19,6 +19,9 @@ export function ResendCodeButton({
   const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
   const [status, setStatus] = useState<Status | null>(null);
   const [pending, startTransition] = useTransition();
+  const t = useT("auth");
+  const errors = useT("errors");
+  const format = useFormat();
 
   useEffect(() => {
     if (secondsLeft <= 0) return;
@@ -36,9 +39,9 @@ export function ResendCodeButton({
           return;
         }
         setSecondsLeft(cooldownSeconds);
-        setStatus({ tone: "info", text: "নতুন কোড পাঠানো হয়েছে।" });
+        setStatus({ tone: "info", text: t("codeSent") });
       } catch {
-        setStatus({ tone: "error", text: requestFailedError });
+        setStatus({ tone: "error", text: errors("requestFailed") });
       }
     });
   };
@@ -48,7 +51,7 @@ export function ResendCodeButton({
   return (
     <div className="flex flex-col items-center gap-[6px] text-center">
       <p className="text-ink-muted text-[14px]">
-        কোড আসেনি? স্প্যাম ফোল্ডারটাও দেখো।
+        {t("noCode")}
       </p>
       <button
         type="button"
@@ -62,10 +65,10 @@ export function ResendCodeButton({
         )}
       >
         {pending
-          ? "পাঠানো হচ্ছে…"
+          ? t("sending")
           : waiting
-            ? `আবার পাঠাও (${secondsLeft.toLocaleString("bn-BD")} সেকেন্ড)`
-            : "আবার পাঠাও"}
+            ? t("resendIn", { seconds: format.number(secondsLeft) })
+            : t("resend")}
       </button>
       {status && (
         <p

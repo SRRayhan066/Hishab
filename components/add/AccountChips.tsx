@@ -1,6 +1,7 @@
 "use client";
 
 import type { MoneyAccount } from "@/lib/finance/types";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 
 type AccountChipsProps = {
@@ -14,10 +15,12 @@ export function AccountChips({
   selected,
   onSelect,
 }: AccountChipsProps) {
+  const t = useT("add");
+
   return (
     <fieldset className="mt-5">
       <legend className="text-ink-muted text-[15px] font-medium">
-        কোন অ্যাকাউন্ট থেকে?
+        {t("accountLegend")}
       </legend>
 
       <div className="mt-2.5 flex flex-wrap gap-2">

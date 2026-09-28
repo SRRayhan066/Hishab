@@ -1,5 +1,6 @@
 import { Suspense, type ReactNode } from "react";
 import { BottomNav } from "./BottomNav";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 import { ProfileLink } from "./ProfileLink";
 import { MonthLine, MonthLineFallback, SavingsStatus } from "./HeaderStatus";
 import { SavingsChipFallback } from "./SavingsChip";
@@ -25,6 +26,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Suspense fallback={<SavingsChipFallback />}>
                 <SavingsStatus />
               </Suspense>
+              <LanguageSwitcher />
               <ProfileLink />
             </div>
           </div>

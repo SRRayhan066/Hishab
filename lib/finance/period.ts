@@ -1,5 +1,3 @@
-import { BENGALI_MONTHS } from "./format";
-
 // The app is written for Bangladesh, so "which month is it" is always answered
 // in Dhaka time. A server running on UTC would otherwise still be showing
 // September at 1:30 AM on the 1st of October.
@@ -43,10 +41,6 @@ export function daysInPeriod({ year, month }: Period): number {
 export function lastRecordableDay(now?: Date): number {
   const today = zonedToday(now);
   return Math.min(daysInPeriod(today), today.day);
-}
-
-export function periodLabel({ month }: Period): string {
-  return BENGALI_MONTHS[month - 1] ?? "";
 }
 
 export function periodKey({ year, month }: Period): string {

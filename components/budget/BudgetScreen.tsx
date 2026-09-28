@@ -4,9 +4,8 @@ import { useEffect, useMemo } from "react";
 import { saveCategorySection } from "@/app/actions/budget";
 import { saveIncomeSection } from "@/app/actions/income";
 import { incomeChanges, overdrawnAccount } from "@/lib/finance/accounts";
-import { formatTaka } from "@/lib/finance/format";
+import { useFormat, useT } from "@/lib/i18n/client";
 import { buildBudgetPlan } from "@/lib/finance/budget";
-import { balanceBelowZeroError } from "@/lib/finance/messages";
 import type { MonthData } from "@/lib/finance/types";
 import { BudgetSection, type RowNote } from "./BudgetSection";
 import { PlanSummary } from "./PlanSummary";
@@ -31,6 +30,9 @@ export function BudgetScreen({
   monthName,
   daysInMonth,
 }: BudgetScreenProps) {
+  const t = useT("budget");
+  const errorsT = useT("errors");
+  const format = useFormat();
   const defaultAccountId = initialData.accounts[0]?.id;
   const checkIncome = (rows: PlanRowField[]) => {
     const after = rows.map((row) => ({
@@ -41,7 +43,7 @@ export function BudgetScreen({
       initialData.accounts,
       incomeChanges(initialData.income, after),
     );
-    return account && balanceBelowZeroError(account.name);
+    return account && errorsT("balanceBelowZero", { name: account.name });
   };
   const income = usePlanSection(
     toIncomeFields(initialData.income),
@@ -94,7 +96,10 @@ export function BudgetScreen({
             return [
               id,
               {
-                note: `এ মাসে এরই মধ্যে ${formatTaka(alreadySpent)} খরচ হয়ে গেছে, বাজেটের চেয়ে ${formatTaka(alreadySpent - budget)} বেশি।`,
+                note: t("overSpent", {
+                  spent: format.taka(alreadySpent),
+                  over: format.taka(alreadySpent - budget),
+                }),
                 noteTone: "warn",
               } satisfies RowNote,
             ];
@@ -105,14 +110,14 @@ export function BudgetScreen({
             {
               note:
                 alreadySpent > 0
-                  ? `এই মাসে এ পর্যন্ত ${formatTaka(alreadySpent)} খরচ হয়েছে।`
+                  ? t("spentSoFar", { amount: format.taka(alreadySpent) })
                   : undefined,
               noteTone: "muted",
             } satisfies RowNote,
           ];
         }),
     );
-  }, [categories.rows, spent]);
+  }, [categories.rows, spent, t, format]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -120,17 +125,17 @@ export function BudgetScreen({
 
       <BudgetSection
         section={income}
-        title="যা আসে"
+        title={t("incomeTitle")}
         hint={
           initialData.accounts.length > 1
-            ? "বেতন, টিউশন, ভাড়া — যেখান থেকেই আসুক, আর কোন অ্যাকাউন্টে জমা হয় সেটাও বেছে দাও। পরের মাসেও এগুলো আপনা-আপনি বসে যাবে।"
-            : "বেতন, টিউশন, ভাড়া — যেখান থেকেই আসুক। পরের মাসেও এগুলো আপনা-আপনি বসে যাবে, আবার লিখতে হবে না।"
+            ? t("incomeHintAccounts")
+            : t("incomeHint")
         }
         notes={{}}
-        namePlaceholder="আয়ের নাম"
-        emptyLabel="এখনো কোনো আয় যোগ করোনি।"
-        addLabel="আয়ের খাত যোগ করো"
-        totalLabel="মোট আয়"
+        namePlaceholder={t("incomeName")}
+        emptyLabel={t("incomeEmpty")}
+        addLabel={t("incomeAdd")}
+        totalLabel={t("incomeTotal")}
         total={incomeTotal}
         accounts={
           initialData.accounts.length > 1 ? initialData.accounts : undefined
@@ -140,13 +145,13 @@ export function BudgetScreen({
 
       <BudgetSection
         section={categories}
-        title="মাসের খরচের পরিকল্পনা"
-        hint="বাসা ভাড়া, বাজার, যাওয়া-আসা — সব খাত এখানে। এটা শুধু পরিকল্পনা; খরচ লিখলে তবেই টাকা কাটবে।"
+        title={t("planTitle")}
+        hint={t("planHint")}
         notes={categoryNotes}
-        namePlaceholder="খাতের নাম"
-        emptyLabel="এখনো কোনো খরচের খাত যোগ করোনি।"
-        addLabel="খরচের খাত যোগ করো"
-        totalLabel="মোট বাজেট"
+        namePlaceholder={t("planName")}
+        emptyLabel={t("planEmpty")}
+        addLabel={t("planAdd")}
+        totalLabel={t("planTotal")}
         total={plannedTotal}
       />
     </div>

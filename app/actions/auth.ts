@@ -10,18 +10,9 @@ import {
   googleProvider,
   readPendingGoogleSignUp,
 } from "@/lib/auth/google";
-import {
-  emailTakenError,
-  googleExpiredError,
-  invalidFormError,
-  wrongCredentialsError,
-} from "@/lib/auth/messages";
-import { defaultMoneyAccount } from "@/lib/finance/accounts";
-import {
-  setPasswordSchema,
-  signInSchema,
-  signUpSchema,
-} from "@/lib/validation/auth";
+import { defaultMoneyAccount } from "@/lib/finance/account-store";
+import { getLocale, getT } from "@/lib/i18n/server";
+import { authSchemas } from "@/lib/validation/auth";
 import type {
   AuthActionResult,
   SetPasswordValues,
@@ -36,9 +27,18 @@ function isUniqueViolation(error: unknown) {
   );
 }
 
+async function schemas() {
+  const [t, validation] = await Promise.all([
+    getT("errors"),
+    getT("validation"),
+  ]);
+  return { t, ...authSchemas(validation) };
+}
+
 export async function signIn(values: SignInValues): Promise<AuthActionResult> {
-  const parsed = signInSchema.safeParse(values);
-  if (!parsed.success) return { error: wrongCredentialsError };
+  const { t, signIn: schema } = await schemas();
+  const parsed = schema.safeParse(values);
+  if (!parsed.success) return { error: t("wrongCredentials") };
 
   const { email, password, remember } = parsed.data;
 
@@ -51,15 +51,16 @@ export async function signIn(values: SignInValues): Promise<AuthActionResult> {
     password,
     user?.passwordHash ?? null,
   );
-  if (!user || !passwordMatches) return { error: wrongCredentialsError };
+  if (!user || !passwordMatches) return { error: t("wrongCredentials") };
 
   await createSession(user.id, remember);
   return {};
 }
 
 export async function signUp(values: SignUpValues): Promise<AuthActionResult> {
-  const parsed = signUpSchema.safeParse(values);
-  if (!parsed.success) return { error: invalidFormError };
+  const { t, signUp: schema } = await schemas();
+  const parsed = schema.safeParse(values);
+  if (!parsed.success) return { error: t("invalidForm") };
 
   const { name, email, password } = parsed.data;
 
@@ -67,7 +68,7 @@ export async function signUp(values: SignUpValues): Promise<AuthActionResult> {
     where: { email },
     select: { id: true },
   });
-  if (existing) return { error: emailTakenError };
+  if (existing) return { error: t("emailTaken") };
 
   try {
     const user = await db.user.create({
@@ -75,13 +76,14 @@ export async function signUp(values: SignUpValues): Promise<AuthActionResult> {
         name,
         email,
         passwordHash: await hashPassword(password),
-        moneyAccounts: { create: defaultMoneyAccount },
+        locale: await getLocale(),
+        moneyAccounts: { create: await defaultMoneyAccount() },
       },
       select: { id: true },
     });
     await createSession(user.id);
   } catch (error) {
-    if (isUniqueViolation(error)) return { error: emailTakenError };
+    if (isUniqueViolation(error)) return { error: t("emailTaken") };
     throw error;
   }
 
@@ -91,11 +93,12 @@ export async function signUp(values: SignUpValues): Promise<AuthActionResult> {
 export async function completeGoogleSignUp(
   values: SetPasswordValues,
 ): Promise<AuthActionResult> {
-  const parsed = setPasswordSchema.safeParse(values);
-  if (!parsed.success) return { error: invalidFormError };
+  const { t, setPassword: schema } = await schemas();
+  const parsed = schema.safeParse(values);
+  if (!parsed.success) return { error: t("invalidForm") };
 
   const pending = await readPendingGoogleSignUp();
-  if (!pending) return { error: googleExpiredError };
+  if (!pending) return { error: t("googleExpired") };
 
   const existing = await db.user.findUnique({
     where: { email: pending.email },
@@ -103,7 +106,7 @@ export async function completeGoogleSignUp(
   });
   if (existing) {
     await clearPendingGoogleSignUp();
-    return { error: emailTakenError };
+    return { error: t("emailTaken") };
   }
 
   try {
@@ -113,20 +116,21 @@ export async function completeGoogleSignUp(
         email: pending.email,
         image: pending.image,
         passwordHash: await hashPassword(parsed.data.password),
+        locale: await getLocale(),
         accounts: {
           create: {
             provider: googleProvider,
             providerAccountId: pending.googleId,
           },
         },
-        moneyAccounts: { create: defaultMoneyAccount },
+        moneyAccounts: { create: await defaultMoneyAccount() },
       },
       select: { id: true },
     });
     await clearPendingGoogleSignUp();
     await createSession(user.id);
   } catch (error) {
-    if (isUniqueViolation(error)) return { error: emailTakenError };
+    if (isUniqueViolation(error)) return { error: t("emailTaken") };
     throw error;
   }
 

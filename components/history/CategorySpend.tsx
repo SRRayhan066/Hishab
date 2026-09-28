@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/Card";
-import { formatTaka } from "@/lib/finance/format";
+import { getFormat, getT } from "@/lib/i18n/server";
 import type { CategoryStat } from "@/lib/finance/types";
 
 const barColor: Record<CategoryStat["tone"], string> = {
@@ -8,16 +8,18 @@ const barColor: Record<CategoryStat["tone"], string> = {
   over: "var(--color-over)",
 };
 
-export function CategorySpend({ categories }: { categories: CategoryStat[] }) {
+export async function CategorySpend({ categories }: { categories: CategoryStat[] }) {
+  const [t, format] = await Promise.all([getT("history"), getFormat()]);
+
   return (
     <Card className="px-[22px] pt-6 pb-[26px]">
       <h2 className="font-display text-[19px] font-bold">
-        এই মাসের খাত অনুযায়ী
+        {t("categoryTitle")}
       </h2>
 
       {categories.length === 0 ? (
         <p className="text-ink-faint pt-4 text-[15px]">
-          এই মাসে এখনো কোনো খাত নেই।
+          {t("categoryEmpty")}
         </p>
       ) : (
         <ul className="mt-2">
@@ -41,7 +43,7 @@ export function CategorySpend({ categories }: { categories: CategoryStat[] }) {
               </div>
 
               <span className="w-[80px] flex-none text-right text-[16px] font-semibold sm:w-[92px]">
-                {formatTaka(category.spent)}
+                {format.taka(category.spent)}
                 <span className="sr-only"> — {category.detail}</span>
               </span>
             </li>

@@ -7,11 +7,8 @@ import {
   nextSortOrder,
 } from "@/lib/finance/month-store";
 import { replaceCategorySection } from "@/lib/finance/section-store";
-import { invalidRowError, signedOutError } from "@/lib/finance/messages";
-import {
-  newCategorySchema,
-  planSectionSchema,
-} from "@/lib/validation/finance";
+import { getT } from "@/lib/i18n/server";
+import { financeSchemas } from "@/lib/validation/finance";
 import type {
   NewCategoryValues,
   NewRowResult,
@@ -23,13 +20,14 @@ import type {
 export async function saveCategorySection(
   rows: PlanRowValues[],
 ): Promise<SectionSaveResult> {
-  const parsed = planSectionSchema.safeParse(rows);
+  const t = await getT("errors");
+  const parsed = financeSchemas(t).planSection.safeParse(rows);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? invalidRowError };
+    return { error: parsed.error.issues[0]?.message ?? t("invalidRow") };
   }
 
   const monthId = await currentMonthForSession();
-  if (!monthId) return { error: signedOutError };
+  if (!monthId) return { error: t("signedOut") };
 
   const result = await replaceCategorySection(monthId, parsed.data);
   if (result.error) return result;
@@ -46,13 +44,14 @@ export async function saveCategorySection(
 export async function addCategoryRow(
   values: NewCategoryValues,
 ): Promise<NewRowResult> {
-  const parsed = newCategorySchema.safeParse(values);
+  const t = await getT("errors");
+  const parsed = financeSchemas(t).newCategory.safeParse(values);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? invalidRowError };
+    return { error: parsed.error.issues[0]?.message ?? t("invalidRow") };
   }
 
   const monthId = await currentMonthForSession();
-  if (!monthId) return { error: signedOutError };
+  if (!monthId) return { error: t("signedOut") };
 
   const row = await db.spendCategory.create({
     data: {

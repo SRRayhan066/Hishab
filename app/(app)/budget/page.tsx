@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import { BudgetScreen } from "@/components/budget/BudgetScreen";
 import { getCurrentMonthView } from "@/lib/finance/view";
+import { getT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "মাসের বাজেট",
-  description: "মাসে কত আসছে, কোথায় কত যাবে — একবার বসিয়ে নাও।",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT("meta");
+  return {
+    title: t("budgetTitle"),
+    description: t("budgetDescription"),
+  };
+}
 
 export default async function BudgetPage() {
   const { data, summary } = await getCurrentMonthView();

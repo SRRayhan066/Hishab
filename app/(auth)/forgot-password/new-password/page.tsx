@@ -5,11 +5,15 @@ import { SetPasswordForm } from "@/components/auth/SetPasswordForm";
 import { readResetVerified } from "@/lib/auth/password-reset";
 import { resetPassword } from "@/app/actions/password-reset";
 import { db } from "@/lib/db";
+import { getT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "নতুন পাসওয়ার্ড",
-  description: "নতুন পাসওয়ার্ড ঠিক করো।",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT("meta");
+  return {
+    title: t("newPasswordTitle"),
+    description: t("newPasswordDescription"),
+  };
+}
 
 export default async function NewPasswordPage() {
   const verified = await readResetVerified();
@@ -21,14 +25,16 @@ export default async function NewPasswordPage() {
   });
   if (!user) redirect("/forgot-password");
 
+  const t = await getT("auth");
+
   return (
     <AuthStepLayout
-      title="নতুন পাসওয়ার্ড দাও"
-      subtitle="কোড মিলে গেছে। এবার নতুন একটা পাসওয়ার্ড ঠিক করো, তারপর সরাসরি হিসাবে ঢুকে যাবে।"
+      title={t("newPasswordTitle")}
+      subtitle={t("newPasswordSubtitle")}
     >
       <SetPasswordForm
         email={user.email}
-        cta="পাসওয়ার্ড বদলাও"
+        cta={t("changePassword")}
         action={resetPassword}
       />
     </AuthStepLayout>

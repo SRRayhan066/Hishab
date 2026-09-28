@@ -4,8 +4,8 @@ import { refresh } from "next/cache";
 import { ownedAccountIds } from "@/lib/finance/account-store";
 import { currentSessionMonth } from "@/lib/finance/month-store";
 import { replaceIncomeSection } from "@/lib/finance/section-store";
-import { invalidRowError, signedOutError } from "@/lib/finance/messages";
-import { planSectionSchema } from "@/lib/validation/finance";
+import { getT } from "@/lib/i18n/server";
+import { financeSchemas } from "@/lib/validation/finance";
 import type { PlanRowValues, SectionSaveResult } from "@/types/finance";
 
 /**
@@ -15,13 +15,14 @@ import type { PlanRowValues, SectionSaveResult } from "@/types/finance";
 export async function saveIncomeSection(
   rows: PlanRowValues[],
 ): Promise<SectionSaveResult> {
-  const parsed = planSectionSchema.safeParse(rows);
+  const t = await getT("errors");
+  const parsed = financeSchemas(t).planSection.safeParse(rows);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? invalidRowError };
+    return { error: parsed.error.issues[0]?.message ?? t("invalidRow") };
   }
 
   const session = await currentSessionMonth();
-  if (!session) return { error: signedOutError };
+  if (!session) return { error: t("signedOut") };
 
   const result = await replaceIncomeSection(
     session.userId,

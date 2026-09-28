@@ -50,8 +50,6 @@ export type PastMonth = {
   year: number;
   /** 1–12. */
   month: number;
-  /** Bengali month name, for display. */
-  label: string;
   /** Total that came in that month. */
   income: number;
   /** What the plan said the month would cost. */

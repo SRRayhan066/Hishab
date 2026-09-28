@@ -2,15 +2,16 @@
 
 import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 
 const items = [
-  { href: "/home", label: "হোম" },
-  { href: "/add", label: "খরচ" },
-  { href: "/budget", label: "বাজেট" },
-  { href: "/accounts", label: "অ্যাকাউন্ট" },
-  { href: "/history", label: "হিসাব" },
-];
+  { href: "/home", key: "home" },
+  { href: "/add", key: "add" },
+  { href: "/budget", key: "budget" },
+  { href: "/accounts", key: "accounts" },
+  { href: "/history", key: "history" },
+] as const;
 
 /**
  * The pill is a child of the link rather than the link itself, because only a
@@ -38,10 +39,11 @@ function NavPill({ label, active }: { label: string; active: boolean }) {
 
 export function BottomNav() {
   const pathname = usePathname();
+  const t = useT("nav");
 
   return (
     <nav
-      aria-label="প্রধান মেনু"
+      aria-label={t("label")}
       className="sticky bottom-0 bg-gradient-to-t from-canvas from-64% to-transparent pt-3 pb-[18px]"
     >
       <div className="bg-surface flex gap-[6px] rounded-[20px] border-[1.5px] border-[#e6e0d4] p-2 shadow-[0_6px_20px_rgba(42,40,37,0.08)]">
@@ -55,7 +57,7 @@ export function BottomNav() {
               aria-current={active ? "page" : undefined}
               className="focus-visible:outline-primary flex flex-1 rounded-[14px] focus-visible:outline-2 focus-visible:outline-offset-2"
             >
-              <NavPill label={item.label} active={active} />
+              <NavPill label={t(item.key)} active={active} />
             </Link>
           );
         })}

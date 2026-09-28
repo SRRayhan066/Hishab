@@ -1,11 +1,11 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { currentPeriod, periodLabel } from "@/lib/finance/period";
+import { currentPeriod, type Period } from "@/lib/finance/period";
 
 export type Profile = {
   name: string;
   email: string;
-  joinedLabel: string;
+  joined: Period;
   monthsTracked: number;
   entries: number;
 };
@@ -26,7 +26,7 @@ export async function loadProfile(userId: string): Promise<Profile | null> {
   return {
     name: user.name,
     email: user.email,
-    joinedLabel: `${periodLabel(joined)} ${joined.year}`,
+    joined,
     monthsTracked: (now.year - joined.year) * 12 + (now.month - joined.month) + 1,
     entries,
   };

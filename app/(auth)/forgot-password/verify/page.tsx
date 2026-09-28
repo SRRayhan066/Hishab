@@ -13,26 +13,32 @@ import {
   resetCodeMinutes,
   secondsUntilResend,
 } from "@/lib/auth/password-reset";
+import { getFormat, getT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "কোড মিলাও",
-  description: "ইমেইলে পাওয়া ৬ অঙ্কের কোডটা লেখো।",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT("meta");
+  return {
+    title: t("verifyCodeTitle"),
+    description: t("verifyCodeDescription"),
+  };
+}
 
 export default async function VerifyCodePage() {
   const request = await readResetRequest();
   if (!request) redirect("/forgot-password");
 
+  const [t, format] = await Promise.all([getT("auth"), getFormat()]);
+
   return (
     <AuthStepLayout
-      title="কোডটা লেখো"
+      title={t("verifyTitle")}
       subtitle={
         <>
+          {t("verifyBefore")}
           <span className="text-ink font-semibold break-all">
             {request.email}
-          </span>{" "}
-          দিয়ে কোনো হিসাব থাকলে সেখানে একটা ৬ অঙ্কের কোড গেছে। কোডটা{" "}
-          {resetCodeMinutes.toLocaleString("bn-BD")} মিনিট কাজ করবে।
+          </span>
+          {t("verifyAfter", { minutes: format.number(resetCodeMinutes) })}
         </>
       }
     >
@@ -45,7 +51,7 @@ export default async function VerifyCodePage() {
 
       <div className="flex justify-center">
         <Link href="/forgot-password" className={authTextLinkClass}>
-          ইমেইল বদলাও
+          {t("changeEmail")}
         </Link>
       </div>
     </AuthStepLayout>

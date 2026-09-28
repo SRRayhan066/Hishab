@@ -19,8 +19,8 @@ import {
   listEntries,
   spentOnDay,
 } from "@/lib/finance/entries";
-import { notEnoughBalanceError, saveFailedError } from "@/lib/finance/messages";
 import type { MonthData, MonthSummary } from "@/lib/finance/types";
+import { useFormat, useT } from "@/lib/i18n/client";
 import { AccountChips } from "./AccountChips";
 import { CategoryChips } from "./CategoryChips";
 import { DayPicker } from "./DayPicker";
@@ -47,6 +47,10 @@ export function AddExpenseScreen({
   const amountId = useId();
   const dateId = useId();
   const amountRef = useRef<HTMLInputElement>(null);
+  const t = useT("add");
+  const errors = useT("errors");
+  const common = useT("common");
+  const format = useFormat();
 
   const [amount, setAmount] = useState("");
   const [categoryId, setCategoryId] = useState(data.categories[0]?.id ?? "");
@@ -95,7 +99,7 @@ export function AddExpenseScreen({
       const result = await addCategoryRow({ name });
 
       if (result.error || !result.id) {
-        setError(result.error ?? saveFailedError);
+        setError(result.error ?? errors("saveFailed"));
         return;
       }
 
@@ -108,18 +112,18 @@ export function AddExpenseScreen({
     event.preventDefault();
 
     if (value <= 0) {
-      setError("কত টাকা খরচ হলো লিখে দাও।");
+      setError(errors("expenseAmount"));
       amountRef.current?.focus();
       return;
     }
 
     if (!categoryId) {
-      setError("কোন খাতে খরচ হলো বেছে নাও।");
+      setError(errors("categoryMissing"));
       return;
     }
 
     if (!accountId) {
-      setError("কোন অ্যাকাউন্ট থেকে খরচ হলো বেছে নাও।");
+      setError(errors("expenseAccount"));
       return;
     }
 
@@ -159,7 +163,7 @@ export function AddExpenseScreen({
             htmlFor={amountId}
             className="text-ink-muted text-[15px] font-medium"
           >
-            কত টাকা খরচ হলো?
+            {t("amountLabel")}
           </label>
 
           <div className="border-line-soft mt-1.5 flex items-center gap-1.5 border-b-2 pb-2.5">
@@ -179,7 +183,7 @@ export function AddExpenseScreen({
 
           <DayPicker
             id={dateId}
-            label="কবে খরচ হলো?"
+            label={t("dateLabel")}
             year={reference.year}
             monthIndex={reference.monthIndex}
             today={reference.day}
@@ -205,7 +209,10 @@ export function AddExpenseScreen({
 
           {overdraw && (
             <p aria-live="polite" className="text-danger mt-2.5 text-[14px] font-medium">
-              {notEnoughBalanceError(account.name, account.balance)}
+              {errors("notEnoughBalance", {
+                name: account.name,
+                balance: format.taka(account.balance),
+              })}
             </p>
           )}
 
@@ -220,13 +227,16 @@ export function AddExpenseScreen({
             disabled={busy || overdraw}
             className="bg-ink font-display focus-visible:outline-primary mt-6 min-h-[50px] w-full cursor-pointer rounded-[12px] px-4 text-[16px] font-bold text-white transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {busy ? "সেভ হচ্ছে…" : "খরচ যোগ করো"}
+            {busy ? common("saving") : t("submit")}
           </button>
 
           <p className="text-ink-faint mt-3 text-center text-[14px]">
-            {day === reference.day
-              ? `তারিখ ধরা হবে আজ, ${day} ${summary.monthName}`
-              : `তারিখ ধরা হবে ${day} ${summary.monthName}`}
+            {t(day === reference.day ? "dateIsToday" : "dateIs", {
+              date: common("dayMonth", {
+                day: format.digits(day),
+                month: summary.monthName,
+              }),
+            })}
           </p>
         </form>
       </Card>

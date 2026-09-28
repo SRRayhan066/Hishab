@@ -1,4 +1,5 @@
-import { BENGALI_MONTHS, formatTaka } from "./format";
+import type { Format } from "@/lib/i18n/format";
+import type { Translator } from "@/lib/i18n/translate";
 import type {
   Burndown,
   BurndownPoint,
@@ -17,12 +18,18 @@ const PAD_BOTTOM = 14;
 
 const sum = (values: number[]) => values.reduce((total, n) => total + n, 0);
 
+export type SummaryText = {
+  t: Translator<"summary">;
+  format: Format;
+};
+
 function buildBurndown(
   cumulative: number[],
   plannedTotal: number,
   daysInMonth: number,
   today: number,
   projected: number,
+  { t, format }: SummaryText,
 ): Burndown {
   const projectedRemaining = plannedTotal - projected;
   const lowest = Math.min(
@@ -58,7 +65,7 @@ function buildBurndown(
     grid.push({
       y: Number(y.toFixed(1)),
       yPercent: Number(((y / CHART_HEIGHT) * 100).toFixed(2)),
-      label: formatTaka(value),
+      label: format.taka(value),
     });
   }
 
@@ -77,17 +84,17 @@ function buildBurndown(
     xLabels: [
       {
         xPercent: Number(((toX(1) / CHART_WIDTH) * 100).toFixed(2)),
-        label: "১ তারিখ",
+        label: t("axisStart"),
         shift: "0",
       },
       {
         xPercent: Number(((last.x / CHART_WIDTH) * 100).toFixed(2)),
-        label: "আজ",
+        label: t("axisToday"),
         shift: "-50%",
       },
       {
         xPercent: Number(((toX(daysInMonth) / CHART_WIDTH) * 100).toFixed(2)),
-        label: "মাসের শেষ",
+        label: t("axisEnd"),
         shift: "-100%",
       },
     ],
@@ -96,8 +103,10 @@ function buildBurndown(
 
 export function buildMonthSummary(
   data: MonthData,
-  now: Date = new Date(),
+  now: Date,
+  text: SummaryText,
 ): MonthSummary {
+  const { t, format } = text;
   const day = now.getDate();
   const daysInMonth = new Date(
     now.getFullYear(),
@@ -159,8 +168,8 @@ export function buildMonthSummary(
         spent,
         percent: 0,
         idealPercent: 0,
-        leftLabel: `${formatTaka(spent)} খরচ`,
-        detail: "শুধু এই মাসের খাত, বাজেটে ধরা নেই।",
+        leftLabel: t("spent", { amount: format.taka(spent) }),
+        detail: t("temporaryDetail"),
         tone: "good",
       };
     }
@@ -181,17 +190,22 @@ export function buildMonthSummary(
           : 0,
       idealPercent: Math.min(100, elapsedFraction * 100),
       leftLabel:
-        left >= 0 ? `${formatTaka(left)} বাকি` : `${formatTaka(-left)} বেশি`,
+        left >= 0
+          ? t("left", { amount: format.taka(left) })
+          : t("over", { amount: format.taka(-left) }),
       detail:
         category.budget > 0
-          ? `${formatTaka(category.budget)} এর মধ্যে ${formatTaka(spent)} খরচ`
-          : `${formatTaka(spent)} খরচ`,
+          ? t("detail", {
+              budget: format.taka(category.budget),
+              spent: format.taka(spent),
+            })
+          : t("spent", { amount: format.taka(spent) }),
       tone: left < 0 ? "over" : aheadOfPace ? "warning" : "good",
     };
   });
 
   return {
-    monthName: BENGALI_MONTHS[now.getMonth()],
+    monthName: format.month(now.getMonth()),
     monthIndex: now.getMonth(),
     year: now.getFullYear(),
     day,
@@ -218,6 +232,7 @@ export function buildMonthSummary(
       daysInMonth,
       Math.min(day, daysInMonth),
       projected,
+      text,
     ),
   };
 }

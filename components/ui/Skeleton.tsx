@@ -1,5 +1,6 @@
 import type { ComponentPropsWithRef, ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { LoadingStatus } from "./LoadingStatus";
 
 /**
  * A placeholder with the same footprint as the thing it stands in for, so
@@ -33,9 +34,7 @@ export function Skeleton({
 export function SkeletonScreen({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <p role="status" className="sr-only">
-        লোড হচ্ছে
-      </p>
+      <LoadingStatus />
       {children}
     </div>
   );

@@ -1,29 +1,30 @@
 "use client";
 
-import { useTransition } from "react";
+import { useMemo, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { FormError } from "@/components/ui/FormError";
-import {
-  forgotPasswordSchema,
-  type ForgotPasswordValues,
-} from "@/lib/validation/auth";
+import { authSchemas, type ForgotPasswordValues } from "@/lib/validation/auth";
 import { requestPasswordReset } from "@/app/actions/password-reset";
-import { requestFailedError } from "@/lib/auth/messages";
+import { useT } from "@/lib/i18n/client";
 
 export function ForgotPasswordForm() {
   const router = useRouter();
   const [navigating, startNavigation] = useTransition();
+  const t = useT("auth");
+  const errorsT = useT("errors");
+  const validation = useT("validation");
+  const schemas = useMemo(() => authSchemas(validation), [validation]);
   const {
     register,
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
   } = useForm<ForgotPasswordValues>({
-    resolver: zodResolver(forgotPasswordSchema),
+    resolver: zodResolver(schemas.forgotPassword),
     defaultValues: { email: "" },
   });
 
@@ -36,7 +37,7 @@ export function ForgotPasswordForm() {
       }
       startNavigation(() => router.push("/forgot-password/verify"));
     } catch {
-      setError("root", { message: requestFailedError });
+      setError("root", { message: errorsT("requestFailed") });
     }
   };
 
@@ -47,11 +48,11 @@ export function ForgotPasswordForm() {
       className="flex flex-col gap-[14px]"
     >
       <Input
-        label="ইমেইল"
+        label={t("email")}
         type="email"
         inputMode="email"
         autoComplete="email"
-        placeholder="tumi@example.com"
+        placeholder={t("emailPlaceholder")}
         error={errors.email?.message}
         {...register("email")}
       />
@@ -63,7 +64,7 @@ export function ForgotPasswordForm() {
         loading={isSubmitting || navigating}
         className="mt-[6px]"
       >
-        কোড পাঠাও
+        {t("sendCode")}
       </Button>
     </form>
   );

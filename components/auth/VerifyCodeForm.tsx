@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useMemo, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,16 +8,21 @@ import type { z } from "zod";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { FormError } from "@/components/ui/FormError";
-import { resetCodeSchema } from "@/lib/validation/auth";
+import { authSchemas } from "@/lib/validation/auth";
 import { verifyPasswordResetCode } from "@/app/actions/password-reset";
-import { requestFailedError } from "@/lib/auth/messages";
+import { useT } from "@/lib/i18n/client";
 
-type CodeInput = z.input<typeof resetCodeSchema>;
-type CodeOutput = z.output<typeof resetCodeSchema>;
+type CodeSchema = ReturnType<typeof authSchemas>["resetCode"];
+type CodeInput = z.input<CodeSchema>;
+type CodeOutput = z.output<CodeSchema>;
 
 export function VerifyCodeForm() {
   const router = useRouter();
   const [navigating, startNavigation] = useTransition();
+  const t = useT("auth");
+  const errorsT = useT("errors");
+  const validation = useT("validation");
+  const schemas = useMemo(() => authSchemas(validation), [validation]);
   const {
     register,
     handleSubmit,
@@ -25,7 +30,7 @@ export function VerifyCodeForm() {
     resetField,
     formState: { errors, isSubmitting },
   } = useForm<CodeInput, unknown, CodeOutput>({
-    resolver: zodResolver(resetCodeSchema),
+    resolver: zodResolver(schemas.resetCode),
     defaultValues: { code: "" },
   });
 
@@ -41,7 +46,7 @@ export function VerifyCodeForm() {
         router.replace("/forgot-password/new-password"),
       );
     } catch {
-      setError("root", { message: requestFailedError });
+      setError("root", { message: errorsT("requestFailed") });
     }
   };
 
@@ -52,7 +57,7 @@ export function VerifyCodeForm() {
       className="flex flex-col gap-[14px]"
     >
       <Input
-        label="৬ অঙ্কের কোড"
+        label={t("codeLabel")}
         inputMode="numeric"
         autoComplete="one-time-code"
         maxLength={6}
@@ -69,7 +74,7 @@ export function VerifyCodeForm() {
         loading={isSubmitting || navigating}
         className="mt-[6px]"
       >
-        কোড মিলাও
+        {t("verifyCode")}
       </Button>
     </form>
   );

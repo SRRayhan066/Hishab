@@ -6,7 +6,7 @@ import { Controller } from "react-hook-form";
 import { AmountInput } from "@/components/ui/AmountInput";
 import { Card } from "@/components/ui/Card";
 import { Select, type SelectOption } from "@/components/ui/Select";
-import { formatTaka } from "@/lib/finance/format";
+import { useFormat, useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 import { SaveStatus } from "./SaveStatus";
 import type { PlanSection } from "./usePlanSection";
@@ -49,6 +49,9 @@ export function BudgetSection({
   accent = false,
   className,
 }: BudgetSectionProps) {
+  const t = useT("budget");
+  const common = useT("common");
+  const format = useFormat();
   const { control, register, fields, focusIndex, dirty, busy, state, error } =
     section;
   const nameRefs = useRef(new Map<number, HTMLInputElement | null>());
@@ -84,13 +87,14 @@ export function BudgetSection({
                 accountGrid,
               )}
             >
-              <span>নাম</span>
-              <span>কোন অ্যাকাউন্টে</span>
-              <span className="text-right">মাসে কত</span>
+              <span>{t("columnName")}</span>
+              <span>{t("columnAccount")}</span>
+              <span className="text-right">{t("columnAmount")}</span>
             </li>
           )}
           {fields.map((field, index) => {
             const rowNote = notes[field.id] ?? {};
+            const row = `${namePlaceholder} ${format.digits(index + 1)}`;
             const nameField = register(`rows.${index}.name`, {
               onChange: section.edited,
             });
@@ -117,7 +121,7 @@ export function BudgetSection({
                       nameRefs.current.set(index, node);
                     }}
                     placeholder={namePlaceholder}
-                    aria-label={`${namePlaceholder} ${index + 1}`}
+                    aria-label={row}
                     className={cn(
                       "bg-field border-line rounded-field text-ink placeholder:text-ink-faint focus:border-primary focus:bg-surface min-h-[46px] min-w-0 border-[1.5px] px-[14px] text-[15px] outline-none transition-colors",
                       withAccounts && "col-start-1 row-start-1",
@@ -141,11 +145,11 @@ export function BudgetSection({
                             <>
                               <WalletMinimal className="h-4 w-4" />
                               <span className="text-ink-muted text-[14px] font-medium sm:hidden">
-                                জমা হবে
+                                {t("depositsTo")}
                               </span>
                             </>
                           }
-                          aria-label={`${namePlaceholder} ${index + 1} — কোন অ্যাকাউন্টে জমা হবে`}
+                          aria-label={t("rowAccount", { row })}
                           className="col-span-2 col-start-1 row-start-2 sm:col-span-1 sm:col-start-2 sm:row-start-1"
                         />
                       )}
@@ -167,7 +171,7 @@ export function BudgetSection({
                         onChange: section.edited,
                       })}
                       placeholder="0"
-                      aria-label={`${namePlaceholder} ${index + 1} — মাসে কত টাকা`}
+                      aria-label={t("rowAmount", { row })}
                       className={cn(
                         "placeholder:text-ink-faint w-full min-w-0 border-none bg-transparent text-right text-[15px] font-bold outline-none",
                         accent ? "text-primary" : "text-ink",
@@ -179,7 +183,7 @@ export function BudgetSection({
                     type="button"
                     onClick={() => section.removeRow(index)}
                     disabled={busy}
-                    aria-label={`${namePlaceholder} ${index + 1} মুছে ফেলো`}
+                    aria-label={t("rowRemove", { row })}
                     className={cn(
                       "border-line text-ink-faint hover:border-danger-line hover:text-danger focus-visible:outline-primary flex h-[46px] w-[46px] cursor-pointer items-center justify-center rounded-[12px] border-[1.5px] text-[20px] leading-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
                       withAccounts && "col-start-3 row-start-1 sm:col-start-4",
@@ -224,7 +228,7 @@ export function BudgetSection({
             accent && "text-primary",
           )}
         >
-          {formatTaka(total)}
+          {format.taka(total)}
         </span>
       </div>
 
@@ -234,7 +238,7 @@ export function BudgetSection({
         disabled={busy || !dirty}
         className="bg-ink focus-visible:outline-primary mt-3.5 min-h-[46px] cursor-pointer rounded-[12px] px-4 text-[15px] font-bold text-white transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
       >
-        {busy ? "সেভ হচ্ছে…" : "সেভ করো"}
+        {busy ? common("saving") : common("save")}
       </button>
     </Card>
   );

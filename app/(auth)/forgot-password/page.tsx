@@ -5,23 +5,26 @@ import {
   authTextLinkClass,
 } from "@/components/auth/AuthStepLayout";
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
+import { getT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "পাসওয়ার্ড ভুলে গেছি",
-  description: "ইমেইলে কোড নিয়ে নতুন পাসওয়ার্ড ঠিক করো।",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT("meta");
+  return {
+    title: t("forgotPasswordTitle"),
+    description: t("forgotPasswordDescription"),
+  };
+}
 
-export default function ForgotPasswordPage() {
+export default async function ForgotPasswordPage() {
+  const t = await getT("auth");
+
   return (
-    <AuthStepLayout
-      title="পাসওয়ার্ড ভুলে গেছো?"
-      subtitle="তোমার হিসাবের ইমেইলটা লেখো। সেখানে একটা ৬ অঙ্কের কোড পাঠাবো।"
-    >
+    <AuthStepLayout title={t("forgotTitle")} subtitle={t("forgotSubtitle")}>
       <ForgotPasswordForm />
 
       <div className="flex justify-center">
         <Link href="/login" className={authTextLinkClass}>
-          সাইন ইনে ফিরে যাও
+          {t("backToLogin")}
         </Link>
       </div>
     </AuthStepLayout>

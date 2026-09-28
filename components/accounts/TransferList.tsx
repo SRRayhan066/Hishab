@@ -5,8 +5,7 @@ import { removeTransfer } from "@/app/actions/accounts";
 import { Card } from "@/components/ui/Card";
 import { FormError } from "@/components/ui/FormError";
 import { accountNames, overdrawnAccount } from "@/lib/finance/accounts";
-import { formatTaka } from "@/lib/finance/format";
-import { balanceBelowZeroError } from "@/lib/finance/messages";
+import { useFormat, useT } from "@/lib/i18n/client";
 import type { MoneyAccount, TransferEntry } from "@/lib/finance/types";
 
 type TransferListProps = {
@@ -20,6 +19,10 @@ export function TransferList({
   transfers,
   monthName,
 }: TransferListProps) {
+  const t = useT("accounts");
+  const common = useT("common");
+  const errorsT = useT("errors");
+  const format = useFormat();
   const names = useMemo(() => accountNames(accounts), [accounts]);
   const sorted = useMemo(
     () =>
@@ -39,7 +42,7 @@ export function TransferList({
       new Map(transfer ? [[transfer.toId, -transfer.amount]] : []),
     );
     if (target) {
-      setError(balanceBelowZeroError(target.name));
+      setError(errorsT("balanceBelowZero", { name: target.name }));
       return;
     }
 
@@ -53,7 +56,7 @@ export function TransferList({
 
   return (
     <Card className="px-[22px] pt-[22px] pb-4">
-      <h2 className="font-display text-[18px] font-bold">এই মাসের ট্রান্সফার</h2>
+      <h2 className="font-display text-[18px] font-bold">{t("transfersTitle")}</h2>
 
       {error && (
         <div className="mt-3">
@@ -63,7 +66,7 @@ export function TransferList({
 
       {visible.length === 0 ? (
         <p className="text-ink-faint pt-3.5 pb-3 text-[15px]">
-          এই মাসে এখনো কোনো ট্রান্সফার হয়নি।
+          {t("transfersEmpty")}
         </p>
       ) : (
         <ul className="mt-1">
@@ -81,16 +84,23 @@ export function TransferList({
                     {from} → {to}
                   </p>
                   <p className="text-ink-muted mt-px text-[14px]">
-                    {transfer.day} {monthName}
+                    {common("dayMonth", {
+                      day: format.digits(transfer.day),
+                      month: monthName,
+                    })}
                   </p>
                 </div>
                 <span className="text-ink-soft text-[16px] font-semibold">
-                  {formatTaka(transfer.amount)}
+                  {format.taka(transfer.amount)}
                 </span>
                 <button
                   type="button"
                   onClick={() => handleRemove(transfer.id)}
-                  aria-label={`${from} থেকে ${to}-এ ${formatTaka(transfer.amount)} ট্রান্সফার মুছে ফেলো`}
+                  aria-label={t("removeTransfer", {
+                    from,
+                    to,
+                    amount: format.taka(transfer.amount),
+                  })}
                   className="text-line-strong hover:text-danger focus-visible:outline-primary -mr-2.5 flex h-11 w-11 flex-none cursor-pointer items-center justify-center rounded-[12px] text-[20px] leading-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
                 >
                   ×

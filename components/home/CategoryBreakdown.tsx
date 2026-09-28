@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/Card";
 import type { CategoryStat, MonthSummary } from "@/lib/finance/types";
+import { getT } from "@/lib/i18n/server";
 
 const barColor: Record<CategoryStat["tone"], string> = {
   good: "var(--color-fixed)",
@@ -13,13 +14,15 @@ const textColor: Record<CategoryStat["tone"], string> = {
   over: "var(--color-over)",
 };
 
-export function CategoryBreakdown({ summary }: { summary: MonthSummary }) {
+export async function CategoryBreakdown({ summary }: { summary: MonthSummary }) {
+  const t = await getT("home");
+
   return (
     <Card className="flex flex-col gap-1 px-[22px] pt-[22px] pb-6">
-      <h2 className="font-display text-[19px] font-bold">কোথায় কত যাচ্ছে</h2>
-      <p className="text-ink-muted mb-2.5 text-[14px]">
-        ছোট দাগটা দেখায় আজ পর্যন্ত কতটুকু খরচ হলে ঠিক থাকতো।
-      </p>
+      <h2 className="font-display text-[19px] font-bold">
+        {t("breakdownTitle")}
+      </h2>
+      <p className="text-ink-muted mb-2.5 text-[14px]">{t("breakdownHint")}</p>
 
       <ul className="flex flex-col gap-1">
         {summary.categories.map((category) => (

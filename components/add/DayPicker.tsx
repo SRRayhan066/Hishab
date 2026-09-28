@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 
 type DayPickerProps = {
@@ -15,8 +16,10 @@ type DayPickerProps = {
 const pad = (value: number) => String(value).padStart(2, "0");
 
 function quickDays(today: number) {
-  const options = [{ label: "আজ", day: today }];
-  if (today > 1) options.push({ label: "গতকাল", day: today - 1 });
+  const options: { label: "today" | "yesterday"; day: number }[] = [
+    { label: "today", day: today },
+  ];
+  if (today > 1) options.push({ label: "yesterday", day: today - 1 });
   return options;
 }
 
@@ -30,6 +33,7 @@ export function DayPicker({
   onChange,
 }: DayPickerProps) {
   const month = `${year}-${pad(monthIndex + 1)}`;
+  const t = useT("add");
 
   return (
     <>
@@ -68,7 +72,7 @@ export function DayPicker({
                   : "border-line bg-field text-ink-soft hover:border-line-strong",
               )}
             >
-              {option.label}
+              {t(option.label)}
             </button>
           ))}
         </div>

@@ -1,12 +1,13 @@
 "use client";
 
 import type { AuthMode } from "@/types/auth";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 
-const tabs: { mode: AuthMode; label: string }[] = [
-  { mode: "login", label: "সাইন ইন" },
-  { mode: "signup", label: "সাইন আপ" },
-];
+const tabs = [
+  { mode: "login", label: "signIn" },
+  { mode: "signup", label: "signUp" },
+] as const satisfies { mode: AuthMode; label: string }[];
 
 type AuthTabsProps = {
   mode: AuthMode;
@@ -15,10 +16,12 @@ type AuthTabsProps = {
 };
 
 export function AuthTabs({ mode, onChange, panelId }: AuthTabsProps) {
+  const t = useT("auth");
+
   return (
     <div
       role="tablist"
-      aria-label="সাইন ইন বা সাইন আপ"
+      aria-label={t("tabsLabel")}
       className="bg-field-alt rounded-tabs flex gap-[5px] p-[5px]"
     >
       {tabs.map((tab) => {
@@ -41,7 +44,7 @@ export function AuthTabs({ mode, onChange, panelId }: AuthTabsProps) {
                 : "text-ink-muted hover:text-ink bg-transparent",
             )}
           >
-            {tab.label}
+            {t(tab.label)}
           </button>
         );
       })}

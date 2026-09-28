@@ -1,89 +1,96 @@
 import { z } from "zod";
+import { toLatinDigits } from "@/lib/i18n/format";
+import type { Translator } from "@/lib/i18n/translate";
 
-const email = z
-  .string()
-  .trim()
-  .toLowerCase()
-  .min(1, "ইমেইলটা লিখে দাও।")
-  .pipe(z.email({ error: "ইমেইলটা একবার দেখে নাও।" }));
-
-const password = z
-  .string()
-  .min(1, "পাসওয়ার্ডটা লিখে দাও।")
-  .min(6, "পাসওয়ার্ড অন্তত ৬ অক্ষরের হতে হবে।");
-
-const confirmPassword = z.string().min(1, "পাসওয়ার্ডটা আবার লেখো।");
-
-const passwordsMustMatch = {
-  error: "পাসওয়ার্ড দুটো মিলছে না।",
-  path: ["confirmPassword"],
-};
-
-export const signInSchema = z.object({
-  email,
-  password,
-  remember: z.boolean(),
-});
-
-export const signUpSchema = z
-  .object({
-    name: z.string().trim().min(1, "নামটা লিখে দাও।"),
-    email,
-    password,
-    confirmPassword,
-  })
-  .refine(
-    (values) => values.password === values.confirmPassword,
-    passwordsMustMatch,
-  );
-
-export const setPasswordSchema = z
-  .object({
-    password,
-    confirmPassword,
-  })
-  .refine(
-    (values) => values.password === values.confirmPassword,
-    passwordsMustMatch,
-  );
-
-export const changePasswordSchema = z
-  .object({
-    currentPassword: z.string().min(1, "এখনকার পাসওয়ার্ডটা লিখে দাও।"),
-    password,
-    confirmPassword,
-  })
-  .refine(
-    (values) => values.password === values.confirmPassword,
-    passwordsMustMatch,
-  )
-  .refine((values) => values.password !== values.currentPassword, {
-    error: "নতুন পাসওয়ার্ডটা আগেরটার থেকে আলাদা হতে হবে।",
-    path: ["password"],
-  });
-
-export const forgotPasswordSchema = z.object({ email });
-
-const banglaDigits = "০১২৩৪৫৬৭৮৯";
-
-function toEnglishDigits(value: string) {
-  return value.replace(/[০-৯]/g, (digit) =>
-    String(banglaDigits.indexOf(digit)),
-  );
-}
-
-export const resetCodeSchema = z.object({
-  code: z
+export function authSchemas(t: Translator<"validation">) {
+  const email = z
     .string()
     .trim()
-    .min(1, "কোডটা লিখে দাও।")
-    .transform(toEnglishDigits)
-    .pipe(z.string().regex(/^\d{6}$/, "কোডটা ৬ অঙ্কের হবে।")),
-});
+    .toLowerCase()
+    .min(1, t("emailRequired"))
+    .pipe(z.email({ error: t("emailInvalid") }));
 
-export type SignInValues = z.infer<typeof signInSchema>;
-export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
-export type ResetCodeValues = z.input<typeof resetCodeSchema>;
-export type SignUpValues = z.infer<typeof signUpSchema>;
-export type SetPasswordValues = z.infer<typeof setPasswordSchema>;
-export type ChangePasswordValues = z.infer<typeof changePasswordSchema>;
+  const password = z
+    .string()
+    .min(1, t("passwordRequired"))
+    .min(6, t("passwordShort"));
+
+  const confirmPassword = z.string().min(1, t("confirmRequired"));
+
+  const passwordsMustMatch = {
+    error: t("passwordsMismatch"),
+    path: ["confirmPassword"],
+  };
+
+  const signIn = z.object({
+    email,
+    password,
+    remember: z.boolean(),
+  });
+
+  const signUp = z
+    .object({
+      name: z.string().trim().min(1, t("nameRequired")),
+      email,
+      password,
+      confirmPassword,
+    })
+    .refine(
+      (values) => values.password === values.confirmPassword,
+      passwordsMustMatch,
+    );
+
+  const setPassword = z
+    .object({
+      password,
+      confirmPassword,
+    })
+    .refine(
+      (values) => values.password === values.confirmPassword,
+      passwordsMustMatch,
+    );
+
+  const changePassword = z
+    .object({
+      currentPassword: z.string().min(1, t("currentPasswordRequired")),
+      password,
+      confirmPassword,
+    })
+    .refine(
+      (values) => values.password === values.confirmPassword,
+      passwordsMustMatch,
+    )
+    .refine((values) => values.password !== values.currentPassword, {
+      error: t("passwordUnchanged"),
+      path: ["password"],
+    });
+
+  const forgotPassword = z.object({ email });
+
+  const resetCode = z.object({
+    code: z
+      .string()
+      .trim()
+      .min(1, t("codeRequired"))
+      .transform(toLatinDigits)
+      .pipe(z.string().regex(/^\d{6}$/, t("codeLength"))),
+  });
+
+  return {
+    signIn,
+    signUp,
+    setPassword,
+    changePassword,
+    forgotPassword,
+    resetCode,
+  };
+}
+
+type AuthSchemas = ReturnType<typeof authSchemas>;
+
+export type SignInValues = z.infer<AuthSchemas["signIn"]>;
+export type ForgotPasswordValues = z.infer<AuthSchemas["forgotPassword"]>;
+export type ResetCodeValues = z.input<AuthSchemas["resetCode"]>;
+export type SignUpValues = z.infer<AuthSchemas["signUp"]>;
+export type SetPasswordValues = z.infer<AuthSchemas["setPassword"]>;
+export type ChangePasswordValues = z.infer<AuthSchemas["changePassword"]>;

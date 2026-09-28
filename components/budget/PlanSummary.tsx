@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/Card";
-import { formatTaka } from "@/lib/finance/format";
+import { useFormat, useT } from "@/lib/i18n/client";
 import type { BudgetPlan } from "@/lib/finance/budget";
 
 type PlanSummaryProps = {
@@ -8,6 +8,8 @@ type PlanSummaryProps = {
 };
 
 export function PlanSummary({ plan, monthName }: PlanSummaryProps) {
+  const t = useT("budget");
+  const format = useFormat();
   const {
     incomeTotal,
     plannedTotal,
@@ -16,22 +18,23 @@ export function PlanSummary({ plan, monthName }: PlanSummaryProps) {
     perDay,
     splitPlanned,
     splitLeftOver,
-    note,
   } = plan;
 
   return (
     <Card className="px-[22px] pt-6 pb-[26px]">
       <h2 className="font-display text-[19px] font-bold">
-        {monthName} মাসের বাজেট
+        {t("summaryTitle", { month: monthName })}
       </h2>
       <p className="text-ink-muted mt-[3px] text-[15px] leading-[1.55]">
-        এখানে শুধু ঠিক করছো কোথায় কত যাবে। আসল খরচ লিখবে &ldquo;খরচ&rdquo;
-        ট্যাবে।
+        {t("summaryHint")}
       </p>
 
       <div
         role="img"
-        aria-label={`আয়ের ভাগ — মোট বাজেট ${formatTaka(plannedTotal)}, থাকবে ${formatTaka(Math.max(leftOver, 0))}`}
+        aria-label={t("splitLabel", {
+          planned: format.taka(plannedTotal),
+          left: format.taka(Math.max(leftOver, 0)),
+        })}
         className="mt-5 flex h-[22px] gap-[2px] overflow-hidden rounded-full bg-[#f2eee5]"
       >
         <span
@@ -49,9 +52,9 @@ export function PlanSummary({ plan, monthName }: PlanSummaryProps) {
 
       <dl className="mt-[18px] grid gap-3.5 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
         <div>
-          <dt className="text-ink-muted text-[14px]">মাসে আসবে</dt>
+          <dt className="text-ink-muted text-[14px]">{t("incomeIn")}</dt>
           <dd className="font-display text-primary mt-0.5 text-[21px] font-bold">
-            {formatTaka(incomeTotal)}
+            {format.taka(incomeTotal)}
           </dd>
         </div>
 
@@ -61,13 +64,13 @@ export function PlanSummary({ plan, monthName }: PlanSummaryProps) {
               className="h-[11px] w-[11px] flex-none rounded-[4px]"
               style={{ background: "var(--color-warn)" }}
             />
-            <span className="text-ink-muted text-[14px]">মোট বাজেট</span>
+            <span className="text-ink-muted text-[14px]">{t("totalBudget")}</span>
           </dt>
           <dd className="font-display mt-0.5 text-[21px] font-bold">
-            {formatTaka(plannedTotal)}
+            {format.taka(plannedTotal)}
           </dd>
           <p className="text-ink-faint mt-px text-[13px]">
-            দিনে প্রায় {formatTaka(perDay)}
+            {t("perDay", { amount: format.taka(perDay) })}
           </p>
         </div>
 
@@ -77,14 +80,14 @@ export function PlanSummary({ plan, monthName }: PlanSummaryProps) {
               className="h-[11px] w-[11px] flex-none rounded-[4px]"
               style={{ background: "var(--color-savings)" }}
             />
-            <span className="text-ink-muted text-[14px]">মাস শেষে থাকবে</span>
+            <span className="text-ink-muted text-[14px]">{t("leftOver")}</span>
           </dt>
           <dd
             className={`font-display mt-0.5 text-[21px] font-bold ${
               isBalanced ? "text-primary" : "text-over"
             }`}
           >
-            {formatTaka(leftOver)}
+            {format.taka(leftOver)}
           </dd>
         </div>
       </dl>
@@ -96,7 +99,9 @@ export function PlanSummary({ plan, monthName }: PlanSummaryProps) {
             : "bg-danger-bg text-danger-ink"
         }`}
       >
-        {note}
+        {isBalanced
+          ? t("balanced", { amount: format.taka(leftOver) })
+          : t("overPlanned", { amount: format.taka(-leftOver) })}
       </p>
     </Card>
   );
