@@ -4,8 +4,14 @@ import { useEffect, useState, useTransition } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { saveAccountSection } from "@/app/actions/accounts";
 import type { SaveState } from "@/components/budget/SaveStatus";
-import { balanceWithOpening, buildSavingsView } from "@/lib/finance/accounts";
+import {
+  balanceWithOpening,
+  buildSavingsView,
+  openingChanges,
+  overdrawnAccount,
+} from "@/lib/finance/accounts";
 import { pickAccountStyle } from "@/lib/finance/account-style";
+import { balanceBelowZeroError } from "@/lib/finance/messages";
 import type {
   MoneyAccount,
   PastMonth,
@@ -104,6 +110,20 @@ export function AccountsScreen({
   };
 
   const save = () => {
+    const openings = getValues("accounts").map((row) => ({
+      id: row.id,
+      amount: Math.round(Number(row.amount)) || 0,
+    }));
+    const overdrawn = overdrawnAccount(
+      accounts,
+      openingChanges(accounts, openings),
+    );
+    if (overdrawn) {
+      setError(balanceBelowZeroError(overdrawn.name));
+      setState("error");
+      return;
+    }
+
     setState("saving");
     setError("");
 

@@ -14,6 +14,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { UseFormRegister } from "react-hook-form";
+import { AmountInput } from "@/components/ui/AmountInput";
 import { colorOf, type AccountIcon } from "@/lib/finance/account-style";
 import { formatTaka } from "@/lib/finance/format";
 import { cn } from "@/lib/utils";
@@ -142,12 +143,8 @@ export function AccountCard({
           </span>
           <span className={cn(fieldClass, "flex h-9 items-center gap-1 px-2.5")}>
             <span className="text-[14px] font-semibold opacity-60">৳</span>
-            <input
+            <AmountInput
               {...register(`accounts.${index}.amount`, { onChange: onEdit })}
-              type="number"
-              inputMode="numeric"
-              min={0}
-              step={1}
               placeholder="0"
               aria-label={`অ্যাকাউন্ট ${index + 1} — ব্যালেন্স`}
               className="w-full min-w-0 border-none bg-transparent text-right text-[15px] font-bold outline-none placeholder:opacity-45"

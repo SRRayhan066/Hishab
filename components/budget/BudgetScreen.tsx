@@ -3,8 +3,10 @@
 import { useEffect, useMemo } from "react";
 import { saveCategorySection } from "@/app/actions/budget";
 import { saveIncomeSection } from "@/app/actions/income";
+import { incomeChanges, overdrawnAccount } from "@/lib/finance/accounts";
 import { formatTaka } from "@/lib/finance/format";
 import { buildBudgetPlan } from "@/lib/finance/budget";
+import { balanceBelowZeroError } from "@/lib/finance/messages";
 import type { MonthData } from "@/lib/finance/types";
 import { BudgetSection, type RowNote } from "./BudgetSection";
 import { PlanSummary } from "./PlanSummary";
@@ -14,6 +16,7 @@ import {
   spentByCategory,
   toCategoryFields,
   toIncomeFields,
+  type PlanRowField,
 } from "./plan-form";
 import { usePlanSection } from "./usePlanSection";
 
@@ -29,10 +32,22 @@ export function BudgetScreen({
   daysInMonth,
 }: BudgetScreenProps) {
   const defaultAccountId = initialData.accounts[0]?.id;
+  const checkIncome = (rows: PlanRowField[]) => {
+    const after = rows.map((row) => ({
+      accountId: row.accountId || defaultAccountId || "",
+      amount: Math.round(Number(row.amount)) || 0,
+    }));
+    const account = overdrawnAccount(
+      initialData.accounts,
+      incomeChanges(initialData.income, after),
+    );
+    return account && balanceBelowZeroError(account.name);
+  };
   const income = usePlanSection(
     toIncomeFields(initialData.income),
     saveIncomeSection,
     () => blankRow(defaultAccountId),
+    checkIncome,
   );
   const categories = usePlanSection(
     toCategoryFields(initialData.categories),

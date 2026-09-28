@@ -4,10 +4,12 @@ import { useEffect, useId, useState, useTransition } from "react";
 import { ArrowDownUp, WalletMinimal } from "lucide-react";
 import { addTransfer } from "@/app/actions/accounts";
 import { DayPicker } from "@/components/add/DayPicker";
+import { AmountInput } from "@/components/ui/AmountInput";
 import { Card } from "@/components/ui/Card";
 import { FormError } from "@/components/ui/FormError";
 import { Select, type SelectOption } from "@/components/ui/Select";
 import { formatTaka } from "@/lib/finance/format";
+import { notEnoughBalanceError } from "@/lib/finance/messages";
 import type { MoneyAccount } from "@/lib/finance/types";
 import { cn } from "@/lib/utils";
 
@@ -70,13 +72,13 @@ export function TransferCard({ accounts, reference }: TransferCardProps) {
     setFrom(to);
     setTo(from);
   };
-  const value = Number(amount) || 0;
-  const after = source ? source.balance - value : 0;
+  const value = Math.round(Number(amount)) || 0;
+  const overdraw = source !== undefined && value > 0 && value > source.balance;
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!Number.isFinite(value) || value <= 0) {
+    if (value <= 0) {
       setError("কত টাকা পাঠাবে লিখে দাও।");
       return;
     }
@@ -85,6 +87,8 @@ export function TransferCard({ accounts, reference }: TransferCardProps) {
       setError("একই অ্যাকাউন্টে ট্রান্সফার করা যায় না। আলাদা দুটো অ্যাকাউন্ট বেছে নাও।");
       return;
     }
+
+    if (overdraw) return;
 
     setError("");
     setDone("");
@@ -152,12 +156,8 @@ export function TransferCard({ accounts, reference }: TransferCardProps) {
         </label>
         <div className="bg-field border-line rounded-field focus-within:border-primary focus-within:bg-surface mt-2 flex min-h-[50px] items-center gap-1.5 border-[1.5px] px-[14px] transition-colors">
           <span className="text-ink-faint text-[18px] font-semibold">৳</span>
-          <input
+          <AmountInput
             id={amountId}
-            type="number"
-            inputMode="numeric"
-            min={0}
-            step={1}
             placeholder="0"
             value={amount}
             onChange={(event) => {
@@ -168,10 +168,9 @@ export function TransferCard({ accounts, reference }: TransferCardProps) {
           />
         </div>
 
-        {source && value > 0 && after < 0 && (
-          <p className="mt-2.5 text-[14px] font-medium text-[#9a6d12]">
-            {source.name}-এ আছে {formatTaka(source.balance)}। ট্রান্সফারের পর{" "}
-            {formatTaka(after)} হয়ে যাবে।
+        {overdraw && (
+          <p aria-live="polite" className="text-danger mt-2.5 text-[14px] font-medium">
+            {notEnoughBalanceError(source.name, source.balance)}
           </p>
         )}
 
@@ -193,7 +192,7 @@ export function TransferCard({ accounts, reference }: TransferCardProps) {
 
         <button
           type="submit"
-          disabled={busy}
+          disabled={busy || overdraw}
           className="bg-ink font-display focus-visible:outline-primary mt-5 min-h-[50px] w-full cursor-pointer rounded-[12px] px-4 text-[16px] font-bold text-white transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {busy ? "সেভ হচ্ছে…" : "ট্রান্সফার করো"}
