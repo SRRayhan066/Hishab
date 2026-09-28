@@ -1,6 +1,6 @@
 import { Suspense, type ReactNode } from "react";
 import { BottomNav } from "./BottomNav";
-import { AccountMenu } from "./AccountMenu";
+import { ProfileLink } from "./ProfileLink";
 import { MonthLine, MonthLineFallback, SavingsStatus } from "./HeaderStatus";
 import { SavingsChipFallback } from "./SavingsChip";
 import { ScreenTitle } from "./ScreenTitle";
@@ -25,7 +25,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Suspense fallback={<SavingsChipFallback />}>
                 <SavingsStatus />
               </Suspense>
-              <AccountMenu />
+              <ProfileLink />
             </div>
           </div>
         </header>
