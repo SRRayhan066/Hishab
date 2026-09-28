@@ -1,23 +1,28 @@
 import { z } from "zod";
+import type { Translator } from "@/lib/i18n/translate";
 
-export const clearDataPhrase = "মুছে ফেলো";
+export function profileSchemas(t: Translator<"validation">, clearPhrase: string) {
+  const name = z.object({
+    name: z
+      .string()
+      .trim()
+      .min(1, t("nameRequired"))
+      .max(60, t("nameTooLong")),
+  });
 
-export const profileNameSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, "নামটা লিখে দাও।")
-    .max(60, "নামটা একটু ছোট করো।"),
-});
+  const clearData = z.object({
+    phrase: z
+      .string()
+      .trim()
+      .refine((value) => value === clearPhrase, {
+        error: t("clearPhrase", { phrase: clearPhrase }),
+      }),
+  });
 
-export const clearDataSchema = z.object({
-  phrase: z
-    .string()
-    .trim()
-    .refine((value) => value === clearDataPhrase, {
-      error: `নিশ্চিত করতে “${clearDataPhrase}” লেখো।`,
-    }),
-});
+  return { name, clearData };
+}
 
-export type ProfileNameValues = z.infer<typeof profileNameSchema>;
-export type ClearDataValues = z.input<typeof clearDataSchema>;
+type ProfileSchemas = ReturnType<typeof profileSchemas>;
+
+export type ProfileNameValues = z.infer<ProfileSchemas["name"]>;
+export type ClearDataValues = z.input<ProfileSchemas["clearData"]>;

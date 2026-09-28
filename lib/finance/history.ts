@@ -1,21 +1,16 @@
-import { formatTaka } from "./format";
 import type { PastMonth } from "./types";
 
 export type MonthResult = {
-  /** Stable key — a Bengali month name alone repeats across years. */
+  /** Stable key — a month name alone repeats across years. */
   id: string;
-  month: string;
+  /** 1–12. */
+  month: number;
   spent: number;
   budget: number;
   amount: number;
-  label: string;
-  word: string;
   tone: "good" | "over";
   percent: number;
 };
-
-export const signedTaka = (value: number) =>
-  `${value >= 0 ? "+" : "−"}${formatTaka(Math.abs(value))}`;
 
 /**
  * How much money the month actually left behind: what came in, less every
@@ -32,8 +27,6 @@ export const monthUnderBudget = (month: PastMonth) => month.budget - month.spent
 function buildResults(
   history: PastMonth[],
   amountOf: (month: PastMonth) => number,
-  good: string,
-  bad: string,
 ): MonthResult[] {
   const amounts = history.map(amountOf);
 
@@ -47,12 +40,10 @@ function buildResults(
 
       return {
         id: `${month.year}-${month.month}`,
-        month: month.label,
+        month: month.month,
         spent: month.spent,
         budget: month.budget,
         amount,
-        label: signedTaka(amount),
-        word: amount >= 0 ? good : bad,
         tone: amount >= 0 ? ("good" as const) : ("over" as const),
         percent: Math.min(100, (Math.abs(amount) / widest) * 100),
       };
@@ -62,10 +53,10 @@ function buildResults(
 
 /** For the history screen: did the hand-cash budget hold? */
 export function buildMonthResults(history: PastMonth[]): MonthResult[] {
-  return buildResults(history, monthUnderBudget, "বেঁচেছে", "বেশি খরচ");
+  return buildResults(history, monthUnderBudget);
 }
 
 /** For the savings screen: how much did each month actually put away? */
 export function buildSavingsResults(history: PastMonth[]): MonthResult[] {
-  return buildResults(history, monthSaving, "জমেছে", "কমেছে");
+  return buildResults(history, monthSaving);
 }

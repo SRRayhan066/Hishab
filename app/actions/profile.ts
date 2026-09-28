@@ -4,37 +4,46 @@ import { refresh } from "next/cache";
 import { db } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { getSessionUserId } from "@/lib/auth/session";
+import { defaultMoneyAccount } from "@/lib/finance/account-store";
+import { getT } from "@/lib/i18n/server";
+import { authSchemas } from "@/lib/validation/auth";
 import {
-  invalidFormError,
-  wrongCurrentPasswordError,
-} from "@/lib/auth/messages";
-import { defaultMoneyAccount } from "@/lib/finance/accounts";
-import { signedOutError } from "@/lib/finance/messages";
-import { changePasswordSchema } from "@/lib/validation/auth";
-import {
-  clearDataSchema,
-  profileNameSchema,
+  profileSchemas,
   type ClearDataValues,
   type ProfileNameValues,
 } from "@/lib/validation/profile";
 import type { AuthActionResult, ChangePasswordValues } from "@/types/auth";
 
+async function schemas() {
+  const [t, validation, profile] = await Promise.all([
+    getT("errors"),
+    getT("validation"),
+    getT("profile"),
+  ]);
+  return {
+    t,
+    ...authSchemas(validation),
+    ...profileSchemas(validation, profile("clearPhrase")),
+  };
+}
+
 export async function updateName(
   values: ProfileNameValues,
 ): Promise<AuthActionResult> {
-  const parsed = profileNameSchema.safeParse(values);
+  const { t, name: schema } = await schemas();
+  const parsed = schema.safeParse(values);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? invalidFormError };
+    return { error: parsed.error.issues[0]?.message ?? t("invalidForm") };
   }
 
   const userId = await getSessionUserId();
-  if (!userId) return { error: signedOutError };
+  if (!userId) return { error: t("signedOut") };
 
   const { count } = await db.user.updateMany({
     where: { id: userId },
     data: { name: parsed.data.name },
   });
-  if (count === 0) return { error: signedOutError };
+  if (count === 0) return { error: t("signedOut") };
 
   refresh();
   return {};
@@ -43,13 +52,14 @@ export async function updateName(
 export async function changePassword(
   values: ChangePasswordValues,
 ): Promise<AuthActionResult> {
-  const parsed = changePasswordSchema.safeParse(values);
+  const { t, changePassword: schema } = await schemas();
+  const parsed = schema.safeParse(values);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? invalidFormError };
+    return { error: parsed.error.issues[0]?.message ?? t("invalidForm") };
   }
 
   const userId = await getSessionUserId();
-  if (!userId) return { error: signedOutError };
+  if (!userId) return { error: t("signedOut") };
 
   const user = await db.user.findUnique({
     where: { id: userId },
@@ -59,8 +69,8 @@ export async function changePassword(
     parsed.data.currentPassword,
     user?.passwordHash ?? null,
   );
-  if (!user) return { error: signedOutError };
-  if (!matches) return { error: wrongCurrentPasswordError };
+  if (!user) return { error: t("signedOut") };
+  if (!matches) return { error: t("wrongCurrentPassword") };
 
   await db.user.update({
     where: { id: userId },
@@ -73,18 +83,20 @@ export async function changePassword(
 export async function clearAllData(
   values: ClearDataValues,
 ): Promise<AuthActionResult> {
-  const parsed = clearDataSchema.safeParse(values);
+  const { t, clearData: schema } = await schemas();
+  const parsed = schema.safeParse(values);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? invalidFormError };
+    return { error: parsed.error.issues[0]?.message ?? t("invalidForm") };
   }
 
   const userId = await getSessionUserId();
-  if (!userId) return { error: signedOutError };
+  if (!userId) return { error: t("signedOut") };
 
+  const account = await defaultMoneyAccount();
   await db.$transaction([
     db.budgetMonth.deleteMany({ where: { userId } }),
     db.moneyAccount.deleteMany({ where: { userId } }),
-    db.moneyAccount.create({ data: { userId, ...defaultMoneyAccount } }),
+    db.moneyAccount.create({ data: { userId, ...account } }),
   ]);
 
   refresh();

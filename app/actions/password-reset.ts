@@ -18,18 +18,8 @@ import {
   secondsUntilResend,
 } from "@/lib/auth/password-reset";
 import { sendPasswordResetCode } from "@/lib/email/mailer";
-import {
-  deadCodeError,
-  invalidFormError,
-  resendTooSoonError,
-  resetExpiredError,
-  wrongCodeError,
-} from "@/lib/auth/messages";
-import {
-  forgotPasswordSchema,
-  resetCodeSchema,
-  setPasswordSchema,
-} from "@/lib/validation/auth";
+import { getLocale, getT } from "@/lib/i18n/server";
+import { authSchemas } from "@/lib/validation/auth";
 import type {
   AuthActionResult,
   ForgotPasswordValues,
@@ -47,6 +37,7 @@ async function sendCodeIfAccountExists(email: string) {
   const code = await issueResetCode(user.id);
   if (!code) return;
 
+  const locale = await getLocale();
   after(async () => {
     try {
       await sendPasswordResetCode({
@@ -54,6 +45,7 @@ async function sendCodeIfAccountExists(email: string) {
         name: user.name,
         code,
         minutes: resetCodeMinutes,
+        locale,
       });
     } catch (error) {
       console.error("Failed to send password reset code", error);
@@ -61,11 +53,20 @@ async function sendCodeIfAccountExists(email: string) {
   });
 }
 
+async function schemas() {
+  const [t, validation] = await Promise.all([
+    getT("errors"),
+    getT("validation"),
+  ]);
+  return { t, ...authSchemas(validation) };
+}
+
 export async function requestPasswordReset(
   values: ForgotPasswordValues,
 ): Promise<AuthActionResult> {
-  const parsed = forgotPasswordSchema.safeParse(values);
-  if (!parsed.success) return { error: invalidFormError };
+  const { t, forgotPassword: schema } = await schemas();
+  const parsed = schema.safeParse(values);
+  if (!parsed.success) return { error: t("invalidForm") };
 
   await sendCodeIfAccountExists(parsed.data.email);
   await saveResetRequest(parsed.data.email);
@@ -73,10 +74,11 @@ export async function requestPasswordReset(
 }
 
 export async function resendPasswordResetCode(): Promise<AuthActionResult> {
+  const t = await getT("errors");
   const request = await readResetRequest();
-  if (!request) return { error: resetExpiredError };
+  if (!request) return { error: t("resetExpired") };
   if (secondsUntilResend(request.sentAt) > 0) {
-    return { error: resendTooSoonError };
+    return { error: t("resendTooSoon") };
   }
 
   await sendCodeIfAccountExists(request.email);
@@ -87,21 +89,22 @@ export async function resendPasswordResetCode(): Promise<AuthActionResult> {
 export async function verifyPasswordResetCode(
   values: ResetCodeValues,
 ): Promise<AuthActionResult> {
-  const parsed = resetCodeSchema.safeParse(values);
-  if (!parsed.success) return { error: wrongCodeError };
+  const { t, resetCode: schema } = await schemas();
+  const parsed = schema.safeParse(values);
+  if (!parsed.success) return { error: t("wrongCode") };
 
   const request = await readResetRequest();
-  if (!request) return { error: resetExpiredError };
+  if (!request) return { error: t("resetExpired") };
 
   const user = await db.user.findUnique({
     where: { email: request.email },
     select: { id: true },
   });
-  if (!user) return { error: wrongCodeError };
+  if (!user) return { error: t("wrongCode") };
 
   const check = await checkResetCode(user.id, parsed.data.code);
-  if (check.status === "wrong") return { error: wrongCodeError };
-  if (check.status === "dead") return { error: deadCodeError };
+  if (check.status === "wrong") return { error: t("wrongCode") };
+  if (check.status === "dead") return { error: t("deadCode") };
 
   await saveResetVerified(user.id, check.otpId);
   await clearResetRequest();
@@ -111,18 +114,19 @@ export async function verifyPasswordResetCode(
 export async function resetPassword(
   values: SetPasswordValues,
 ): Promise<AuthActionResult> {
-  const parsed = setPasswordSchema.safeParse(values);
-  if (!parsed.success) return { error: invalidFormError };
+  const { t, setPassword: schema } = await schemas();
+  const parsed = schema.safeParse(values);
+  if (!parsed.success) return { error: t("invalidForm") };
 
   const verified = await readResetVerified();
-  if (!verified) return { error: resetExpiredError };
+  if (!verified) return { error: t("resetExpired") };
 
   const replaced = await replacePassword(
     verified.userId,
     verified.otpId,
     await hashPassword(parsed.data.password),
   );
-  if (!replaced) return { error: resetExpiredError };
+  if (!replaced) return { error: t("resetExpired") };
 
   await clearResetVerified();
   await createSession(verified.userId);

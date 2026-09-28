@@ -1,8 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { formatTaka } from "@/lib/finance/format";
 import type { Burndown } from "@/lib/finance/types";
+import { useFormat, useT } from "@/lib/i18n/client";
 
 type BurndownChartProps = {
   burndown: Burndown;
@@ -18,6 +18,9 @@ export function BurndownChart({
   const { width, height, points, grid, xLabels, today } = burndown;
   const plotRef = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState<number | null>(null);
+  const t = useT("home");
+  const common = useT("common");
+  const format = useFormat();
 
   const lineColor = isUnderPlan
     ? "var(--color-primary)"
@@ -58,7 +61,7 @@ export function BurndownChart({
           preserveAspectRatio="none"
           className="block h-[190px] w-full sm:h-[240px] lg:h-[280px]"
           role="img"
-          aria-label={`${monthName} মাসের খরচের বার্নডাউন চার্ট। বিস্তারিত নিচের টেবিলে আছে।`}
+          aria-label={t("chartLabel", { month: monthName })}
         >
           {grid.map((line) => (
             <line
@@ -163,10 +166,13 @@ export function BurndownChart({
             }}
           >
             <p className="text-ink-muted text-[12px] font-medium whitespace-nowrap">
-              {active.day} {monthName}
+              {common("dayMonth", {
+                day: format.digits(active.day),
+                month: monthName,
+              })}
             </p>
             <p className="font-display text-[16px] font-bold whitespace-nowrap">
-              {formatTaka(active.remaining)} বাকি ছিল
+              {t("remainingThen", { amount: format.taka(active.remaining) })}
             </p>
           </div>
         )}
@@ -174,18 +180,18 @@ export function BurndownChart({
 
       <div className="sr-only">
         <table>
-          <caption>{monthName} মাসের প্রতিদিন শেষে বাকি থাকা টাকা</caption>
+          <caption>{t("tableCaption", { month: monthName })}</caption>
           <thead>
             <tr>
-              <th scope="col">তারিখ</th>
-              <th scope="col">বাকি</th>
+              <th scope="col">{t("tableDate")}</th>
+              <th scope="col">{t("tableLeft")}</th>
             </tr>
           </thead>
           <tbody>
             {points.map((point) => (
               <tr key={point.day}>
-                <th scope="row">{point.day}</th>
-                <td>{formatTaka(point.remaining)}</td>
+                <th scope="row">{format.digits(point.day)}</th>
+                <td>{format.taka(point.remaining)}</td>
               </tr>
             ))}
           </tbody>

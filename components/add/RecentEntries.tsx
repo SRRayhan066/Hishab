@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
-import { formatTaka } from "@/lib/finance/format";
 import type { RecentEntry } from "@/lib/finance/entries";
+import { useFormat, useT } from "@/lib/i18n/client";
 
 type RecentEntriesProps = {
   entries: RecentEntry[];
@@ -19,16 +19,19 @@ export function RecentEntries({
   onRemove,
 }: RecentEntriesProps) {
   const [expanded, setExpanded] = useState(false);
+  const t = useT("add");
+  const common = useT("common");
+  const format = useFormat();
   const visible = expanded ? entries : entries.slice(0, PAGE_SIZE);
   const hidden = entries.length - visible.length;
 
   return (
     <Card className="flex min-h-0 flex-col px-[22px] pt-[22px] pb-4">
-      <h2 className="font-display text-[19px] font-bold">সর্বশেষ যোগ করা</h2>
+      <h2 className="font-display text-[19px] font-bold">{t("recentTitle")}</h2>
 
       {entries.length === 0 ? (
         <p className="text-ink-faint pt-3.5 pb-5 text-[15px]">
-          এই মাসে এখনো কিছু যোগ করা হয়নি।
+          {t("recentEmpty")}
         </p>
       ) : (
         <>
@@ -43,17 +46,23 @@ export function RecentEntries({
                     {entry.categoryName}
                   </p>
                   <p className="text-ink-muted mt-px text-[14px]">
-                    {entry.day} {monthName}
+                    {common("dayMonth", {
+                      day: format.digits(entry.day),
+                      month: monthName,
+                    })}
                     {entry.accountName && ` · ${entry.accountName}`}
                   </p>
                 </div>
                 <span className="text-ink-soft text-[16px] font-semibold">
-                  {formatTaka(entry.amount)}
+                  {format.taka(entry.amount)}
                 </span>
                 <button
                   type="button"
                   onClick={() => onRemove(entry.id)}
-                  aria-label={`${entry.categoryName} খাতের ${formatTaka(entry.amount)} খরচ মুছে ফেলো`}
+                  aria-label={t("removeEntry", {
+                    category: entry.categoryName,
+                    amount: format.taka(entry.amount),
+                  })}
                   className="text-line-strong hover:text-danger focus-visible:outline-primary -mr-2.5 flex h-11 w-11 flex-none cursor-pointer items-center justify-center rounded-[12px] text-[20px] leading-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
                 >
                   ×
@@ -68,7 +77,9 @@ export function RecentEntries({
               onClick={() => setExpanded((current) => !current)}
               className="text-primary hover:text-primary-dark focus-visible:outline-primary mt-1.5 min-h-[44px] cursor-pointer self-start rounded-md text-[15px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2"
             >
-              {expanded ? "কম দেখাও" : `আরও ${hidden}টি দেখাও`}
+              {expanded
+                ? t("showLess")
+                : t("showMore", { count: format.number(hidden) })}
             </button>
           )}
         </>

@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
 import { db } from "@/lib/db";
+import { syncLocale } from "@/lib/i18n/server";
 import { daysFromNow, secureCookieOptions } from "./cookies";
 import {
   sessionAudience,
@@ -24,6 +25,7 @@ export async function createSession(userId: string, remember = true) {
     token,
     secureCookieOptions(remember ? expiresAt : undefined),
   );
+  await syncLocale(userId);
 }
 
 export async function deleteSession() {

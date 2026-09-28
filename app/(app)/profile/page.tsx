@@ -7,11 +7,15 @@ import { ProfileSummary } from "@/components/profile/ProfileSummary";
 import { SignOutCard } from "@/components/profile/SignOutCard";
 import { loadProfile } from "@/lib/auth/profile";
 import { getSessionUserId } from "@/lib/auth/session";
+import { getT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "প্রোফাইল",
-  description: "নাম, পাসওয়ার্ড, ডেটা আর সাইন আউট।",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT("meta");
+  return {
+    title: t("profileTitle"),
+    description: t("profileDescription"),
+  };
+}
 
 export default async function ProfilePage() {
   const userId = await getSessionUserId();

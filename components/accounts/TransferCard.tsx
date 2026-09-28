@@ -8,8 +8,7 @@ import { AmountInput } from "@/components/ui/AmountInput";
 import { Card } from "@/components/ui/Card";
 import { FormError } from "@/components/ui/FormError";
 import { Select, type SelectOption } from "@/components/ui/Select";
-import { formatTaka } from "@/lib/finance/format";
-import { notEnoughBalanceError } from "@/lib/finance/messages";
+import { useFormat, useT } from "@/lib/i18n/client";
 import type { MoneyAccount } from "@/lib/finance/types";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +18,10 @@ type TransferCardProps = {
 };
 
 export function TransferCard({ accounts, reference }: TransferCardProps) {
+  const t = useT("accounts");
+  const common = useT("common");
+  const errorsT = useT("errors");
+  const format = useFormat();
   const fromId = useId();
   const toId = useId();
   const amountId = useId();
@@ -41,10 +44,9 @@ export function TransferCard({ accounts, reference }: TransferCardProps) {
   if (accounts.length < 2) {
     return (
       <Card className="px-[22px] pt-[22px] pb-6">
-        <h2 className="font-display text-[18px] font-bold">ট্রান্সফার</h2>
+        <h2 className="font-display text-[18px] font-bold">{t("transferTitle")}</h2>
         <p className="text-ink-muted mt-1 text-[15px] leading-[1.55]">
-          এক অ্যাকাউন্ট থেকে আরেকটায় টাকা সরাতে অন্তত দুটো অ্যাকাউন্ট লাগবে।
-          উপরে আরেকটা যোগ করে সেভ করো।
+          {t("transferNeedTwo")}
         </p>
       </Card>
     );
@@ -53,7 +55,7 @@ export function TransferCard({ accounts, reference }: TransferCardProps) {
   const options: SelectOption[] = accounts.map((account) => ({
     value: account.id,
     label: account.name,
-    hint: `আছে ${formatTaka(account.balance)}`,
+    hint: t("has", { amount: format.taka(account.balance) }),
   }));
   const source = accounts.find((account) => account.id === from);
   const target = accounts.find((account) => account.id === to);
@@ -79,12 +81,12 @@ export function TransferCard({ accounts, reference }: TransferCardProps) {
     event.preventDefault();
 
     if (value <= 0) {
-      setError("কত টাকা পাঠাবে লিখে দাও।");
+      setError(errorsT("transferAmount"));
       return;
     }
 
     if (from === to) {
-      setError("একই অ্যাকাউন্টে ট্রান্সফার করা যায় না। আলাদা দুটো অ্যাকাউন্ট বেছে নাও।");
+      setError(errorsT("transferSameAccount"));
       return;
     }
 
@@ -101,23 +103,22 @@ export function TransferCard({ accounts, reference }: TransferCardProps) {
       }
 
       setAmount("");
-      setDone("ট্রান্সফার হয়ে গেছে।");
+      setDone(t("done"));
     });
   };
 
   return (
     <Card className="px-[22px] pt-[22px] pb-6">
       <form onSubmit={handleSubmit} noValidate>
-        <h2 className="font-display text-[18px] font-bold">ট্রান্সফার</h2>
+        <h2 className="font-display text-[18px] font-bold">{t("transferTitle")}</h2>
         <p className="text-ink-muted mt-0.5 text-[14px] leading-[1.55]">
-          এক অ্যাকাউন্ট থেকে আরেকটায় টাকা সরানো। এটা খরচ না, মোট টাকা একই
-          থাকে।
+          {t("transferHint")}
         </p>
 
         <div className="mt-4">
           <AccountField
             id={fromId}
-            label="যেখান থেকে"
+            label={t("from")}
             value={from}
             options={options}
             balance={source?.balance}
@@ -129,8 +130,8 @@ export function TransferCard({ accounts, reference }: TransferCardProps) {
             <button
               type="button"
               onClick={swap}
-              aria-label="অ্যাকাউন্ট দুটো অদলবদল করো"
-              title="অদলবদল করো"
+              aria-label={t("swap")}
+              title={t("swapTitle")}
               className="border-line bg-surface text-ink-soft hover:border-primary hover:text-primary focus-visible:outline-primary flex h-10 w-10 flex-none cursor-pointer items-center justify-center rounded-full border-[1.5px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
             >
               <ArrowDownUp className="h-[18px] w-[18px]" />
@@ -140,7 +141,7 @@ export function TransferCard({ accounts, reference }: TransferCardProps) {
 
           <AccountField
             id={toId}
-            label="যেখানে যাবে"
+            label={t("to")}
             value={to}
             options={options}
             balance={target?.balance}
@@ -152,7 +153,7 @@ export function TransferCard({ accounts, reference }: TransferCardProps) {
           htmlFor={amountId}
           className="text-ink-muted mt-5 block text-[15px] font-medium"
         >
-          কত টাকা?
+          {t("amount")}
         </label>
         <div className="bg-field border-line rounded-field focus-within:border-primary focus-within:bg-surface mt-2 flex min-h-[50px] items-center gap-1.5 border-[1.5px] px-[14px] transition-colors">
           <span className="text-ink-faint text-[18px] font-semibold">৳</span>
@@ -170,13 +171,16 @@ export function TransferCard({ accounts, reference }: TransferCardProps) {
 
         {overdraw && (
           <p aria-live="polite" className="text-danger mt-2.5 text-[14px] font-medium">
-            {notEnoughBalanceError(source.name, source.balance)}
+            {errorsT("notEnoughBalance", {
+              name: source.name,
+              balance: format.taka(source.balance),
+            })}
           </p>
         )}
 
         <DayPicker
           id={dateId}
-          label="কবে?"
+          label={t("when")}
           year={reference.year}
           monthIndex={reference.monthIndex}
           today={reference.day}
@@ -195,7 +199,7 @@ export function TransferCard({ accounts, reference }: TransferCardProps) {
           disabled={busy || overdraw}
           className="bg-ink font-display focus-visible:outline-primary mt-5 min-h-[50px] w-full cursor-pointer rounded-[12px] px-4 text-[16px] font-bold text-white transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {busy ? "সেভ হচ্ছে…" : "ট্রান্সফার করো"}
+          {busy ? common("saving") : t("submit")}
         </button>
 
         {done && (
@@ -225,6 +229,8 @@ function AccountField({
   balance,
   onChange,
 }: AccountFieldProps) {
+  const t = useT("accounts");
+  const format = useFormat();
   const labelId = `${id}-label`;
 
   return (
@@ -240,7 +246,7 @@ function AccountField({
               balance < 0 ? "text-danger font-medium" : "text-ink-faint",
             )}
           >
-            আছে {formatTaka(balance)}
+            {t("has", { amount: format.taka(balance) })}
           </span>
         )}
       </div>

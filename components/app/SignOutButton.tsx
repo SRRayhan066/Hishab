@@ -3,9 +3,11 @@
 import { useFormStatus } from "react-dom";
 import { Loader2, LogOut } from "lucide-react";
 import { signOut } from "@/app/actions/auth";
+import { useT } from "@/lib/i18n/client";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
+  const t = useT("common");
 
   return (
     <button
@@ -18,7 +20,7 @@ function SubmitButton() {
       ) : (
         <LogOut className="h-4 w-4" />
       )}
-      সাইন আউট
+      {t("signOut")}
     </button>
   );
 }

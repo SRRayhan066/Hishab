@@ -1,17 +1,14 @@
 "use client";
 
-import { useTransition } from "react";
+import { useMemo, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Button } from "@/components/ui/Button";
 import { FormError } from "@/components/ui/FormError";
-import {
-  setPasswordSchema,
-  type SetPasswordValues,
-} from "@/lib/validation/auth";
-import { requestFailedError } from "@/lib/auth/messages";
+import { authSchemas, type SetPasswordValues } from "@/lib/validation/auth";
+import { useT } from "@/lib/i18n/client";
 import type { AuthActionResult } from "@/types/auth";
 
 type SetPasswordFormProps = {
@@ -23,13 +20,17 @@ type SetPasswordFormProps = {
 export function SetPasswordForm({ email, cta, action }: SetPasswordFormProps) {
   const router = useRouter();
   const [navigating, startNavigation] = useTransition();
+  const t = useT("auth");
+  const errorsT = useT("errors");
+  const validation = useT("validation");
+  const schemas = useMemo(() => authSchemas(validation), [validation]);
   const {
     register,
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
   } = useForm<SetPasswordValues>({
-    resolver: zodResolver(setPasswordSchema),
+    resolver: zodResolver(schemas.setPassword),
     defaultValues: { password: "", confirmPassword: "" },
   });
 
@@ -42,7 +43,7 @@ export function SetPasswordForm({ email, cta, action }: SetPasswordFormProps) {
       }
       startNavigation(() => router.replace("/home"));
     } catch {
-      setError("root", { message: requestFailedError });
+      setError("root", { message: errorsT("requestFailed") });
     }
   };
 
@@ -62,17 +63,17 @@ export function SetPasswordForm({ email, cta, action }: SetPasswordFormProps) {
       />
 
       <PasswordInput
-        label="পাসওয়ার্ড"
+        label={t("password")}
         autoComplete="new-password"
-        placeholder="অন্তত ৬ অক্ষর"
+        placeholder={t("passwordPlaceholder")}
         error={errors.password?.message}
         {...register("password")}
       />
 
       <PasswordInput
-        label="পাসওয়ার্ড আবার লেখো"
+        label={t("confirmPassword")}
         autoComplete="new-password"
-        placeholder="আগেরটার মতোই"
+        placeholder={t("confirmPlaceholder")}
         error={errors.confirmPassword?.message}
         {...register("confirmPassword")}
       />

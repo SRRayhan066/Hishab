@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "@/lib/db";
 import { Prisma } from "@/lib/generated/prisma/client";
+import { getT } from "@/lib/i18n/server";
 import type { MoneyAccount } from "./types";
 
 export type MoneyTx = Parameters<Parameters<typeof db.$transaction>[0]>[0];
@@ -55,6 +56,11 @@ function selectAccounts(
     WHERE ${where}
     ORDER BY a."sortOrder" ASC, a."createdAt" ASC
   `;
+}
+
+export async function defaultMoneyAccount() {
+  const t = await getT("common");
+  return { name: t("defaultAccount") };
 }
 
 export async function loadAccounts(userId: string): Promise<MoneyAccount[]> {

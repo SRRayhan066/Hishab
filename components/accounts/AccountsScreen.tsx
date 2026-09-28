@@ -11,7 +11,7 @@ import {
   overdrawnAccount,
 } from "@/lib/finance/accounts";
 import { pickAccountStyle } from "@/lib/finance/account-style";
-import { balanceBelowZeroError } from "@/lib/finance/messages";
+import { useT } from "@/lib/i18n/client";
 import type {
   MoneyAccount,
   PastMonth,
@@ -55,6 +55,7 @@ export function AccountsScreen({
   monthName,
   reference,
 }: AccountsScreenProps) {
+  const errorsT = useT("errors");
   const { control, register, getValues, reset, formState } = useForm<AccountFormValues>({
     defaultValues: { accounts: toFields(accounts) },
   });
@@ -119,7 +120,7 @@ export function AccountsScreen({
       openingChanges(accounts, openings),
     );
     if (overdrawn) {
-      setError(balanceBelowZeroError(overdrawn.name));
+      setError(errorsT("balanceBelowZero", { name: overdrawn.name }));
       setState("error");
       return;
     }

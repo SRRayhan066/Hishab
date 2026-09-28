@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Anek_Bangla, Hind_Siliguri } from "next/font/google";
+import { I18nProvider } from "@/lib/i18n/provider";
+import { getLocale, getT } from "@/lib/i18n/server";
 import "./globals.css";
 
 const hindSiliguri = Hind_Siliguri({
@@ -15,37 +17,45 @@ const anekBangla = Anek_Bangla({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "টাকার হিসাব",
-    template: "%s — টাকার হিসাব",
-  },
-  description: "মাসের শুরুতে হিসাব, মাস শেষে স্বস্তি।",
-  applicationName: "টাকার হিসাব",
-  openGraph: {
-    title: "টাকার হিসাব",
-    description: "মাসের শুরুতে হিসাব, মাস শেষে স্বস্তি।",
-    siteName: "টাকার হিসাব",
-    locale: "bn_BD",
-    type: "website",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const [locale, t] = await Promise.all([getLocale(), getT("common")]);
+  const appName = t("appName");
+  const description = t("tagline");
+
+  return {
+    title: {
+      default: appName,
+      template: `%s — ${appName}`,
+    },
+    description,
+    applicationName: appName,
+    openGraph: {
+      title: appName,
+      description,
+      siteName: appName,
+      locale: locale === "bn" ? "bn_BD" : "en_US",
+      type: "website",
+    },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#f7f4ee",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const locale = await getLocale();
+
   return (
     <html
-      lang="bn"
+      lang={locale}
       className={`${hindSiliguri.variable} ${anekBangla.variable} h-full antialiased`}
     >
       <body
         suppressHydrationWarning
         className="bg-canvas text-ink flex min-h-full flex-col font-sans"
       >
-        {children}
+        <I18nProvider namespaces={["common", "errors"]}>{children}</I18nProvider>
       </body>
     </html>
   );

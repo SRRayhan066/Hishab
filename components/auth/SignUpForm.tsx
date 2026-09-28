@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useMemo, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,20 +8,24 @@ import { Input } from "@/components/ui/Input";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Button } from "@/components/ui/Button";
 import { FormError } from "@/components/ui/FormError";
-import { signUpSchema, type SignUpValues } from "@/lib/validation/auth";
+import { authSchemas, type SignUpValues } from "@/lib/validation/auth";
 import { signUp } from "@/app/actions/auth";
-import { requestFailedError } from "@/lib/auth/messages";
+import { useT } from "@/lib/i18n/client";
 
 export function SignUpForm({ cta }: { cta: string }) {
   const router = useRouter();
   const [navigating, startNavigation] = useTransition();
+  const t = useT("auth");
+  const errorsT = useT("errors");
+  const validation = useT("validation");
+  const schemas = useMemo(() => authSchemas(validation), [validation]);
   const {
     register,
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
   } = useForm<SignUpValues>({
-    resolver: zodResolver(signUpSchema),
+    resolver: zodResolver(schemas.signUp),
     defaultValues: { name: "", email: "", password: "", confirmPassword: "" },
   });
 
@@ -34,7 +38,7 @@ export function SignUpForm({ cta }: { cta: string }) {
       }
       startNavigation(() => router.replace("/home"));
     } catch {
-      setError("root", { message: requestFailedError });
+      setError("root", { message: errorsT("requestFailed") });
     }
   };
 
@@ -45,35 +49,35 @@ export function SignUpForm({ cta }: { cta: string }) {
       className="flex flex-col gap-[14px]"
     >
       <Input
-        label="তোমার নাম"
+        label={t("name")}
         autoComplete="name"
-        placeholder="যেমন, রাকিব"
+        placeholder={t("namePlaceholder")}
         error={errors.name?.message}
         {...register("name")}
       />
 
       <Input
-        label="ইমেইল"
+        label={t("email")}
         type="email"
         inputMode="email"
         autoComplete="email"
-        placeholder="tumi@example.com"
+        placeholder={t("emailPlaceholder")}
         error={errors.email?.message}
         {...register("email")}
       />
 
       <PasswordInput
-        label="পাসওয়ার্ড"
+        label={t("password")}
         autoComplete="new-password"
-        placeholder="অন্তত ৬ অক্ষর"
+        placeholder={t("passwordPlaceholder")}
         error={errors.password?.message}
         {...register("password")}
       />
 
       <PasswordInput
-        label="পাসওয়ার্ড আবার লেখো"
+        label={t("confirmPassword")}
         autoComplete="new-password"
-        placeholder="আগেরটার মতোই"
+        placeholder={t("confirmPlaceholder")}
         error={errors.confirmPassword?.message}
         {...register("confirmPassword")}
       />

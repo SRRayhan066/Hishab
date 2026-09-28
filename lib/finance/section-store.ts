@@ -2,13 +2,7 @@ import "server-only";
 import { db } from "@/lib/db";
 import { lockBalances, moneyTransaction } from "./account-store";
 import { incomeChanges, openingChanges, overdrawnAccount } from "./accounts";
-import {
-  accountGoneError,
-  accountInUseError,
-  balanceBelowZeroError,
-  categoryHasExpensesError,
-  lastAccountError,
-} from "./messages";
+import { getT } from "@/lib/i18n/server";
 import type { AccountRow, PlanRow } from "@/lib/validation/finance";
 
 /** A saved row as the form needs it back — with the id the database gave it. */
@@ -99,9 +93,10 @@ export async function replaceIncomeSection(
   accountIds: string[],
   rows: PlanRow[],
 ): Promise<SectionResult> {
+  const t = await getT("errors");
   const owned = new Set(accountIds);
   if (rows.some((row) => row.accountId && !owned.has(row.accountId))) {
-    return { error: accountGoneError };
+    return { error: t("accountGone") };
   }
 
   const withAccount = ({ name, amount, sortOrder, accountId }: RowData) => ({
@@ -143,7 +138,9 @@ export async function replaceIncomeSection(
     }
     return undefined;
   });
-  if (overdrawn) return { error: balanceBelowZeroError(overdrawn.name) };
+  if (overdrawn) {
+    return { error: t("balanceBelowZero", { name: overdrawn.name }) };
+  }
 
   // Hand the rows back so the form picks up the ids of everything just
   // created — otherwise a second save would create them all over again.
@@ -187,8 +184,10 @@ export async function replaceCategorySection(
       select: { id: true, name: true, budget: true },
     });
 
+    const t = await getT("errors");
+
     return {
-      error: categoryHasExpensesError,
+      error: t("categoryHasExpenses"),
       rows: asRows(
         current.map((row) => ({
           id: row.id,
@@ -252,6 +251,7 @@ export async function replaceAccountSection(
   userId: string,
   rows: AccountRow[],
 ): Promise<SectionResult> {
+  const t = await getT("errors");
   const existing = await db.moneyAccount.findMany({
     where: { userId },
     select: {
@@ -272,7 +272,7 @@ export async function replaceAccountSection(
   );
 
   if (updates.length + creates.length === 0) {
-    return { error: lastAccountError, rows: await savedAccountRows(userId) };
+    return { error: t("lastAccount"), rows: await savedAccountRows(userId) };
   }
 
   const inUse = existing.some(
@@ -281,7 +281,7 @@ export async function replaceAccountSection(
       _count.incomes + _count.expenses + _count.transfersIn + _count.transfersOut > 0,
   );
   if (inUse) {
-    return { error: accountInUseError, rows: await savedAccountRows(userId) };
+    return { error: t("accountInUse"), rows: await savedAccountRows(userId) };
   }
 
   const overdrawn = await moneyTransaction(async (tx) => {
@@ -312,7 +312,9 @@ export async function replaceAccountSection(
     }
     return undefined;
   });
-  if (overdrawn) return { error: balanceBelowZeroError(overdrawn.name) };
+  if (overdrawn) {
+    return { error: t("balanceBelowZero", { name: overdrawn.name }) };
+  }
 
   return { rows: await savedAccountRows(userId) };
 }

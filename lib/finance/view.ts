@@ -2,7 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { getSessionUserId } from "@/lib/auth/session";
-import { formatTaka } from "./format";
+import { getFormat, getT } from "@/lib/i18n/server";
 import { loadMonthSnapshot } from "./month-store";
 import { zonedReferenceDate } from "./period";
 import { buildMonthSummary } from "./summary";
@@ -32,14 +32,23 @@ export const getCurrentMonthView = cache(async function getCurrentMonthView(): P
   // rely on that alone before reading somebody's money.
   if (!userId) redirect("/login");
 
-  const { monthId, data } = await loadMonthSnapshot(userId);
-  const summary = buildMonthSummary(data, zonedReferenceDate());
+  const [{ monthId, data }, t, header, format] = await Promise.all([
+    loadMonthSnapshot(userId),
+    getT("summary"),
+    getT("header"),
+    getFormat(),
+  ]);
+  const summary = buildMonthSummary(data, zonedReferenceDate(), { t, format });
 
   return {
     monthId,
     data,
     summary,
-    monthLabel: `${summary.monthName} ${summary.year} · ${summary.daysLeft} দিন বাকি`,
-    savingsLabel: formatTaka(summary.balance),
+    monthLabel: header(summary.daysLeft === 1 ? "monthLineOne" : "monthLine", {
+      month: summary.monthName,
+      year: format.digits(summary.year),
+      days: format.number(summary.daysLeft),
+    }),
+    savingsLabel: format.taka(summary.balance),
   };
 });

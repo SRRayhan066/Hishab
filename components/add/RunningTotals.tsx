@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/Card";
-import { formatTaka } from "@/lib/finance/format";
+import { useFormat, useT } from "@/lib/i18n/client";
 import type {
   CategoryStat,
   MoneyAccount,
@@ -25,21 +25,24 @@ export function RunningTotals({
   category,
   account,
 }: RunningTotalsProps) {
+  const t = useT("add");
+  const format = useFormat();
+
   return (
     <Card className="px-[22px] py-5">
       <dl className="grid gap-x-4 gap-y-3.5 [grid-template-columns:repeat(auto-fit,minmax(116px,1fr))]">
         <div>
           <dt className="text-ink-muted text-[14px] font-medium">
-            আজকের খরচ
+            {t("todaySpent")}
           </dt>
           <dd className="font-display mt-0.5 text-[21px] font-bold">
-            {formatTaka(todaySpent)}
+            {format.taka(todaySpent)}
           </dd>
         </div>
 
         <div>
           <dt className="text-ink-muted text-[14px] font-medium">
-            বাড়তি টাকা (এই মাসের)
+            {t("freeToSpend")}
           </dt>
           <dd
             className="font-display mt-0.5 text-[21px] font-bold"
@@ -47,7 +50,7 @@ export function RunningTotals({
               color: summary.freeToSpend < 0 ? "var(--color-over)" : undefined,
             }}
           >
-            {formatTaka(summary.freeToSpend)}
+            {format.taka(summary.freeToSpend)}
           </dd>
         </div>
 
@@ -68,7 +71,7 @@ export function RunningTotals({
         {account && (
           <div>
             <dt className="text-ink-muted text-[14px] font-medium">
-              {account.name}-এ আছে
+              {t("inAccount", { name: account.name })}
             </dt>
             <dd
               className="font-display mt-0.5 text-[21px] font-bold"
@@ -76,7 +79,7 @@ export function RunningTotals({
                 color: account.balance < 0 ? "var(--color-over)" : undefined,
               }}
             >
-              {formatTaka(account.balance)}
+              {format.taka(account.balance)}
             </dd>
           </div>
         )}

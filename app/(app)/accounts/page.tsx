@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import { AccountsScreen } from "@/components/accounts/AccountsScreen";
 import { getCurrentMonthView } from "@/lib/finance/view";
+import { getT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "অ্যাকাউন্ট",
-  description: "কোন অ্যাকাউন্টে কত আছে, আর এক অ্যাকাউন্ট থেকে আরেকটায় টাকা সরানো।",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT("meta");
+  return {
+    title: t("accountsTitle"),
+    description: t("accountsDescription"),
+  };
+}
 
 export default async function AccountsPage() {
   const { data, summary } = await getCurrentMonthView();

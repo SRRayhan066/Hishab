@@ -2,11 +2,15 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { readPendingGoogleSignUp } from "@/lib/auth/google";
 import { CompleteSignUpScreen } from "@/components/auth/CompleteSignUpScreen";
+import { getT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "পাসওয়ার্ড ঠিক করো",
-  description: "গুগল দিয়ে হিসাব খোলার শেষ ধাপ।",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT("meta");
+  return {
+    title: t("completeSignUpTitle"),
+    description: t("completeSignUpDescription"),
+  };
+}
 
 export default async function CompleteSignUpPage() {
   const pending = await readPendingGoogleSignUp();

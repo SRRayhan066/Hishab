@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/Card";
-import { formatTaka } from "@/lib/finance/format";
+import { useFormat, useT } from "@/lib/i18n/client";
 import type { MonthResult } from "@/lib/finance/history";
 
 const toneInk: Record<MonthResult["tone"], string> = {
@@ -8,15 +8,18 @@ const toneInk: Record<MonthResult["tone"], string> = {
 };
 
 export function SavingsHistory({ months }: { months: MonthResult[] }) {
+  const t = useT("accounts");
+  const format = useFormat();
+
   return (
     <Card className="px-[22px] pt-[22px] pb-4">
       <h2 className="font-display text-[18px] font-bold">
-        মাসে মাসে জমার হিসাব
+        {t("savingsTitle")}
       </h2>
 
       {months.length === 0 ? (
         <p className="text-ink-faint pt-3.5 pb-3 text-[15px]">
-          আগের মাসের কোনো হিসাব এখনো নেই।
+          {t("savingsEmpty")}
         </p>
       ) : (
         <ul className="mt-1">
@@ -26,7 +29,7 @@ export function SavingsHistory({ months }: { months: MonthResult[] }) {
               className="flex items-center gap-3 border-b-[1.5px] border-[#f4f0e7] py-3.5 last:border-b-0"
             >
               <span className="w-[84px] flex-none text-[16px] font-semibold">
-                {month.month}
+                {format.month(month.month - 1)}
               </span>
 
               <div className="h-[10px] min-w-[40px] flex-1 rounded-full bg-[#f2eee5]">
@@ -42,9 +45,13 @@ export function SavingsHistory({ months }: { months: MonthResult[] }) {
               <span
                 className="font-display w-[92px] flex-none text-right text-[16px] font-bold"
                 style={{ color: toneInk[month.tone] }}
-                aria-label={`${month.month} মাসে ${formatTaka(Math.abs(month.amount))} ${month.word}`}
+                aria-label={t("savingsAria", {
+                  month: format.month(month.month - 1),
+                  amount: format.taka(Math.abs(month.amount)),
+                  word: t(month.amount >= 0 ? "savedWord" : "lostWord"),
+                })}
               >
-                {month.label}
+                {format.signedTaka(month.amount)}
               </span>
             </li>
           ))}

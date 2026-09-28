@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { getSessionUserId } from "@/lib/auth/session";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { loadAccounts } from "./account-store";
-import { currentPeriod, periodLabel, type Period } from "./period";
+import { currentPeriod, type Period } from "./period";
 import type { ExpenseEntry, MonthData, PastMonth } from "./types";
 
 /** How many earlier months feed the history list and the month-by-month savings. */
@@ -172,7 +172,6 @@ async function loadHistory(
   `;
 
   return months
-    .map((month) => ({ ...month, label: periodLabel(month) }))
     // A month the user never set up would otherwise show as a flat ৳0 bar and
     // drag the history chart down with nothing to say.
     .filter(

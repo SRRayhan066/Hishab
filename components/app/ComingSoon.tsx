@@ -1,11 +1,14 @@
 import { Card } from "@/components/ui/Card";
+import { getT } from "@/lib/i18n/server";
 
-export function ComingSoon({ title }: { title: string }) {
+export async function ComingSoon({ title }: { title: string }) {
+  const t = await getT("common");
+
   return (
     <Card className="px-6 py-12 text-center">
       <p className="font-display text-[19px] font-bold">{title}</p>
       <p className="text-ink-muted mt-2 text-[15px]">
-        এই স্ক্রিনটা এখনো বানানো হয়নি।
+        {t("comingSoon")}
       </p>
     </Card>
   );

@@ -1,7 +1,9 @@
 import { Card } from "@/components/ui/Card";
 import type { Profile } from "@/lib/auth/profile";
+import { getFormat, getT } from "@/lib/i18n/server";
 
-export function ProfileSummary({ profile }: { profile: Profile }) {
+export async function ProfileSummary({ profile }: { profile: Profile }) {
+  const [t, format] = await Promise.all([getT("profile"), getFormat()]);
   const initial = profile.name.trim().charAt(0);
 
   return (
@@ -25,16 +27,21 @@ export function ProfileSummary({ profile }: { profile: Profile }) {
 
       <dl className="mt-6 grid gap-3.5 [grid-template-columns:repeat(auto-fit,minmax(160px,1fr))]">
         <div className="bg-field rounded-[16px] px-[18px] py-4">
-          <dt className="text-ink-muted text-[14px]">যোগ দিয়েছ</dt>
+          <dt className="text-ink-muted text-[14px]">{t("joined")}</dt>
           <dd className="font-display mt-0.5 text-[20px] font-bold">
-            {profile.joinedLabel}
+            {t("joinedValue", {
+              month: format.month(profile.joined.month - 1),
+              year: format.digits(profile.joined.year),
+            })}
           </dd>
         </div>
 
         <div className="bg-field rounded-[16px] px-[18px] py-4">
-          <dt className="text-ink-muted text-[14px]">হিসাব রাখছ</dt>
+          <dt className="text-ink-muted text-[14px]">{t("tracking")}</dt>
           <dd className="font-display mt-0.5 text-[20px] font-bold">
-            {profile.monthsTracked} মাস ধরে
+            {t(profile.monthsTracked === 1 ? "monthsTrackedOne" : "monthsTracked", {
+              count: format.number(profile.monthsTracked),
+            })}
           </dd>
         </div>
       </dl>

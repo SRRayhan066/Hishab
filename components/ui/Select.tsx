@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { Check, ChevronDown } from "lucide-react";
+import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 
 export type SelectOption = {
@@ -41,13 +42,14 @@ export function Select({
   onChange,
   onBlur,
   icon,
-  placeholder = "বেছে নাও",
+  placeholder,
   disabled = false,
   className,
   "aria-label": ariaLabel,
   "aria-labelledby": ariaLabelledBy,
 }: SelectProps) {
   const listId = useId();
+  const t = useT("common");
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -211,7 +213,7 @@ export function Select({
           <span className="text-primary flex flex-none items-center gap-1.5">{icon}</span>
         )}
         <span className={cn("min-w-0 flex-1 truncate", !selected && "text-ink-faint font-medium")}>
-          {selected?.label ?? placeholder}
+          {selected?.label ?? placeholder ?? t("choose")}
         </span>
         <ChevronDown
           aria-hidden

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { useT } from "@/lib/i18n/client";
 
 type RetryNoticeProps = {
   error: Error & { digest?: string };
@@ -19,6 +20,7 @@ type RetryNoticeProps = {
  */
 export function RetryNotice({ error, reset }: RetryNoticeProps) {
   const [retrying, setRetrying] = useState(true);
+  const t = useT("common");
   // React remounts this boundary on every failed `reset`, but the ref survives
   // that remount — without it a permanently broken screen would retry forever.
   const retried = useRef(false);
@@ -39,16 +41,16 @@ export function RetryNotice({ error, reset }: RetryNoticeProps) {
   if (retrying) {
     return (
       <Card className="px-6 py-12 text-center" aria-busy>
-        <p className="text-ink-muted text-[15px]">আবার চেষ্টা করা হচ্ছে…</p>
+        <p className="text-ink-muted text-[15px]">{t("retrying")}</p>
       </Card>
     );
   }
 
   return (
     <Card className="px-6 py-10 text-center">
-      <p className="font-display text-[19px] font-bold">একটু সমস্যা হয়েছে</p>
+      <p className="font-display text-[19px] font-bold">{t("errorTitle")}</p>
       <p className="text-ink-muted mx-auto mt-2 max-w-[320px] text-[15px]">
-        তথ্য আনতে গিয়ে সংযোগে ঝামেলা হয়েছে। আবার চেষ্টা করুন।
+        {t("errorBody")}
       </p>
       <Button
         variant="outline"
@@ -59,7 +61,7 @@ export function RetryNotice({ error, reset }: RetryNoticeProps) {
           reset();
         }}
       >
-        আবার চেষ্টা করুন
+        {t("retry")}
       </Button>
     </Card>
   );

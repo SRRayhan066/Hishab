@@ -1,5 +1,3 @@
-import { formatTaka } from "./format";
-
 export type BudgetPlan = {
   incomeTotal: number;
   plannedTotal: number;
@@ -9,7 +7,6 @@ export type BudgetPlan = {
   perDay: number;
   splitPlanned: number;
   splitLeftOver: number;
-  note: string;
 };
 
 /**
@@ -38,8 +35,5 @@ export function buildBudgetPlan(
     perDay: daysInMonth > 0 ? plannedTotal / daysInMonth : plannedTotal,
     splitPlanned: (plannedTotal / base) * 100,
     splitLeftOver: (Math.max(leftOver, 0) / base) * 100,
-    note: isBalanced
-      ? `সব মিলে গেছে! বাজেট মেনে চললে মাস শেষে ${formatTaka(leftOver)} হাতে থাকবে।`
-      : `আয়ের চেয়ে ${formatTaka(-leftOver)} বেশি খরচ ধরে ফেলেছো। কোথাও একটু কাটছাঁট করো।`,
   };
 }

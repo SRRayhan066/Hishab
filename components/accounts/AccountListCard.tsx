@@ -9,6 +9,7 @@ import type {
 } from "react-hook-form";
 import { SaveStatus, type SaveState } from "@/components/budget/SaveStatus";
 import { Card } from "@/components/ui/Card";
+import { useT } from "@/lib/i18n/client";
 import { AccountCard } from "./AccountCard";
 
 export type AccountField = {
@@ -52,6 +53,8 @@ export function AccountListCard({
   onSave,
   onEdit,
 }: AccountListCardProps) {
+  const t = useT("accounts");
+  const common = useT("common");
   const nameRefs = useRef(new Map<number, HTMLInputElement | null>());
 
   useEffect(() => {
@@ -62,11 +65,9 @@ export function AccountListCard({
     <Card className="flex flex-col px-[22px] pt-[22px] pb-6">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
-          <h2 className="font-display text-[18px] font-bold">অ্যাকাউন্টগুলো</h2>
+          <h2 className="font-display text-[18px] font-bold">{t("listTitle")}</h2>
           <p className="text-ink-muted mt-0.5 max-w-[60ch] text-[14px] leading-[1.55]">
-            ক্যাশ, ব্যাংক, বিকাশ — যেখানে যেখানে টাকা রাখো। অ্যাপ শুরুর দিন
-            প্রতিটায় কত ছিল সেটা বসিয়ে দাও। লেনদেন আছে এমন অ্যাকাউন্টের শুধু নাম
-            বদলানো যায়, মোছা যায় না।
+            {t("listHint")}
           </p>
         </div>
         <SaveStatus state={state} error={error} dirty={dirty} />
@@ -103,7 +104,7 @@ export function AccountListCard({
             <span className="bg-field-alt flex h-9 w-9 items-center justify-center rounded-full sm:h-11 sm:w-11">
               <Plus className="h-5 w-5" />
             </span>
-            অ্যাকাউন্ট যোগ করো
+            {t("addAccount")}
           </button>
         </li>
       </ul>
@@ -114,7 +115,7 @@ export function AccountListCard({
         disabled={busy || !dirty}
         className="bg-ink focus-visible:outline-primary mt-4 min-h-[46px] cursor-pointer rounded-[12px] px-4 text-[15px] font-bold text-white transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
       >
-        {busy ? "সেভ হচ্ছে…" : "সেভ করো"}
+        {busy ? common("saving") : common("save")}
       </button>
     </Card>
   );

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CategoryStat } from "@/lib/finance/types";
+import { useT } from "@/lib/i18n/client";
 
 type CategoryChipsProps = {
   categories: CategoryStat[];
@@ -24,6 +25,8 @@ export function CategoryChips({
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const nameRef = useRef<HTMLInputElement>(null);
+  const t = useT("add");
+  const errors = useT("errors");
 
   useEffect(() => {
     if (open) nameRef.current?.focus();
@@ -39,12 +42,12 @@ export function CategoryChips({
     const trimmed = name.trim();
 
     if (!trimmed) {
-      setError("খাতের নাম লিখে দাও।");
+      setError(errors("categoryName"));
       return;
     }
 
     if (categories.some((item) => item.name === trimmed)) {
-      setError("এই নামে একটা খাত আগে থেকেই আছে।");
+      setError(errors("categoryExists"));
       return;
     }
 
@@ -66,7 +69,7 @@ export function CategoryChips({
   return (
     <fieldset className="mt-5">
       <legend className="text-ink-muted text-[15px] font-medium">
-        কোন খাতে?
+        {t("categoryLegend")}
       </legend>
 
       <div className="mt-2.5 flex flex-wrap gap-2">
@@ -103,7 +106,7 @@ export function CategoryChips({
             className="text-ink-soft hover:border-line-strong hover:text-ink focus-visible:outline-primary flex min-h-[46px] cursor-pointer items-center gap-1.5 rounded-full border-[1.5px] border-dashed border-[#d8d2c4] px-4 text-[15px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             <Plus className="h-4 w-4" />
-            নতুন খাত
+            {t("newCategory")}
           </button>
         )}
       </div>
@@ -116,7 +119,7 @@ export function CategoryChips({
                 htmlFor="new-category-name"
                 className="text-ink-soft text-[14px] font-semibold"
               >
-                খাতের নাম
+                {t("categoryName")}
               </label>
               <input
                 id="new-category-name"
@@ -124,7 +127,7 @@ export function CategoryChips({
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="যেমন, বাসার মেরামত"
+                placeholder={t("categoryPlaceholder")}
                 className="bg-surface border-line rounded-field text-ink placeholder:text-ink-faint focus:border-primary min-h-[46px] border-[1.5px] px-[14px] text-[15px] outline-none"
               />
             </div>
@@ -136,14 +139,14 @@ export function CategoryChips({
                 disabled={busy}
                 className="bg-primary hover:bg-primary-dark focus-visible:outline-primary min-h-[46px] flex-1 cursor-pointer @md:flex-none rounded-[12px] px-4 text-[15px] font-bold text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                যোগ করো
+                {t("addCategory")}
               </button>
               <button
                 type="button"
                 onClick={close}
                 className="text-ink-soft hover:text-ink focus-visible:outline-primary min-h-[46px] cursor-pointer rounded-[12px] px-3 text-[15px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
               >
-                বাতিল
+                {t("cancel")}
               </button>
             </div>
           </div>
@@ -154,7 +157,7 @@ export function CategoryChips({
             </p>
           ) : (
             <p className="text-ink-faint mt-2.5 text-[14px]">
-              এই খাতটা শুধু এই মাসের জন্য, বাজেটে যোগ হবে না।
+              {t("temporaryHint")}
             </p>
           )}
         </div>

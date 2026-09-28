@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, LoaderCircle, TriangleAlert } from "lucide-react";
+import { useT } from "@/lib/i18n/client";
 
 export type SaveState = "idle" | "saving" | "saved" | "error";
 
@@ -12,6 +13,8 @@ type SaveStatusProps = {
 };
 
 export function SaveStatus({ state, error, dirty = false }: SaveStatusProps) {
+  const t = useT("budget");
+
   if (state === "error") {
     return (
       <p
@@ -31,7 +34,7 @@ export function SaveStatus({ state, error, dirty = false }: SaveStatusProps) {
         className="text-ink-faint flex items-center gap-1.5 text-[14px] font-medium"
       >
         <LoaderCircle className="h-4 w-4 flex-none animate-spin" />
-        সেভ হচ্ছে
+        {t("statusSaving")}
       </p>
     );
   }
@@ -39,7 +42,7 @@ export function SaveStatus({ state, error, dirty = false }: SaveStatusProps) {
   if (dirty) {
     return (
       <p className="text-ink-muted flex items-center gap-1.5 text-[14px] font-medium">
-        সেভ করা হয়নি
+        {t("statusUnsaved")}
       </p>
     );
   }
@@ -51,7 +54,7 @@ export function SaveStatus({ state, error, dirty = false }: SaveStatusProps) {
         className="text-ink-faint flex items-center gap-1.5 text-[14px] font-medium"
       >
         <Check className="text-primary h-4 w-4 flex-none" />
-        সেভ হয়েছে
+        {t("statusSaved")}
       </p>
     );
   }

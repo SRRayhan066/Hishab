@@ -1,8 +1,9 @@
 import { Card } from "@/components/ui/Card";
-import { formatTaka } from "@/lib/finance/format";
 import type { MonthSummary } from "@/lib/finance/types";
+import { getFormat, getT } from "@/lib/i18n/server";
 
-export function BalanceCard({ summary }: { summary: MonthSummary }) {
+export async function BalanceCard({ summary }: { summary: MonthSummary }) {
+  const [t, format] = await Promise.all([getT("home"), getFormat()]);
   const {
     balance,
     remainingPlanned,
@@ -19,16 +20,18 @@ export function BalanceCard({ summary }: { summary: MonthSummary }) {
   const short = freeToSpend < 0;
 
   const sentence = short
-    ? `পরিকল্পনার সব খরচ মেটাতে আরও ${formatTaka(-freeToSpend)} লাগবে। কোনো খাত কমাতে হবে।`
+    ? t("short", { amount: format.taka(-freeToSpend) })
     : daysLeft > 0
-      ? `ফিক্সড খরচগুলো সরিয়ে রাখলে দিনে প্রায় ${formatTaka(perDay)} করে খরচ করতে পারো।`
-      : "আজই মাসের শেষ দিন।";
+      ? t("perDay", { amount: format.taka(perDay) })
+      : t("lastDay");
 
   return (
     <Card className="px-6 pt-[26px] pb-7">
-      <p className="text-ink-muted text-[15px] font-medium">এখন হাতে আছে</p>
+      <p className="text-ink-muted text-[15px] font-medium">
+        {t("balanceLabel")}
+      </p>
       <p className="font-display mt-1 text-[clamp(46px,11vw,74px)] leading-[1.05] font-bold tracking-[-0.02em]">
-        {formatTaka(balance)}
+        {format.taka(balance)}
       </p>
       <p className="text-ink-soft mt-2 max-w-[38ch] text-[16px] leading-[1.55]">
         {sentence}
@@ -36,9 +39,11 @@ export function BalanceCard({ summary }: { summary: MonthSummary }) {
 
       <dl className="mt-6 grid gap-3.5 [grid-template-columns:repeat(auto-fit,minmax(170px,1fr))]">
         <div className="bg-field rounded-[16px] px-[18px] py-4">
-          <dt className="text-ink-muted text-[14px]">খরচ বাকি (পরিকল্পনা)</dt>
+          <dt className="text-ink-muted text-[14px]">
+            {t("remainingPlanned")}
+          </dt>
           <dd className="font-display mt-0.5 text-[22px] font-bold">
-            {formatTaka(remainingPlanned)}
+            {format.taka(remainingPlanned)}
           </dd>
         </div>
 
@@ -47,13 +52,13 @@ export function BalanceCard({ summary }: { summary: MonthSummary }) {
             short ? "bg-danger-bg" : "bg-panel"
           }`}
         >
-          <dt className="text-ink-soft text-[14px]">বাড়তি টাকা (এই মাসের)</dt>
+          <dt className="text-ink-soft text-[14px]">{t("freeToSpend")}</dt>
           <dd
             className={`font-display mt-0.5 text-[22px] font-bold ${
               short ? "text-danger-ink" : "text-primary-dark"
             }`}
           >
-            {formatTaka(freeToSpend)}
+            {format.taka(freeToSpend)}
           </dd>
         </div>
       </dl>
@@ -75,9 +80,9 @@ export function BalanceCard({ summary }: { summary: MonthSummary }) {
           />
         </div>
         <div className="text-ink-muted mt-2.5 flex justify-between gap-3 text-[14px]">
-          <span>খরচ হয়েছে {formatTaka(spentTotal)}</span>
-          <span>আজকের হিসাবে এখানে থাকার কথা</span>
-          <span>পরিকল্পনা {formatTaka(plannedTotal)}</span>
+          <span>{t("spentSoFar", { amount: format.taka(spentTotal) })}</span>
+          <span>{t("paceMarker")}</span>
+          <span>{t("planned", { amount: format.taka(plannedTotal) })}</span>
         </div>
       </div>
     </Card>
