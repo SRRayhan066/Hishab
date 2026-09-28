@@ -40,6 +40,11 @@ export function daysInPeriod({ year, month }: Period): number {
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
 
+export function lastRecordableDay(now?: Date): number {
+  const today = zonedToday(now);
+  return Math.min(daysInPeriod(today), today.day);
+}
+
 export function periodLabel({ month }: Period): string {
   return BENGALI_MONTHS[month - 1] ?? "";
 }

@@ -1,11 +1,16 @@
 import { Card } from "@/components/ui/Card";
 import { formatTaka } from "@/lib/finance/format";
-import type { CategoryStat, MonthSummary } from "@/lib/finance/types";
+import type {
+  CategoryStat,
+  MoneyAccount,
+  MonthSummary,
+} from "@/lib/finance/types";
 
 type RunningTotalsProps = {
   summary: MonthSummary;
   todaySpent: number;
   category: CategoryStat | undefined;
+  account?: MoneyAccount;
 };
 
 const toneInk: Record<CategoryStat["tone"], string> = {
@@ -18,6 +23,7 @@ export function RunningTotals({
   summary,
   todaySpent,
   category,
+  account,
 }: RunningTotalsProps) {
   return (
     <Card className="px-[22px] py-5">
@@ -55,6 +61,22 @@ export function RunningTotals({
               style={{ color: toneInk[category.tone] }}
             >
               {category.leftLabel}
+            </dd>
+          </div>
+        )}
+
+        {account && (
+          <div>
+            <dt className="text-ink-muted text-[14px] font-medium">
+              {account.name}-এ আছে
+            </dt>
+            <dd
+              className="font-display mt-0.5 text-[21px] font-bold"
+              style={{
+                color: account.balance < 0 ? "var(--color-over)" : undefined,
+              }}
+            >
+              {formatTaka(account.balance)}
             </dd>
           </div>
         )}

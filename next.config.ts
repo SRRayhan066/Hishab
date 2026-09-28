@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
   // when opening the dev server by LAN IP, e.g. http://192.168.0.107:3000.
   allowedDevOrigins: ["192.168.*.*"],
 
+  redirects() {
+    return [{ source: "/savings", destination: "/accounts", permanent: true }];
+  },
+
   turbopack: {
     // Turbopack finds the project root by walking up for a lockfile, and there
     // is a stray package-lock.json in the home directory above this one. It

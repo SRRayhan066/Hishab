@@ -2,9 +2,13 @@
 
 import { refresh } from "next/cache";
 import { db } from "@/lib/db";
-import { currentMonthForSession } from "@/lib/finance/month-store";
-import { daysInPeriod, zonedToday } from "@/lib/finance/period";
 import {
+  currentMonthForSession,
+  currentSessionMonth,
+} from "@/lib/finance/month-store";
+import { lastRecordableDay } from "@/lib/finance/period";
+import {
+  accountGoneError,
   categoryMissingError,
   expenseDayError,
   invalidRowError,
@@ -22,25 +26,30 @@ export async function addExpense(
     return { error: parsed.error.issues[0]?.message ?? invalidRowError };
   }
 
-  const monthId = await currentMonthForSession();
-  if (!monthId) return { error: signedOutError };
+  const session = await currentSessionMonth();
+  if (!session) return { error: signedOutError };
 
-  const { categoryId, day, amount } = parsed.data;
+  const { categoryId, accountId, day, amount } = parsed.data;
 
   // 31 passes the schema, but February has no 31st — and spending can't be
   // recorded for a day that hasn't happened yet in Dhaka.
-  const today = zonedToday();
-  const lastAllowedDay = Math.min(daysInPeriod(today), today.day);
-  if (day > lastAllowedDay) return { error: expenseDayError };
+  if (day > lastRecordableDay()) return { error: expenseDayError };
 
-  const category = await db.spendCategory.findFirst({
-    where: { id: categoryId, monthId },
-    select: { id: true },
-  });
+  const [category, account] = await Promise.all([
+    db.spendCategory.findFirst({
+      where: { id: categoryId, monthId: session.monthId },
+      select: { id: true },
+    }),
+    db.moneyAccount.findFirst({
+      where: { id: accountId, userId: session.userId },
+      select: { id: true },
+    }),
+  ]);
   if (!category) return { error: categoryMissingError };
+  if (!account) return { error: accountGoneError };
 
   await db.expense.create({
-    data: { categoryId: category.id, day, amount },
+    data: { categoryId: category.id, accountId: account.id, day, amount },
   });
 
   refresh();

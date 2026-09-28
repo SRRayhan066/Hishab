@@ -8,7 +8,7 @@ const items = [
   { href: "/home", label: "হোম" },
   { href: "/add", label: "খরচ" },
   { href: "/budget", label: "বাজেট" },
-  { href: "/savings", label: "জমা" },
+  { href: "/accounts", label: "অ্যাকাউন্ট" },
   { href: "/history", label: "হিসাব" },
 ];
 

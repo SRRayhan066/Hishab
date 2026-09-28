@@ -13,11 +13,16 @@ import { addCategoryRow } from "@/app/actions/budget";
 import { addExpense, removeExpense } from "@/app/actions/expense";
 import { Card } from "@/components/ui/Card";
 import { FormError } from "@/components/ui/FormError";
-import { listEntries, spentOnDay } from "@/lib/finance/entries";
+import {
+  lastUsedAccountId,
+  listEntries,
+  spentOnDay,
+} from "@/lib/finance/entries";
 import { saveFailedError } from "@/lib/finance/messages";
 import type { MonthData, MonthSummary } from "@/lib/finance/types";
-import { cn } from "@/lib/utils";
+import { AccountChips } from "./AccountChips";
 import { CategoryChips } from "./CategoryChips";
+import { DayPicker } from "./DayPicker";
 import { RecentEntries } from "./RecentEntries";
 import { RunningTotals } from "./RunningTotals";
 
@@ -33,14 +38,6 @@ type AddExpenseScreenProps = {
   reference: Reference;
 };
 
-const pad = (value: number) => String(value).padStart(2, "0");
-
-function quickDays(today: number) {
-  const options = [{ label: "আজ", day: today }];
-  if (today > 1) options.push({ label: "গতকাল", day: today - 1 });
-  return options;
-}
-
 export function AddExpenseScreen({
   data,
   summary,
@@ -52,6 +49,9 @@ export function AddExpenseScreen({
 
   const [amount, setAmount] = useState("");
   const [categoryId, setCategoryId] = useState(data.categories[0]?.id ?? "");
+  const [accountId, setAccountId] = useState(
+    () => lastUsedAccountId(listEntries(data)) ?? data.accounts[0]?.id ?? "",
+  );
   const [day, setDay] = useState(reference.day);
   const [error, setError] = useState("");
   const [busy, startTransition] = useTransition();
@@ -69,9 +69,8 @@ export function AddExpenseScreen({
     (current, id: string) => current.filter((entry) => entry.id !== id),
   );
   const selected = summary.categories.find((item) => item.id === categoryId);
+  const account = data.accounts.find((item) => item.id === accountId);
   const todaySpent = spentOnDay(data, reference.day);
-
-  const month = `${reference.year}-${pad(reference.monthIndex + 1)}`;
 
   // A category deleted on the budget screen, or a month that just rolled
   // over, can leave the selection pointing at nothing.
@@ -80,6 +79,12 @@ export function AddExpenseScreen({
       setCategoryId(data.categories[0]?.id ?? "");
     }
   }, [data.categories, categoryId]);
+
+  useEffect(() => {
+    if (!data.accounts.some((item) => item.id === accountId)) {
+      setAccountId(data.accounts[0]?.id ?? "");
+    }
+  }, [data.accounts, accountId]);
 
   const handleCreateCategory = (name: string) => {
     setError("");
@@ -111,9 +116,14 @@ export function AddExpenseScreen({
       return;
     }
 
+    if (!accountId) {
+      setError("কোন অ্যাকাউন্ট থেকে খরচ হলো বেছে নাও।");
+      return;
+    }
+
     setError("");
     startTransition(async () => {
-      const result = await addExpense({ categoryId, day, amount });
+      const result = await addExpense({ categoryId, accountId, day, amount });
 
       if (result.error) {
         setError(result.error);
@@ -164,46 +174,15 @@ export function AddExpenseScreen({
             />
           </div>
 
-          <label
-            htmlFor={dateId}
-            className="text-ink-muted mt-5 block text-[15px] font-medium"
-          >
-            কবে খরচ হলো?
-          </label>
-
-          <div className="mt-2.5 flex flex-wrap gap-2">
-            <input
-              id={dateId}
-              type="date"
-              value={`${month}-${pad(day)}`}
-              min={`${month}-01`}
-              max={`${month}-${pad(reference.day)}`}
-              onChange={(event) => {
-                const picked = Number(event.target.value.slice(8, 10));
-                if (picked >= 1 && picked <= reference.day) setDay(picked);
-              }}
-              className="bg-field border-line rounded-field text-ink focus:border-primary focus:bg-surface min-h-[46px] min-w-[150px] flex-1 border-[1.5px] px-[14px] text-[15px] outline-none transition-colors"
-            />
-
-            <div className="flex gap-2">
-              {quickDays(reference.day).map((option) => (
-                <button
-                  key={option.label}
-                  type="button"
-                  onClick={() => setDay(option.day)}
-                  aria-pressed={day === option.day}
-                  className={cn(
-                    "focus-visible:outline-primary min-h-[46px] cursor-pointer rounded-full border-[1.5px] px-4 text-[15px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2",
-                    day === option.day
-                      ? "border-primary bg-panel text-primary-dark"
-                      : "border-line bg-field text-ink-soft hover:border-line-strong",
-                  )}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          <DayPicker
+            id={dateId}
+            label="কবে খরচ হলো?"
+            year={reference.year}
+            monthIndex={reference.monthIndex}
+            today={reference.day}
+            day={day}
+            onChange={setDay}
+          />
 
           <CategoryChips
             categories={summary.categories}
@@ -212,6 +191,15 @@ export function AddExpenseScreen({
             onCreate={handleCreateCategory}
             busy={busy}
           />
+
+          {data.accounts.length > 1 && (
+            <AccountChips
+              accounts={data.accounts}
+              selected={accountId}
+              amount={Number(amount) || 0}
+              onSelect={setAccountId}
+            />
+          )}
 
           {error && (
             <div className="mt-4">
@@ -240,6 +228,7 @@ export function AddExpenseScreen({
           summary={summary}
           todaySpent={todaySpent}
           category={selected}
+          account={data.accounts.length > 1 ? account : undefined}
         />
         <RecentEntries
           entries={visibleEntries}

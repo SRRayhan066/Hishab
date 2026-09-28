@@ -2,10 +2,11 @@ import "server-only";
 import { db } from "@/lib/db";
 import { getSessionUserId } from "@/lib/auth/session";
 import { Prisma } from "@/lib/generated/prisma/client";
+import { loadAccounts } from "./account-store";
 import { currentPeriod, periodLabel, type Period } from "./period";
 import type { ExpenseEntry, MonthData, PastMonth } from "./types";
 
-/** How many earlier months feed the history list and the savings total. */
+/** How many earlier months feed the history list and the month-by-month savings. */
 const HISTORY_LIMIT = 12;
 
 // Every budget row is ordered the same way: the order the user put them in,
@@ -50,7 +51,13 @@ function findSeedMonth(userId: string, period: Period) {
     select: {
       id: true,
       incomes: {
-        select: { lineageId: true, name: true, amount: true, sortOrder: true },
+        select: {
+          lineageId: true,
+          name: true,
+          amount: true,
+          accountId: true,
+          sortOrder: true,
+        },
         orderBy: byOrder,
       },
       // A temporary category was for that month alone.
@@ -190,19 +197,16 @@ export async function loadMonthSnapshot(
   userId: string,
   period: Period = currentPeriod(),
 ): Promise<MonthSnapshot> {
-  const [monthId, user, history] = await Promise.all([
+  const [monthId, history] = await Promise.all([
     ensureCurrentMonth(userId, period),
-    db.user.findUniqueOrThrow({
-      where: { id: userId },
-      select: { openingBalance: true },
-    }),
     loadHistory(userId, period),
   ]);
 
-  const [income, categories, expenses] = await Promise.all([
+  const [accounts, income, categories, expenses, transfers] = await Promise.all([
+    loadAccounts(userId),
     db.incomeSource.findMany({
       where: { monthId },
-      select: { id: true, name: true, amount: true },
+      select: { id: true, name: true, amount: true, accountId: true },
       orderBy: byOrder,
     }),
     db.spendCategory.findMany({
@@ -215,6 +219,19 @@ export async function loadMonthSnapshot(
       select: {
         id: true,
         categoryId: true,
+        accountId: true,
+        day: true,
+        amount: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "asc" },
+    }),
+    db.transfer.findMany({
+      where: { monthId },
+      select: {
+        id: true,
+        fromId: true,
+        toId: true,
         day: true,
         amount: true,
         createdAt: true,
@@ -231,6 +248,7 @@ export async function loadMonthSnapshot(
       id: expense.id,
       day: expense.day,
       amount: expense.amount,
+      accountId: expense.accountId,
       addedAt: expense.createdAt.getTime(),
     };
 
@@ -243,11 +261,15 @@ export async function loadMonthSnapshot(
     monthId,
     period,
     data: {
-      openingBalance: user.openingBalance,
+      accounts,
       income,
       categories: categories.map((category) => ({
         ...category,
         entries: entriesByCategory.get(category.id) ?? [],
+      })),
+      transfers: transfers.map(({ createdAt, ...transfer }) => ({
+        ...transfer,
+        addedAt: createdAt.getTime(),
       })),
       history,
     },
@@ -263,6 +285,15 @@ export async function currentMonthForSession(): Promise<string | null> {
   const userId = await getSessionUserId();
   if (!userId) return null;
   return ensureCurrentMonth(userId);
+}
+
+export async function currentSessionMonth(): Promise<{
+  userId: string;
+  monthId: string;
+} | null> {
+  const userId = await getSessionUserId();
+  if (!userId) return null;
+  return { userId, monthId: await ensureCurrentMonth(userId) };
 }
 
 export type BudgetSection = "income" | "category";

@@ -123,12 +123,7 @@ export function buildMonthSummary(
     ),
   );
 
-  // The wallet: what was there to begin with, plus everything that has come
-  // in, less everything that has actually gone out. Planned-but-unpaid costs
-  // are deliberately not subtracted — they have not left the wallet yet.
-  const pastNet = sum(data.history.map((month) => month.income - month.spent));
-  const balance =
-    data.openingBalance + pastNet + (incomeTotal - spentTotal);
+  const balance = sum(data.accounts.map((account) => account.balance));
 
   const freeToSpend = balance - remainingPlanned;
 
