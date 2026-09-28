@@ -1,16 +1,15 @@
 import { formatTaka } from "./format";
 import { buildSavingsResults, monthSaving, signedTaka, type MonthResult } from "./history";
-import type { PastMonth } from "./types";
+import type { MoneyAccount, PastMonth } from "./types";
+
+export const defaultMoneyAccount = { name: "ক্যাশ" };
 
 export type SavingsView = {
   opening: number;
   pastSaved: number;
   pastSavedLabel: string;
-  /** Opening + every past month + this month so far. The wallet, in other words. */
   total: number;
-  /** Actually banked this month: what came in, less what has gone out. */
   thisMonth: number;
-  /** Where this month lands if the current spending pace holds. */
   projected: number;
   sentence: string;
   months: MonthResult[];
@@ -18,13 +17,13 @@ export type SavingsView = {
 
 export function buildSavingsView(
   opening: number,
+  total: number,
   history: PastMonth[],
   thisMonth: number,
   projected: number,
 ): SavingsView {
-  // What each past month really left over: income less everything spent.
   const pastSaved = history.reduce(
-    (total, month) => total + monthSaving(month),
+    (sum, month) => sum + monthSaving(month),
     0,
   );
 
@@ -32,9 +31,7 @@ export function buildSavingsView(
     opening,
     pastSaved,
     pastSavedLabel: signedTaka(pastSaved),
-    // Deliberately the same three parts the balance is built from, so the
-    // headline here and the one in the header can never disagree.
-    total: opening + pastSaved + thisMonth,
+    total,
     thisMonth,
     projected,
     sentence:
@@ -43,4 +40,16 @@ export function buildSavingsView(
         : `প্রতি মাসে যা বেঁচে যায় সেটা এর সাথে যোগ হয়। তবে এখনকার খরচের গতি ধরলে এই মাসে জমার বদলে ${formatTaka(-projected)} কমে যাবে।`,
     months: buildSavingsResults(history),
   };
+}
+
+export function balanceWithOpening(
+  account: MoneyAccount | undefined,
+  opening: number,
+): number {
+  if (!account) return opening;
+  return account.balance - account.openingBalance + opening;
+}
+
+export function accountNames(accounts: MoneyAccount[]): Map<string, string> {
+  return new Map(accounts.map((account) => [account.id, account.name]));
 }

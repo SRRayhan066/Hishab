@@ -39,6 +39,19 @@
   --radius-tab: 10px;
   --radius-field: 13px;
   --radius-button: 15px;
+
+  --animate-pop-in: pop-in 130ms ease-out;
+
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
 }
 
 html,

@@ -5,22 +5,26 @@ export type PlanRowField = {
   id: string;
   name: string;
   amount: string;
+  accountId?: string;
 };
 
-export type PlanFormValues = {
-  income: PlanRowField[];
-  categories: PlanRowField[];
+export type PlanSectionValues = {
+  rows: PlanRowField[];
 };
 
-export type PlanSectionName = keyof PlanFormValues;
-
-export const blankRow = (): PlanRowField => ({ id: "", name: "", amount: "" });
+export const blankRow = (accountId?: string): PlanRowField => ({
+  id: "",
+  name: "",
+  amount: "",
+  ...(accountId ? { accountId } : {}),
+});
 
 export function toIncomeFields(items: IncomeSource[]): PlanRowField[] {
   return items.map((item) => ({
     id: item.id,
     name: item.name,
     amount: String(item.amount),
+    accountId: item.accountId,
   }));
 }
 

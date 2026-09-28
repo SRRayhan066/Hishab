@@ -13,14 +13,32 @@ model User {
   email             String             @unique
   passwordHash      String
   image             String?
-  /// What was in the wallet/bank the day the app was first used. Every
-  /// month's income is added on top and every expense taken off.
-  openingBalance    Int                @default(0)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   accounts          Account[]
+  moneyAccounts     MoneyAccount[]
   passwordResetOtps PasswordResetOtp[]
   budgetMonths      BudgetMonth[]
+}
+
+model MoneyAccount {
+  id             String   @id @default(cuid())
+  userId         String
+  name           String
+  openingBalance Int      @default(0)
+  color          String   @default("sage")
+  icon           String   @default("wallet")
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  incomes      IncomeSource[]
+  expenses     Expense[]
+  transfersOut Transfer[]     @relation("TransferFrom")
+  transfersIn  Transfer[]     @relation("TransferTo")
+
+  @@index([userId])
 }
 
 model PasswordResetOtp {
@@ -64,6 +82,7 @@ model BudgetMonth {
   seeded     BudgetMonth[]   @relation("MonthSeed")
   incomes    IncomeSource[]
   categories SpendCategory[]
+  transfers  Transfer[]
 
   @@unique([userId, year, month])
   @@index([userId, year, month])
@@ -77,14 +96,17 @@ model IncomeSource {
   lineageId String   @default(cuid())
   name      String
   amount    Int      @default(0)
+  accountId String
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  month BudgetMonth @relation(fields: [monthId], references: [id], onDelete: Cascade)
+  month   BudgetMonth  @relation(fields: [monthId], references: [id], onDelete: Cascade)
+  account MoneyAccount @relation(fields: [accountId], references: [id], onDelete: NoAction)
 
   @@index([monthId])
   @@index([lineageId])
+  @@index([accountId])
 }
 
 model SpendCategory {
@@ -93,6 +115,9 @@ model SpendCategory {
   lineageId String   @default(cuid())
   name      String
   budget    Int      @default(0)
+  /// Added on the fly from the add-expense screen. Belongs to this month only:
+  /// it has no budget, stays off the plan and is not copied into the next month.
+  temporary Boolean  @default(false)
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -107,12 +132,33 @@ model SpendCategory {
 model Expense {
   id         String   @id @default(cuid())
   categoryId String
+  accountId  String
   day        Int
   amount     Int
   note       String?
   createdAt  DateTime @default(now())
 
   category SpendCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  account  MoneyAccount  @relation(fields: [accountId], references: [id], onDelete: NoAction)
 
   @@index([categoryId])
+  @@index([accountId])
+}
+
+model Transfer {
+  id        String   @id @default(cuid())
+  monthId   String
+  fromId    String
+  toId      String
+  day       Int
+  amount    Int
+  createdAt DateTime @default(now())
+
+  month BudgetMonth  @relation(fields: [monthId], references: [id], onDelete: Cascade)
+  from  MoneyAccount @relation("TransferFrom", fields: [fromId], references: [id], onDelete: NoAction)
+  to    MoneyAccount @relation("TransferTo", fields: [toId], references: [id], onDelete: NoAction)
+
+  @@index([monthId])
+  @@index([fromId])
+  @@index([toId])
 }

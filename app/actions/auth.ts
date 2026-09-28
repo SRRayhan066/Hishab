@@ -16,6 +16,7 @@ import {
   invalidFormError,
   wrongCredentialsError,
 } from "@/lib/auth/messages";
+import { defaultMoneyAccount } from "@/lib/finance/accounts";
 import {
   setPasswordSchema,
   signInSchema,
@@ -70,7 +71,12 @@ export async function signUp(values: SignUpValues): Promise<AuthActionResult> {
 
   try {
     const user = await db.user.create({
-      data: { name, email, passwordHash: await hashPassword(password) },
+      data: {
+        name,
+        email,
+        passwordHash: await hashPassword(password),
+        moneyAccounts: { create: defaultMoneyAccount },
+      },
       select: { id: true },
     });
     await createSession(user.id);
@@ -113,6 +119,7 @@ export async function completeGoogleSignUp(
             providerAccountId: pending.googleId,
           },
         },
+        moneyAccounts: { create: defaultMoneyAccount },
       },
       select: { id: true },
     });

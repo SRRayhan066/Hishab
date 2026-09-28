@@ -12,7 +12,7 @@ const titles: Record<string, string> = {
   "/home": "এক নজরে",
   "/add": "খরচ যোগ করা",
   "/budget": "মাসের বাজেট",
-  "/savings": "জমা ও ব্যালেন্স",
+  "/accounts": "অ্যাকাউন্ট ও ব্যালেন্স",
   "/history": "আগের হিসাব",
 };
 

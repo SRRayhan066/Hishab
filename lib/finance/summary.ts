@@ -123,12 +123,7 @@ export function buildMonthSummary(
     ),
   );
 
-  // The wallet: what was there to begin with, plus everything that has come
-  // in, less everything that has actually gone out. Planned-but-unpaid costs
-  // are deliberately not subtracted — they have not left the wallet yet.
-  const pastNet = sum(data.history.map((month) => month.income - month.spent));
-  const balance =
-    data.openingBalance + pastNet + (incomeTotal - spentTotal);
+  const balance = sum(data.accounts.map((account) => account.balance));
 
   const freeToSpend = balance - remainingPlanned;
 
@@ -152,6 +147,24 @@ export function buildMonthSummary(
 
   const categories: CategoryStat[] = data.categories.map((category, index) => {
     const spent = spentByCategory[index];
+
+    // Nothing was planned for a temporary category, so there is no budget for
+    // it to be under or over — only what has gone out.
+    if (category.temporary) {
+      return {
+        id: category.id,
+        name: category.name,
+        budget: 0,
+        temporary: true,
+        spent,
+        percent: 0,
+        idealPercent: 0,
+        leftLabel: `${formatTaka(spent)} খরচ`,
+        detail: "শুধু এই মাসের খাত, বাজেটে ধরা নেই।",
+        tone: "good",
+      };
+    }
+
     const left = category.budget - spent;
     const aheadOfPace =
       category.budget > 0 && spent > category.budget * elapsedFraction;
@@ -160,6 +173,7 @@ export function buildMonthSummary(
       id: category.id,
       name: category.name,
       budget: category.budget,
+      temporary: false,
       spent,
       percent:
         category.budget > 0

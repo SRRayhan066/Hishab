@@ -1,14 +1,35 @@
+export type MoneyAccount = {
+  id: string;
+  name: string;
+  openingBalance: number;
+  color: string;
+  icon: string;
+  balance: number;
+  inUse: boolean;
+};
+
 export type IncomeSource = {
   id: string;
   name: string;
   amount: number;
+  accountId: string;
 };
 
 export type ExpenseEntry = {
   id: string;
   day: number;
   amount: number;
+  accountId: string;
   addedAt?: number;
+};
+
+export type TransferEntry = {
+  id: string;
+  fromId: string;
+  toId: string;
+  day: number;
+  amount: number;
+  addedAt: number;
 };
 
 /**
@@ -20,6 +41,8 @@ export type Category = {
   id: string;
   name: string;
   budget: number;
+  /** Added for this month only — no budget, not part of the plan. */
+  temporary: boolean;
   entries: ExpenseEntry[];
 };
 
@@ -38,10 +61,10 @@ export type PastMonth = {
 };
 
 export type MonthData = {
-  /** What was in the wallet before the app started tracking anything. */
-  openingBalance: number;
+  accounts: MoneyAccount[];
   income: IncomeSource[];
   categories: Category[];
+  transfers: TransferEntry[];
   history: PastMonth[];
 };
 
@@ -49,6 +72,7 @@ export type CategoryStat = {
   id: string;
   name: string;
   budget: number;
+  temporary: boolean;
   spent: number;
   percent: number;
   idealPercent: number;
@@ -107,7 +131,7 @@ export type MonthSummary = {
   /** Of the plan, what is still unpaid — bills yet to come. */
   remainingPlanned: number;
 
-  /** The real wallet figure: opening balance, plus all income, less all spending. */
+  /** The real wallet figure: every account's balance added together. */
   balance: number;
   /** Balance that is not already promised to the rest of the plan. */
   freeToSpend: number;

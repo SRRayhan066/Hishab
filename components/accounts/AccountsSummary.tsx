@@ -1,14 +1,16 @@
 import { Card } from "@/components/ui/Card";
 import { formatTaka } from "@/lib/finance/format";
-import type { SavingsView } from "@/lib/finance/savings";
+import type { SavingsView } from "@/lib/finance/accounts";
 
-export function SavingsSummary({ view }: { view: SavingsView }) {
+export function AccountsSummary({ view }: { view: SavingsView }) {
   const { total, opening, pastSavedLabel, thisMonth, sentence } = view;
   const gaining = thisMonth >= 0;
 
   return (
     <Card className="px-6 pt-[26px] pb-7">
-      <p className="text-ink-muted text-[15px] font-medium">সব মিলিয়ে হাতে আছে</p>
+      <p className="text-ink-muted text-[15px] font-medium">
+        সব অ্যাকাউন্ট মিলিয়ে আছে
+      </p>
       <p className="font-display mt-1 text-[clamp(46px,11vw,74px)] leading-[1.05] font-bold tracking-[-0.02em]">
         {formatTaka(total)}
       </p>

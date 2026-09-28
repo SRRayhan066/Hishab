@@ -44,6 +44,7 @@ export function RecentEntries({
                   </p>
                   <p className="text-ink-muted mt-px text-[14px]">
                     {entry.day} {monthName}
+                    {entry.accountName && ` · ${entry.accountName}`}
                   </p>
                 </div>
                 <span className="text-ink-soft text-[16px] font-semibold">
