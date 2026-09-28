@@ -1,20 +1,8 @@
-import { Mail } from "lucide-react";
-import { GoogleIcon } from "@/components/icons/GoogleIcon";
 import { Card } from "@/components/ui/Card";
+import type { Profile } from "@/lib/auth/profile";
 
-type ProfileSummaryProps = {
-  profile: {
-    name: string;
-    email: string;
-    joinedLabel: string;
-    provider: "email" | "google";
-    monthsTracked: number;
-  };
-};
-
-export function ProfileSummary({ profile }: ProfileSummaryProps) {
+export function ProfileSummary({ profile }: { profile: Profile }) {
   const initial = profile.name.trim().charAt(0);
-  const google = profile.provider === "google";
 
   return (
     <Card className="px-6 pt-[26px] pb-7">
@@ -47,18 +35,6 @@ export function ProfileSummary({ profile }: ProfileSummaryProps) {
           <dt className="text-ink-muted text-[14px]">হিসাব রাখছ</dt>
           <dd className="font-display mt-0.5 text-[20px] font-bold">
             {profile.monthsTracked} মাস ধরে
-          </dd>
-        </div>
-
-        <div className="bg-panel rounded-[16px] px-[18px] py-4">
-          <dt className="text-ink-soft text-[14px]">লগইন করো</dt>
-          <dd className="text-primary-dark font-display mt-0.5 flex items-center gap-2 text-[20px] font-bold">
-            {google ? (
-              <GoogleIcon className="h-[18px] w-[18px]" />
-            ) : (
-              <Mail className="h-[18px] w-[18px]" />
-            )}
-            {google ? "Google দিয়ে" : "ইমেইল দিয়ে"}
           </dd>
         </div>
       </dl>

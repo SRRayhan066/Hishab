@@ -4,6 +4,7 @@ export const emailTakenError =
   "এই ইমেইলে আগেই একটা হিসাব খোলা আছে। সাইন ইন করো।";
 export const wrongCredentialsError = "ইমেইল বা পাসওয়ার্ড মিলছে না।";
 export const googleExpiredError = "সময় পেরিয়ে গেছে। আবার গুগল দিয়ে শুরু করো।";
+export const wrongCurrentPasswordError = "এখনকার পাসওয়ার্ডটা মিলছে না।";
 
 export const resetExpiredError =
   "সময় পেরিয়ে গেছে। আবার গোড়া থেকে শুরু করো।";

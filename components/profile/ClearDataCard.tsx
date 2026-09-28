@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useState, useTransition } from "react";
 import {
   ArrowLeftRight,
   CalendarRange,
@@ -10,29 +10,59 @@ import {
   TriangleAlert,
   WalletMinimal,
 } from "lucide-react";
+import { clearAllData } from "@/app/actions/profile";
 import { Card } from "@/components/ui/Card";
+import { FormError } from "@/components/ui/FormError";
+import { requestFailedError } from "@/lib/auth/messages";
+import { clearDataPhrase } from "@/lib/validation/profile";
 
-const phrase = "মুছে ফেলো";
+const kept = [
+  "তোমার নাম আর ইমেইল",
+  "পাসওয়ার্ড আর লগইন",
+  "একটা খালি “ক্যাশ” অ্যাকাউন্ট",
+];
 
-type ClearDataCardProps = {
-  monthsTracked: number;
-  entries: number;
-};
-
-export function ClearDataCard({ monthsTracked, entries }: ClearDataCardProps) {
+export function ClearDataCard({ entries }: { entries: number }) {
   const inputId = useId();
   const [confirming, setConfirming] = useState(false);
   const [typed, setTyped] = useState("");
-  const ready = typed.trim() === phrase;
+  const [error, setError] = useState("");
+  const [done, setDone] = useState(false);
+  const [busy, startTransition] = useTransition();
+  const ready = typed.trim() === clearDataPhrase;
 
   const cancel = () => {
     setConfirming(false);
     setTyped("");
+    setError("");
+  };
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!ready) return;
+
+    setError("");
+    startTransition(async () => {
+      try {
+        const result = await clearAllData({ phrase: typed });
+        if (result.error) {
+          setError(result.error);
+          return;
+        }
+        cancel();
+        setDone(true);
+      } catch {
+        setError(requestFailedError);
+      }
+    });
   };
 
   const removed = [
-    { icon: CalendarRange, label: `${monthsTracked} মাসের বাজেট আর আয়` },
-    { icon: ReceiptText, label: `${entries}টা খরচের এন্ট্রি` },
+    { icon: CalendarRange, label: "সব মাসের বাজেট আর আয়" },
+    {
+      icon: ReceiptText,
+      label: entries > 0 ? `${entries}টা খরচের এন্ট্রি` : "সব খরচের এন্ট্রি",
+    },
     { icon: WalletMinimal, label: "সব অ্যাকাউন্ট আর ব্যালেন্স" },
     { icon: ArrowLeftRight, label: "সব ট্রান্সফার" },
   ];
@@ -67,7 +97,7 @@ export function ClearDataCard({ monthsTracked, entries }: ClearDataCardProps) {
         <div className="bg-panel rounded-[16px] px-[18px] py-4">
           <p className="text-ink-soft text-[14px] font-medium">যা থাকবে</p>
           <ul className="mt-2.5 flex flex-col gap-2">
-            {["তোমার নাম আর ইমেইল", "পাসওয়ার্ড আর লগইন"].map((label) => (
+            {kept.map((label) => (
               <li key={label} className="text-ink-panel flex items-center gap-2.5 text-[15px]">
                 <Check className="text-primary h-4 w-4 flex-none" />
                 {label}
@@ -79,7 +109,7 @@ export function ClearDataCard({ monthsTracked, entries }: ClearDataCardProps) {
 
       {confirming ? (
         <form
-          onSubmit={(event) => event.preventDefault()}
+          onSubmit={handleSubmit}
           className="bg-danger-bg border-danger-line animate-pop-in mt-5 rounded-[16px] border px-[18px] pt-4 pb-[18px]"
         >
           <p className="text-danger-ink flex items-center gap-2 text-[15px] font-semibold">
@@ -87,43 +117,63 @@ export function ClearDataCard({ monthsTracked, entries }: ClearDataCardProps) {
             সত্যিই সব মুছবে?
           </p>
           <label htmlFor={inputId} className="text-danger-ink mt-1.5 block text-[14px] leading-[1.55]">
-            নিশ্চিত করতে নিচে <span className="font-bold">“{phrase}”</span> লেখো।
+            নিশ্চিত করতে নিচে <span className="font-bold">“{clearDataPhrase}”</span> লেখো।
           </label>
           <input
             id={inputId}
             value={typed}
-            onChange={(event) => setTyped(event.target.value)}
+            onChange={(event) => {
+              setTyped(event.target.value);
+              setError("");
+            }}
             autoComplete="off"
-            placeholder={phrase}
+            autoFocus
+            placeholder={clearDataPhrase}
             className="bg-surface border-danger-field text-ink placeholder:text-ink-faint focus:border-danger rounded-field mt-3 min-h-[50px] w-full border-[1.5px] px-[15px] text-[16px] outline-none transition-colors"
           />
+          {error && (
+            <div className="mt-3">
+              <FormError message={error} />
+            </div>
+          )}
           <div className="mt-3.5 flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end">
             <button
               type="button"
               onClick={cancel}
-              className="bg-surface border-line text-ink hover:border-line-strong focus-visible:outline-primary min-h-[48px] cursor-pointer rounded-[12px] border-[1.5px] px-5 text-[15px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+              disabled={busy}
+              className="bg-surface border-line text-ink hover:border-line-strong focus-visible:outline-primary min-h-[48px] cursor-pointer rounded-[12px] border-[1.5px] px-5 text-[15px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
             >
               থাক, মুছব না
             </button>
             <button
               type="submit"
-              disabled={!ready}
+              disabled={!ready || busy}
               className="bg-danger font-display focus-visible:outline-danger flex min-h-[48px] cursor-pointer items-center justify-center gap-2 rounded-[12px] px-5 text-[15px] font-bold text-white transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <Trash2 className="h-4 w-4" />
-              সব মুছে ফেলো
+              {busy ? "মুছে ফেলা হচ্ছে…" : "সব মুছে ফেলো"}
             </button>
           </div>
         </form>
       ) : (
-        <button
-          type="button"
-          onClick={() => setConfirming(true)}
-          className="border-danger-line text-danger hover:bg-danger-bg focus-visible:outline-danger mt-5 flex min-h-[50px] w-full cursor-pointer items-center justify-center gap-2 rounded-[12px] border-[1.5px] px-4 text-[16px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
-        >
-          <Trash2 className="h-4 w-4" />
-          সব হিসাব মুছে ফেলো
-        </button>
+        <>
+          <button
+            type="button"
+            onClick={() => {
+              setConfirming(true);
+              setDone(false);
+            }}
+            className="border-danger-line text-danger hover:bg-danger-bg focus-visible:outline-danger mt-5 flex min-h-[50px] w-full cursor-pointer items-center justify-center gap-2 rounded-[12px] border-[1.5px] px-4 text-[16px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            <Trash2 className="h-4 w-4" />
+            সব হিসাব মুছে ফেলো
+          </button>
+          {done && (
+            <p aria-live="polite" className="text-primary-dark mt-3 text-center text-[14px] font-medium">
+              সব হিসাব মুছে ফেলা হয়েছে। এবার নতুন করে শুরু করো।
+            </p>
+          )}
+        </>
       )}
     </Card>
   );
