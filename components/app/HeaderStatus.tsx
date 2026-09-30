@@ -1,4 +1,6 @@
+import { Avatar } from "@/components/ui/Avatar";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { getCurrentUser } from "@/lib/auth/session";
 import { getCurrentMonthView } from "@/lib/finance/view";
 import { SavingsChip } from "./SavingsChip";
 
@@ -29,4 +31,15 @@ export async function SavingsStatus() {
   const { savingsLabel } = await getCurrentMonthView();
 
   return <SavingsChip label={savingsLabel} />;
+}
+
+export async function ProfileAvatar() {
+  const user = await getCurrentUser();
+  if (!user) return <ProfileAvatarFallback />;
+
+  return <Avatar seed={user.email} animate="hover" className="h-9 w-9" />;
+}
+
+export function ProfileAvatarFallback() {
+  return <Skeleton className="h-7 w-7" />;
 }
