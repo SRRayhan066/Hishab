@@ -1,20 +1,15 @@
+import { Avatar } from "@/components/ui/Avatar";
 import { Card } from "@/components/ui/Card";
 import type { Profile } from "@/lib/auth/profile";
 import { getFormat, getT } from "@/lib/i18n/server";
 
 export async function ProfileSummary({ profile }: { profile: Profile }) {
   const [t, format] = await Promise.all([getT("profile"), getFormat()]);
-  const initial = profile.name.trim().charAt(0);
 
   return (
     <Card className="px-6 pt-[26px] pb-7">
       <div className="flex items-center gap-4">
-        <span
-          aria-hidden
-          className="bg-panel text-primary-dark font-display flex h-[68px] w-[68px] flex-none items-center justify-center rounded-full text-[30px] font-bold"
-        >
-          {initial}
-        </span>
+        <Avatar seed={profile.email} animate="always" className="h-[68px] w-[68px]" />
         <div className="min-w-0">
           <p className="font-display truncate text-[26px] leading-[1.2] font-bold tracking-[-0.01em]">
             {profile.name}

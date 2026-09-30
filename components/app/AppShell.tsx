@@ -5,7 +5,13 @@ import { BottomNav } from "./BottomNav";
 import { InstallBanner } from "./InstallBanner";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { ProfileLink } from "./ProfileLink";
-import { MonthLine, MonthLineFallback, SavingsStatus } from "./HeaderStatus";
+import {
+  MonthLine,
+  MonthLineFallback,
+  ProfileAvatar,
+  ProfileAvatarFallback,
+  SavingsStatus,
+} from "./HeaderStatus";
 import { SavingsChipFallback } from "./SavingsChip";
 import { ScreenTitle } from "./ScreenTitle";
 
@@ -35,7 +41,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <SavingsStatus />
                 </Suspense>
                 <LanguageSwitcher />
-                <ProfileLink />
+                <ProfileLink>
+                  <Suspense fallback={<ProfileAvatarFallback />}>
+                    <ProfileAvatar />
+                  </Suspense>
+                </ProfileLink>
               </div>
             </div>
           </header>

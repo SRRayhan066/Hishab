@@ -1,12 +1,12 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { UserRound } from "lucide-react";
 import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 
-export function ProfileLink() {
+export function ProfileLink({ children }: { children: ReactNode }) {
   const active = usePathname() === "/profile";
   const t = useT("header");
 
@@ -22,7 +22,7 @@ export function ProfileLink() {
           : "bg-surface text-ink-soft hover:bg-field-alt",
       )}
     >
-      <UserRound className="h-5 w-5" />
+      {children}
     </Link>
   );
 }
