@@ -17,6 +17,7 @@ export type SelectOption = {
   label: string;
   hint?: string;
   disabled?: boolean;
+  icon?: ReactNode;
 };
 
 type SelectProps = {
@@ -28,6 +29,7 @@ type SelectProps = {
   icon?: ReactNode;
   placeholder?: string;
   disabled?: boolean;
+  rich?: boolean;
   className?: string;
   "aria-label"?: string;
   "aria-labelledby"?: string;
@@ -44,6 +46,7 @@ export function Select({
   icon,
   placeholder,
   disabled = false,
+  rich = false,
   className,
   "aria-label": ariaLabel,
   "aria-labelledby": ariaLabelledBy,
@@ -203,17 +206,29 @@ export function Select({
           onBlur?.();
         }}
         className={cn(
-          "rounded-field text-ink flex min-h-[46px] w-full cursor-pointer items-center gap-2 border-[1.5px] px-3 text-left text-[15px] font-semibold outline-none transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+          "rounded-field text-ink flex w-full cursor-pointer items-center border px-3 text-left text-[15px] font-semibold outline-none transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+          rich ? "min-h-[58px] gap-3" : "min-h-[46px] gap-2",
           open
             ? "border-primary bg-surface"
             : "bg-field border-line hover:border-line-strong focus-visible:border-primary focus-visible:bg-surface",
         )}
       >
-        {icon && (
-          <span className="text-primary flex flex-none items-center gap-1.5">{icon}</span>
+        {rich && selected?.icon ? (
+          <span className="bg-field-alt text-ink flex h-9 w-9 flex-none items-center justify-center rounded-[10px]">
+            {selected.icon}
+          </span>
+        ) : (
+          icon && (
+            <span className="text-primary flex flex-none items-center gap-1.5">{icon}</span>
+          )
         )}
         <span className={cn("min-w-0 flex-1 truncate", !selected && "text-ink-faint font-medium")}>
           {selected?.label ?? placeholder ?? t("choose")}
+          {rich && selected?.hint && (
+            <span className="text-ink-soft block text-[13px] font-normal">
+              {selected.hint}
+            </span>
+          )}
         </span>
         <ChevronDown
           aria-hidden
@@ -257,10 +272,13 @@ export function Select({
                 option.disabled && "cursor-not-allowed opacity-45",
               )}
             >
+              {option.icon && (
+                <span className="text-ink-soft flex flex-none items-center">{option.icon}</span>
+              )}
               <span className="min-w-0 flex-1">
                 <span className="block truncate">{option.label}</span>
                 {option.hint && (
-                  <span className="text-ink-muted block text-[13px] font-normal">
+                  <span className="text-ink-soft block text-[13px] font-normal">
                     {option.hint}
                   </span>
                 )}

@@ -46,6 +46,7 @@ function selectAccounts(
         + COALESCE(incoming.total, 0)
         - COALESCE(outgoing.total, 0)
         + COALESCE(adjusted.total, 0)
+        + COALESCE(debt.total, 0)
       )::int AS balance,
       (
         income.total IS NOT NULL
@@ -53,6 +54,7 @@ function selectAccounts(
         OR incoming.total IS NOT NULL
         OR outgoing.total IS NOT NULL
         OR adjusted.total IS NOT NULL
+        OR debt.total IS NOT NULL
       ) AS "inUse",
       (${openedMonth} < ${periodKey(currentPeriod())}) AS "openingLocked"
     FROM "MoneyAccount" a
@@ -86,6 +88,14 @@ function selectAccounts(
       WHERE b."accountId" = a."id"
         ${upToMonth(Prisma.sql`b."monthId"`)}
     ) adjusted ON TRUE
+    LEFT JOIN LATERAL (
+      SELECT SUM(
+        CASE WHEN d."kind" IN ('borrow', 'gotBack') THEN d."amount" ELSE -d."amount" END
+      ) AS total
+      FROM "DebtEntry" d
+      WHERE d."accountId" = a."id"
+        ${upToMonth(Prisma.sql`d."monthId"`)}
+    ) debt ON TRUE
     WHERE ${where}
     ORDER BY a."sortOrder" ASC, a."createdAt" ASC
   `;

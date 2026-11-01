@@ -56,3 +56,23 @@ export function fieldsTotal(rows: WatchedRow[] | undefined): number {
     return total + (Number.isFinite(parsed) ? parsed : 0);
   }, 0);
 }
+
+export function countChanges(
+  saved: (WatchedRow | undefined)[] | undefined,
+  rows: WatchedRow[] | undefined,
+): number {
+  const before = new Map((saved ?? []).map((row) => [row?.id, row]));
+  const edited = (rows ?? []).filter((row) => {
+    const original = row.id ? before.get(row.id) : undefined;
+    return (
+      !original ||
+      original.name !== row.name ||
+      original.amount !== row.amount ||
+      original.accountId !== row.accountId
+    );
+  });
+  const kept = new Set((rows ?? []).map((row) => row.id));
+  const removed = (saved ?? []).filter((row) => !kept.has(row?.id));
+
+  return edited.length + removed.length;
+}

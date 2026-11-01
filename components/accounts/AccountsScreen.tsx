@@ -1,47 +1,51 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { saveAccountSection } from "@/app/actions/accounts";
-import type { SaveState } from "@/components/budget/SaveStatus";
+import { DirtyBar } from "@/components/app/DirtyBar";
+import { Card } from "@/components/ui/Card";
+import { FormError } from "@/components/ui/FormError";
 import {
   balanceWithOpening,
-  buildSavingsView,
   keepsHistory,
   openingChanges,
   overdrawnAccount,
 } from "@/lib/finance/accounts";
-import { pickAccountStyle } from "@/lib/finance/account-style";
-import { useT } from "@/lib/i18n/client";
+import { buildSavingsResults } from "@/lib/finance/history";
 import type {
   BalanceAdjustmentEntry,
   MoneyAccount,
   PastMonth,
   TransferEntry,
 } from "@/lib/finance/types";
-import { cn } from "@/lib/utils";
-import {
-  AccountListCard,
-  type AccountField,
-  type AccountFormValues,
-} from "./AccountListCard";
-import { AccountsSummary } from "./AccountsSummary";
-import { BalanceCorrectionDialog } from "./BalanceCorrectionDialog";
+import { useFormat, useT } from "@/lib/i18n/client";
+import { AccountCard } from "./AccountCard";
+import { AddAccountSheet } from "./AddAccountSheet";
 import { CorrectionList } from "./CorrectionList";
+import { CorrectionSheet } from "./CorrectionSheet";
 import { SavingsHistory } from "./SavingsHistory";
-import { TransferCard } from "./TransferCard";
-import { TransferList } from "./TransferList";
+import { TransferPanel } from "./TransferPanel";
+
+export type AccountField = {
+  id: string;
+  name: string;
+  amount: string;
+  color: string;
+  icon: string;
+};
+
+export type AccountFormValues = { accounts: AccountField[] };
 
 type AccountsScreenProps = {
   accounts: MoneyAccount[];
   transfers: TransferEntry[];
   adjustments: BalanceAdjustmentEntry[];
   history: PastMonth[];
-  thisMonthNet: number;
-  projectedNet: number;
+  balanceChange: number;
+  remainingPlanned: number;
   monthName: string;
   readOnly: boolean;
-  reference: { year: number; monthIndex: number; day: number };
 };
 
 const toFields = (accounts: MoneyAccount[]): AccountField[] =>
@@ -53,29 +57,45 @@ const toFields = (accounts: MoneyAccount[]): AccountField[] =>
     icon: account.icon,
   }));
 
+const changedRows = (
+  saved: (Partial<AccountField> | undefined)[] | undefined,
+  rows: AccountField[],
+) => {
+  const before = new Map((saved ?? []).map((row) => [row?.id, row]));
+  const edited = rows.filter((row) => {
+    const original = before.get(row.id);
+    return original?.name !== row.name || original?.amount !== row.amount;
+  });
+  const kept = new Set(rows.map((row) => row.id));
+  return (
+    edited.length + (saved ?? []).filter((row) => !kept.has(row?.id ?? "")).length
+  );
+};
+
 export function AccountsScreen({
   accounts,
   transfers,
   adjustments,
   history,
-  thisMonthNet,
-  projectedNet,
+  balanceChange,
+  remainingPlanned,
   monthName,
   readOnly,
-  reference,
 }: AccountsScreenProps) {
+  const t = useT("accounts");
   const errorsT = useT("errors");
-  const { control, register, getValues, reset, formState } = useForm<AccountFormValues>({
-    defaultValues: { accounts: toFields(accounts) },
-  });
+  const format = useFormat();
+  const { control, register, getValues, reset, formState } =
+    useForm<AccountFormValues>({
+      defaultValues: { accounts: toFields(accounts) },
+    });
   const list = useFieldArray({ control, name: "accounts", keyName: "key" });
 
-  const [state, setState] = useState<SaveState>("idle");
   const [error, setError] = useState("");
-  const dirty = formState.isDirty;
-  const [focus, setFocus] = useState<number | null>(null);
   const [correcting, setCorrecting] = useState("");
+  const [adding, setAdding] = useState(false);
   const [busy, startTransition] = useTransition();
+  const dirty = formState.isDirty;
 
   useEffect(() => {
     if (!dirty) return;
@@ -93,40 +113,13 @@ export function AccountsScreen({
       Number(row?.amount) || 0,
     ),
   );
-  const locked = list.fields.map((field) => {
-    const account = byId.get(field.id);
-    return account ? keepsHistory(account) : false;
-  });
-  const openingFixed = list.fields.map(
-    (field) => byId.get(field.id)?.openingLocked ?? false,
-  );
-  const correctable = list.fields.map((field) => byId.has(field.id));
+  const total = balances.reduce((sum, balance) => sum + balance, 0);
+  const planned = total - remainingPlanned;
   const correctingAccount = byId.get(correcting);
+  const months = useMemo(() => buildSavingsResults(history), [history]);
+  const gaining = balanceChange >= 0;
 
-  const view = buildSavingsView(
-    rows.reduce((sum, row) => sum + (Number(row?.amount) || 0), 0),
-    balances.reduce((sum, balance) => sum + balance, 0),
-    history,
-    thisMonthNet,
-    projectedNet,
-  );
-
-  const edited = () => {
-    if (state !== "error") return;
-    setState("idle");
-    setError("");
-  };
-
-  const add = () => {
-    setFocus(getValues("accounts").length);
-    list.append({
-      id: "",
-      name: "",
-      amount: "",
-      ...pickAccountStyle(getValues("accounts")),
-    });
-    edited();
-  };
+  const edited = () => setError("");
 
   const save = () => {
     const openings = getValues("accounts").map((row) => ({
@@ -139,78 +132,165 @@ export function AccountsScreen({
     );
     if (overdrawn) {
       setError(errorsT("balanceBelowZero", { name: overdrawn.name }));
-      setState("error");
       return;
     }
 
-    setState("saving");
     setError("");
-
     startTransition(async () => {
       const result = await saveAccountSection(getValues("accounts"));
-
-      if (result.rows) reset({ accounts: result.rows });
-
-      if (result.error) {
-        setError(result.error);
-        setState("error");
-        return;
+      if (result.rows) {
+        reset({
+          accounts: result.rows.map((row) => ({
+            ...row,
+            color: row.color ?? "sage",
+            icon: row.icon ?? "wallet",
+          })),
+        });
       }
-
-      setFocus(null);
-      setState("saved");
+      if (result.error) setError(result.error);
     });
   };
 
   return (
     <>
-      <AccountsSummary view={view} monthName={monthName} past={readOnly} />
-      <AccountListCard
-        fields={list.fields}
-        balances={balances}
-        locked={locked}
-        openingFixed={openingFixed}
-        correctable={correctable}
-        readOnly={readOnly}
-        monthName={monthName}
-        register={register}
-        remove={list.remove}
-        focusIndex={focus}
-        dirty={dirty}
-        busy={busy}
-        state={state}
-        error={error}
-        onAdd={add}
-        onSave={save}
-        onEdit={edited}
-        onCorrect={(index) => setCorrecting(list.fields[index].id)}
-      />
-      {correctingAccount && (
-        <BalanceCorrectionDialog
-          key={correctingAccount.id}
-          account={correctingAccount}
-          onClose={() => setCorrecting("")}
-        />
-      )}
+      <Card className="grid grid-cols-[minmax(0,1fr)] items-end gap-[18px] p-5 md:p-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+        <div className="grid gap-1.5">
+          <p className="text-ink-soft text-[15px] font-medium">
+            {readOnly
+              ? t("totalLabelPast", { month: monthName })
+              : t("totalLabel")}
+          </p>
+          <p className="font-display text-[50px] leading-[1.05] font-bold tracking-[-0.02em] md:text-[64px]">
+            {format.taka(total)}
+          </p>
+          <p className="text-ink-soft mt-1 text-[16px] leading-[1.55] text-pretty">
+            {readOnly
+              ? t("sentencePast", { month: monthName })
+              : planned >= 0
+                ? t("sentence", { amount: format.taka(planned) })
+                : t("sentenceShort", { amount: format.taka(-planned) })}
+          </p>
+        </div>
+        <dl className="grid grid-cols-2 gap-3">
+          <div className="bg-field grid gap-1 rounded-[16px] px-4 py-3.5">
+            <dt className="text-ink-soft text-[14px]">{t("startOfMonth")}</dt>
+            <dd className="font-display text-[22px] font-bold">
+              {format.taka(total - balanceChange)}
+            </dd>
+          </div>
+          <div
+            className={`grid gap-1 rounded-[16px] px-4 py-3.5 ${
+              gaining ? "bg-panel" : "bg-danger-bg"
+            }`}
+          >
+            <dt className={`text-[14px] ${gaining ? "text-ink-panel" : "text-danger-ink"}`}>
+              {readOnly ? t("monthNet", { month: monthName }) : t("thisMonth")}
+            </dt>
+            <dd
+              className={`font-display text-[22px] font-bold ${
+                gaining ? "text-primary-dark" : "text-danger-ink"
+              }`}
+            >
+              {format.signedTaka(balanceChange)}
+            </dd>
+          </div>
+        </dl>
+      </Card>
+
+      <FormError message={error} />
+
+      <ul className="grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {list.fields.map((field, index) => {
+          const account = byId.get(field.id);
+
+          return (
+            <AccountCard
+              key={field.key}
+              index={index}
+              color={field.color}
+              icon={field.icon}
+              balance={balances[index] ?? 0}
+              removable={
+                !readOnly &&
+                list.fields.length > 1 &&
+                !(account && keepsHistory(account))
+              }
+              correctable={!readOnly && account !== undefined}
+              openingFixed={account?.openingLocked ?? false}
+              readOnly={readOnly}
+              dirty={dirty}
+              busy={busy}
+              register={register}
+              nameRef={() => {}}
+              onRemove={() => {
+                list.remove(index);
+                edited();
+              }}
+              onEdit={edited}
+              onCorrect={() => setCorrecting(field.id)}
+            />
+          );
+        })}
+
+        {!readOnly && (
+          <li className="col-span-full">
+            <button
+              type="button"
+              onClick={() => setAdding(true)}
+              disabled={dirty}
+              title={dirty ? t("saveFirst") : undefined}
+              className="text-ink-soft hover:border-line-strong hover:text-ink focus-visible:outline-primary h-[46px] w-full cursor-pointer rounded-[13px] border border-dashed border-[#d8d2c4] text-[15px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              + {t("addAccount")}
+            </button>
+          </li>
+        )}
+      </ul>
+
       <CorrectionList
         accounts={accounts}
         adjustments={adjustments}
         monthName={monthName}
         readOnly={readOnly}
       />
-      <div
-        data-tour="transfers"
-        className={cn("grid gap-4 lg:items-start", !readOnly && "lg:grid-cols-2")}
-      >
-        {!readOnly && <TransferCard accounts={accounts} reference={reference} />}
-        <TransferList
+
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 md:grid-cols-2">
+        <TransferPanel
           accounts={accounts}
           transfers={transfers}
           monthName={monthName}
           readOnly={readOnly}
         />
+        <SavingsHistory months={months} />
       </div>
-      <SavingsHistory months={view.months} />
+
+      {correctingAccount && (
+        <CorrectionSheet
+          key={correctingAccount.id}
+          account={correctingAccount}
+          onClose={() => setCorrecting("")}
+        />
+      )}
+      {adding && (
+        <AddAccountSheet
+          used={accounts}
+          onClose={() => setAdding(false)}
+        />
+      )}
+      {dirty && !readOnly && (
+        <DirtyBar
+          count={Math.max(
+            changedRows(formState.defaultValues?.accounts, getValues("accounts")),
+            1,
+          )}
+          busy={busy}
+          onDiscard={() => {
+            reset();
+            edited();
+          }}
+          onSave={save}
+        />
+      )}
     </>
   );
 }

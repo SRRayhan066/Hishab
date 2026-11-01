@@ -16,22 +16,15 @@ export default async function AccountsPage() {
 
   return (
     <AccountsScreen
-      key={`${summary.year}-${summary.monthIndex}`}
+      key={`${summary.year}-${summary.monthIndex}-${data.accounts.length}`}
       accounts={data.accounts}
       transfers={data.transfers}
       adjustments={data.adjustments}
       history={data.history}
-      thisMonthNet={summary.netTotal}
-      projectedNet={
-        summary.incomeTotal - summary.projected + summary.adjustedTotal
-      }
+      balanceChange={summary.balanceChange}
+      remainingPlanned={summary.remainingPlanned}
       monthName={summary.monthName}
       readOnly={summary.isPast}
-      reference={{
-        year: summary.year,
-        monthIndex: summary.monthIndex,
-        day: summary.day,
-      }}
     />
   );
 }

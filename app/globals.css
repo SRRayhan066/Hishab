@@ -41,6 +41,7 @@
   --radius-button: 15px;
 
   --animate-pop-in: pop-in 130ms ease-out;
+  --animate-sheet-up: sheet-up 200ms ease-out;
 
   @keyframes pop-in {
     from {
@@ -52,10 +53,27 @@
       transform: scale(1);
     }
   }
+
+  @keyframes sheet-up {
+    from {
+      transform: translateY(32px);
+      opacity: 0.6;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
 }
 
 html,
 body {
   margin: 0;
   padding: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog {
+    animation: none !important;
+  }
 }

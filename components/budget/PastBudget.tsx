@@ -4,12 +4,12 @@ import { Card } from "@/components/ui/Card";
 import { buildBudgetPlan } from "@/lib/finance/budget";
 import type { MonthData } from "@/lib/finance/types";
 import { useFormat, useT } from "@/lib/i18n/client";
-import { PlanSummary } from "./PlanSummary";
+import { BudgetSummary } from "./BudgetSummary";
+import { HistoryLink } from "./HistoryLink";
 import { spentByCategory } from "./plan-form";
 
 type PastBudgetProps = {
   data: MonthData;
-  monthName: string;
   daysInMonth: number;
 };
 
@@ -18,7 +18,7 @@ type PastRow = { id: string; name: string; amount: number; note?: string };
 const total = (rows: PastRow[]) =>
   rows.reduce((sum, row) => sum + row.amount, 0);
 
-export function PastBudget({ data, monthName, daysInMonth }: PastBudgetProps) {
+export function PastBudget({ data, daysInMonth }: PastBudgetProps) {
   const t = useT("budget");
   const format = useFormat();
   const spent = spentByCategory(data.categories);
@@ -34,24 +34,26 @@ export function PastBudget({ data, monthName, daysInMonth }: PastBudgetProps) {
     }));
 
   return (
-    <div className="flex flex-col gap-4">
-      <PlanSummary
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-4">
+      <BudgetSummary
         plan={buildBudgetPlan(total(income), total(planned), daysInMonth)}
-        monthName={monthName}
-        past
       />
-      <PastSection
-        title={t("incomeTitle")}
-        emptyLabel={t("incomeEmpty")}
-        totalLabel={t("incomeTotal")}
-        rows={income}
-      />
-      <PastSection
-        title={t("planTitle")}
-        emptyLabel={t("planEmpty")}
-        totalLabel={t("planTotal")}
-        rows={planned}
-      />
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+        <PastSection
+          title={t("planTitle")}
+          emptyLabel={t("planEmpty")}
+          rows={planned}
+        />
+        <div className="grid min-w-0 gap-4">
+          <PastSection
+            title={t("incomeTitle")}
+            emptyLabel={t("incomeEmpty")}
+            rows={income}
+            accent
+          />
+          <HistoryLink />
+        </div>
+      </div>
     </div>
   );
 }
@@ -59,46 +61,48 @@ export function PastBudget({ data, monthName, daysInMonth }: PastBudgetProps) {
 type PastSectionProps = {
   title: string;
   emptyLabel: string;
-  totalLabel: string;
   rows: PastRow[];
+  accent?: boolean;
 };
 
-function PastSection({ title, emptyLabel, totalLabel, rows }: PastSectionProps) {
+function PastSection({ title, emptyLabel, rows, accent = false }: PastSectionProps) {
   const format = useFormat();
 
   return (
-    <Card className="flex flex-col px-[22px] pt-[22px] pb-6">
-      <h2 className="font-display text-[18px] font-bold">{title}</h2>
+    <Card className="grid grid-cols-[minmax(0,1fr)] p-5 md:p-6">
+      <div className="mb-2 flex items-baseline justify-between gap-2.5">
+        <h2 className="font-display text-[19px] font-bold">{title}</h2>
+        <span
+          className={`font-display text-[17px] font-bold ${accent ? "text-primary-dark" : ""}`}
+        >
+          {format.taka(total(rows))}
+        </span>
+      </div>
 
       {rows.length === 0 ? (
-        <p className="text-ink-faint pt-4 text-[15px]">{emptyLabel}</p>
+        <p className="text-ink-soft border-t border-[#f4f0e7] pt-3 text-[15px]">
+          {emptyLabel}
+        </p>
       ) : (
-        <ul className="mt-1">
+        <ul>
           {rows.map((row) => (
             <li
               key={row.id}
-              className="flex items-center gap-3 border-b-[1.5px] border-[#f4f0e7] py-2.5 last:border-b-0"
+              className="flex items-center gap-3 border-t border-[#f4f0e7] py-3"
             >
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[16px] font-semibold">{row.name}</p>
+                <p className="truncate text-[15px] font-semibold">{row.name}</p>
                 {row.note && (
-                  <p className="text-ink-muted mt-px text-[14px]">{row.note}</p>
+                  <p className="text-ink-soft text-[13px]">{row.note}</p>
                 )}
               </div>
-              <span className="text-ink-soft text-[16px] font-semibold">
+              <span className="font-display text-[16px] font-bold">
                 {format.taka(row.amount)}
               </span>
             </li>
           ))}
         </ul>
       )}
-
-      <div className="mt-3 flex items-center justify-between gap-3 border-t-[1.5px] border-[#f0ebe1] pt-3">
-        <span className="text-[16px] font-semibold">{totalLabel}</span>
-        <span className="font-display text-[18px] font-bold">
-          {format.taka(total(rows))}
-        </span>
-      </div>
     </Card>
   );
 }

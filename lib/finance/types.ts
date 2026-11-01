@@ -75,6 +75,7 @@ export type MonthData = {
   categories: Category[];
   transfers: TransferEntry[];
   adjustments: BalanceAdjustmentEntry[];
+  debtMoved: number;
   history: PastMonth[];
 };
 
@@ -121,6 +122,7 @@ export type Burndown = {
   today: { x: number; y: number };
   grid: GridLine[];
   xLabels: AxisLabel[];
+  todayLabel: string;
 };
 
 export type MonthSummary = {
@@ -142,6 +144,8 @@ export type MonthSummary = {
   adjustedTotal: number;
   /** What the month left behind: income, less spending, give or take corrections. */
   netTotal: number;
+  /** How far every account moved this month, debts and all. */
+  balanceChange: number;
   /** Of the plan, what is still unpaid — bills yet to come. */
   remainingPlanned: number;
 

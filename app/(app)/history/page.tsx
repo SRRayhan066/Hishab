@@ -17,13 +17,13 @@ export default async function HistoryPage() {
   const { data, summary } = await getMonthView();
 
   return (
-    <>
+    <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 md:grid-cols-2">
       <PastMonths months={buildMonthResults(data.history)} />
       <CategorySpend
         categories={summary.categories}
         isPast={summary.isPast}
         monthName={summary.monthName}
       />
-    </>
+    </div>
   );
 }

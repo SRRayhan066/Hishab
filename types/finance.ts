@@ -17,8 +17,10 @@ export type SectionSaveResult = FinanceActionResult & {
 export type {
   PlanRowValues,
   AccountRowValues,
+  NewAccountValues,
   NewCategoryValues,
   ExpenseValues,
   TransferValues,
+  DebtValues,
   BalanceCorrectionValues,
 } from "@/lib/validation/finance";

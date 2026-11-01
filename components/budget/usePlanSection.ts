@@ -3,8 +3,7 @@
 import { useState, useTransition } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import type { PlanRowValues, SectionSaveResult } from "@/types/finance";
-import type { SaveState } from "./SaveStatus";
-import type { PlanRowField, PlanSectionValues } from "./plan-form";
+import { countChanges, type PlanRowField, type PlanSectionValues } from "./plan-form";
 
 export function usePlanSection(
   initialRows: PlanRowField[],
@@ -21,16 +20,11 @@ export function usePlanSection(
   });
   const rows = useWatch({ control, name: "rows" });
 
-  const [state, setState] = useState<SaveState>("idle");
   const [error, setError] = useState("");
   const [focusIndex, setFocusIndex] = useState<number | null>(null);
   const [busy, startTransition] = useTransition();
 
-  const edited = () => {
-    if (state !== "error") return;
-    setState("idle");
-    setError("");
-  };
+  const edited = () => setError("");
 
   const add = () => {
     setFocusIndex(getValues("rows").length);
@@ -47,11 +41,9 @@ export function usePlanSection(
     const problem = check?.(getValues("rows"));
     if (problem) {
       setError(problem);
-      setState("error");
       return;
     }
 
-    setState("saving");
     setError("");
 
     startTransition(async () => {
@@ -61,13 +53,17 @@ export function usePlanSection(
 
       if (result.error) {
         setError(result.error);
-        setState("error");
         return;
       }
 
       setFocusIndex(null);
-      setState("saved");
     });
+  };
+
+  const discard = () => {
+    reset();
+    setError("");
+    setFocusIndex(null);
   };
 
   return {
@@ -76,13 +72,15 @@ export function usePlanSection(
     fields,
     rows,
     dirty: formState.isDirty,
+    changes: countChanges(formState.defaultValues?.rows, rows),
+    dirtyRows: formState.dirtyFields.rows,
     busy,
-    state,
     error,
     focusIndex,
     add,
     removeRow,
     save,
+    discard,
     edited,
   };
 }

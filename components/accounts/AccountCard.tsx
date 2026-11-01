@@ -19,7 +19,7 @@ import { AmountInput } from "@/components/ui/AmountInput";
 import { colorOf, type AccountIcon } from "@/lib/finance/account-style";
 import { useFormat, useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
-import type { AccountFormValues } from "./AccountListCard";
+import type { AccountFormValues } from "./AccountsScreen";
 
 const icons: Record<AccountIcon, LucideIcon> = {
   landmark: Landmark,
@@ -31,6 +31,17 @@ const icons: Record<AccountIcon, LucideIcon> = {
   vault: Vault,
   gem: Gem,
 };
+
+export function AccountIcon({
+  icon,
+  className,
+}: {
+  icon: string;
+  className?: string;
+}) {
+  const Icon = icons[icon as AccountIcon] ?? Wallet;
+  return <Icon className={className} />;
+}
 
 const fieldClass =
   "rounded-[10px] border-[1.5px] border-dashed border-black/15 bg-white/35 outline-none transition-colors hover:border-black/25 focus-within:border-solid focus-within:border-primary focus-within:bg-white/85";
@@ -80,7 +91,7 @@ export function AccountCard({
 
   return (
     <li
-      className="relative isolate flex min-h-[172px] flex-col overflow-hidden rounded-[20px] border px-4 pt-3.5 pb-3.5 shadow-[0_1px_2px_rgba(42,40,37,0.04),0_10px_24px_-14px_rgba(42,40,37,0.28)]"
+      className="relative isolate flex min-h-[172px] flex-col overflow-hidden rounded-[18px] border px-4 py-3.5 shadow-[0_1px_2px_rgba(42,40,37,0.04),0_10px_24px_-14px_rgba(42,40,37,0.28)]"
       style={{
         background: `linear-gradient(135deg, ${palette.from} 0%, ${palette.to} 100%)`,
         borderColor: palette.border,
@@ -138,7 +149,7 @@ export function AccountCard({
             type="button"
             onClick={onCorrect}
             disabled={busy || dirty}
-            title={dirty ? t("correctSaveFirst") : undefined}
+            title={dirty ? t("saveFirst") : undefined}
             aria-label={t("correctAria", { index: number })}
             className="focus-visible:outline-primary flex h-9 flex-none cursor-pointer items-center gap-1.5 rounded-full bg-white/55 px-3 text-[13px] font-semibold transition hover:bg-white/85 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
           >
@@ -180,7 +191,7 @@ export function AccountCard({
               "flex h-9 items-center gap-1 px-2.5",
             )}
           >
-            <span className="text-[14px] font-semibold opacity-60">৳</span>
+            <span className="text-[14px] font-semibold opacity-60">{format.symbol}</span>
             <AmountInput
               {...register(`accounts.${index}.amount`, { onChange: onEdit })}
               readOnly={openingFixed || readOnly}

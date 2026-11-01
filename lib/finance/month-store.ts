@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { getSessionUserId } from "@/lib/auth/session";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { loadAccounts } from "./account-store";
+import { accountEffect } from "./debts";
 import { currentPeriod, samePeriod, type Period } from "./period";
 import type { ExpenseEntry, MonthData, PastMonth } from "./types";
 
@@ -231,7 +232,7 @@ export async function loadMonthSnapshot(
   const period = chosen ? { year: chosen.year, month: chosen.month } : current;
   const isPast = !samePeriod(period, current);
 
-  const [history, accounts, income, categories, expenses, transfers, adjustments] = await Promise.all([
+  const [history, accounts, income, categories, expenses, transfers, adjustments, debtEntries] = await Promise.all([
     loadHistory(userId, period),
     loadAccounts(userId, isPast ? period : undefined),
     db.incomeSource.findMany({
@@ -279,6 +280,10 @@ export async function loadMonthSnapshot(
       },
       orderBy: { createdAt: "asc" },
     }),
+    db.debtEntry.findMany({
+      where: { monthId },
+      select: { kind: true, amount: true },
+    }),
   ]);
 
   // One pass instead of a `filter` per category, which is O(categories ×
@@ -318,6 +323,10 @@ export async function loadMonthSnapshot(
         ...adjustment,
         addedAt: createdAt.getTime(),
       })),
+      debtMoved: debtEntries.reduce(
+        (sum, entry) => sum + accountEffect(entry.kind, entry.amount),
+        0,
+      ),
       history,
     },
   };

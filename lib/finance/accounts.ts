@@ -1,36 +1,4 @@
-import { buildSavingsResults, monthSaving, type MonthResult } from "./history";
-import type { MoneyAccount, PastMonth } from "./types";
-
-export type SavingsView = {
-  opening: number;
-  pastSaved: number;
-  total: number;
-  thisMonth: number;
-  projected: number;
-  months: MonthResult[];
-};
-
-export function buildSavingsView(
-  opening: number,
-  total: number,
-  history: PastMonth[],
-  thisMonth: number,
-  projected: number,
-): SavingsView {
-  const pastSaved = history.reduce(
-    (sum, month) => sum + monthSaving(month),
-    0,
-  );
-
-  return {
-    opening,
-    pastSaved,
-    total,
-    thisMonth,
-    projected,
-    months: buildSavingsResults(history),
-  };
-}
+import type { MoneyAccount } from "./types";
 
 export function balanceWithOpening(
   account: MoneyAccount | undefined,

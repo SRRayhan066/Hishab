@@ -266,6 +266,7 @@ export async function replaceAccountSection(
           transfersIn: true,
           transfersOut: true,
           adjustments: true,
+          debtEntries: true,
         },
       },
     },
@@ -286,7 +287,8 @@ export async function replaceAccountSection(
         _count.expenses +
         _count.transfersIn +
         _count.transfersOut +
-        _count.adjustments >
+        _count.adjustments +
+        _count.debtEntries >
         0,
   );
   if (inUse) {

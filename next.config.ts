@@ -6,7 +6,10 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["192.168.*.*"],
 
   redirects() {
-    return [{ source: "/savings", destination: "/accounts", permanent: true }];
+    return [
+      { source: "/savings", destination: "/accounts", permanent: true },
+      { source: "/add", destination: "/spending", permanent: false },
+    ];
   },
 
   turbopack: {

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { I18nClientProvider } from "./client";
-import { getLocale, pickMessages } from "./server";
+import { getCurrency, getLocale, pickMessages } from "./server";
 import type { Namespace } from "./translate";
 
 type I18nProviderProps = {
@@ -9,13 +9,14 @@ type I18nProviderProps = {
 };
 
 export async function I18nProvider({ namespaces, children }: I18nProviderProps) {
-  const [locale, messages] = await Promise.all([
+  const [locale, currency, messages] = await Promise.all([
     getLocale(),
+    getCurrency(),
     pickMessages(namespaces),
   ]);
 
   return (
-    <I18nClientProvider locale={locale} messages={messages}>
+    <I18nClientProvider locale={locale} currency={currency} messages={messages}>
       {children}
     </I18nClientProvider>
   );

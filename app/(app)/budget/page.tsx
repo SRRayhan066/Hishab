@@ -17,11 +17,7 @@ export default async function BudgetPage() {
 
   if (summary.isPast) {
     return (
-      <PastBudget
-        data={data}
-        monthName={summary.monthName}
-        daysInMonth={summary.daysInMonth}
-      />
+      <PastBudget data={data} daysInMonth={summary.daysInMonth} />
     );
   }
 
@@ -35,7 +31,6 @@ export default async function BudgetPage() {
         ...data,
         categories: data.categories.filter((category) => !category.temporary),
       }}
-      monthName={summary.monthName}
       daysInMonth={summary.daysInMonth}
     />
   );

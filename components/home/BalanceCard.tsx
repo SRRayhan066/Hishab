@@ -29,6 +29,11 @@ export async function BalanceCard({ summary }: { summary: MonthSummary }) {
     { label: t("pastNet"), value: format.signedTaka(netTotal) },
   ];
 
+  const perDayValues = {
+    amount: format.taka(perDay),
+    days: format.number(daysLeft),
+  };
+
   const sentence = isPast
     ? t(netTotal >= 0 ? "pastSaved" : "pastLost", {
         amount: format.taka(Math.abs(netTotal)),
@@ -36,56 +41,56 @@ export async function BalanceCard({ summary }: { summary: MonthSummary }) {
       })
     : short
       ? t("short", { amount: format.taka(-freeToSpend) })
-      : daysLeft > 0
-        ? t("perDay", { amount: format.taka(perDay) })
-        : t("lastDay");
+      : daysLeft > 1
+        ? t("perDay", perDayValues)
+        : daysLeft === 1
+          ? t("perDayOne", perDayValues)
+          : t("lastDay");
 
   return (
-    <Card data-tour="balance" className="px-6 pt-[26px] pb-7">
-      <p className="text-ink-muted text-[15px] font-medium">
-        {isPast
-          ? t("balanceLabelPast", { month: monthName })
-          : t("balanceLabel")}
-      </p>
-      <p className="font-display mt-1 text-[clamp(46px,11vw,74px)] leading-[1.05] font-bold tracking-[-0.02em]">
-        {format.taka(balance)}
-      </p>
-      <p className="text-ink-soft mt-2 max-w-[38ch] text-[16px] leading-[1.55]">
-        {sentence}
-      </p>
+    <Card className="grid gap-[18px] p-5 md:p-6">
+      <div className="grid gap-1.5">
+        <p className="text-ink-soft text-[15px] font-medium">
+          {isPast
+            ? t("balanceLabelPast", { month: monthName })
+            : t("balanceLabel")}
+        </p>
+        <p className="font-display text-[50px] leading-[1.05] font-bold tracking-[-0.02em] md:text-[64px]">
+          {format.taka(balance)}
+        </p>
+        <p className="text-ink-soft mt-1 text-[16px] leading-[1.55] text-pretty">
+          {sentence}
+        </p>
+      </div>
 
-      <dl className="mt-6 grid gap-3.5 [grid-template-columns:repeat(auto-fit,minmax(170px,1fr))]">
+      <dl className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(140px,1fr))]">
         {isPast ? (
           pastTiles.map((tile) => (
-            <div
-              key={tile.label}
-              className="bg-field rounded-[16px] px-[18px] py-4"
-            >
-              <dt className="text-ink-muted text-[14px]">{tile.label}</dt>
-              <dd className="font-display mt-0.5 text-[22px] font-bold">
-                {tile.value}
-              </dd>
+            <div key={tile.label} className="bg-field grid gap-1 rounded-[16px] px-4 py-3.5">
+              <dt className="text-ink-soft text-[14px]">{tile.label}</dt>
+              <dd className="font-display text-[22px] font-bold">{tile.value}</dd>
             </div>
           ))
         ) : (
           <>
-            <div className="bg-field rounded-[16px] px-[18px] py-4">
-              <dt className="text-ink-muted text-[14px]">
+            <div className="bg-field grid gap-1 rounded-[16px] px-4 py-3.5">
+              <dt className="text-ink-soft text-[14px]">
                 {t("remainingPlanned")}
               </dt>
-              <dd className="font-display mt-0.5 text-[22px] font-bold">
+              <dd className="font-display text-[22px] font-bold">
                 {format.taka(remainingPlanned)}
               </dd>
             </div>
-
             <div
-              className={`rounded-[16px] px-[18px] py-4 ${
+              className={`grid gap-1 rounded-[16px] px-4 py-3.5 ${
                 short ? "bg-danger-bg" : "bg-panel"
               }`}
             >
-              <dt className="text-ink-soft text-[14px]">{t("freeToSpend")}</dt>
+              <dt className={`text-[14px] ${short ? "text-danger-ink" : "text-ink-panel"}`}>
+                {t("freeToSpend")}
+              </dt>
               <dd
-                className={`font-display mt-0.5 text-[22px] font-bold ${
+                className={`font-display text-[22px] font-bold ${
                   short ? "text-danger-ink" : "text-primary-dark"
                 }`}
               >
@@ -96,10 +101,10 @@ export async function BalanceCard({ summary }: { summary: MonthSummary }) {
         )}
       </dl>
 
-      <div className="mt-[26px]">
-        <div className="relative h-[18px] rounded-full bg-[#f2eee5]">
+      <div className="grid gap-2">
+        <div className="relative h-3.5 rounded-full bg-[#f2eee5]">
           <div
-            className="absolute top-0 bottom-0 left-0 rounded-full"
+            className="absolute inset-y-0 left-0 rounded-full"
             style={{
               width: `${spentPercent}%`,
               background: isUnderPlan
@@ -109,15 +114,19 @@ export async function BalanceCard({ summary }: { summary: MonthSummary }) {
           />
           {!isPast && (
             <div
-              className="bg-ink absolute -top-[7px] -bottom-[7px] w-[3px] rounded-[2px]"
+              className="bg-ink absolute -top-1 -bottom-1 w-[3px] rounded-[2px]"
               style={{ left: `${idealPercent}%` }}
             />
           )}
         </div>
-        <div className="text-ink-muted mt-2.5 flex justify-between gap-3 text-[14px]">
-          <span>{t("spentSoFar", { amount: format.taka(spentTotal) })}</span>
+        <div className="text-ink-soft flex flex-wrap justify-between gap-2.5 text-[13px]">
+          <span>
+            {t("meter", {
+              spent: format.taka(spentTotal),
+              planned: format.taka(plannedTotal),
+            })}
+          </span>
           {!isPast && <span>{t("paceMarker")}</span>}
-          <span>{t("planned", { amount: format.taka(plannedTotal) })}</span>
         </div>
       </div>
     </Card>

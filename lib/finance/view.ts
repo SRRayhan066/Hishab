@@ -3,10 +3,18 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { getSessionUserId } from "@/lib/auth/session";
 import { getFormat, getT } from "@/lib/i18n/server";
+import { loadDebtBook } from "./debt-store";
+import { lastUsedAccountId, listEntries } from "./entries";
 import { loadMonthSnapshot } from "./month-store";
-import { monthEndReference, zonedReferenceDate, type Period } from "./period";
+import {
+  currentPeriod,
+  monthEndReference,
+  zonedReferenceDate,
+  zonedToday,
+  type Period,
+} from "./period";
 import { buildMonthSummary } from "./summary";
-import type { MonthData, MonthSummary } from "./types";
+import type { MoneyAccount, MonthData, MonthSummary } from "./types";
 import { getViewedPeriod } from "./viewed-month";
 
 export type MonthView = {
@@ -18,8 +26,16 @@ export type MonthView = {
   summary: MonthSummary;
   monthLabel: string;
   daysLabel: string;
-  /** The wallet figure shown in every screen's header. */
-  savingsLabel: string;
+};
+
+export type EntryContext = {
+  accounts: MoneyAccount[];
+  categories: { id: string; name: string }[];
+  people: { id: string; name: string; net: number }[];
+  lastAccountId?: string;
+  today: number;
+  period: Period;
+  isPast: boolean;
 };
 
 /**
@@ -67,6 +83,27 @@ export const getMonthView = cache(async function getMonthView(): Promise<MonthVi
       .filter(Boolean)
       .join(" · "),
     daysLabel,
-    savingsLabel: format.taka(summary.balance),
+  };
+});
+
+export const getEntryContext = cache(async function getEntryContext(): Promise<EntryContext> {
+  const userId = await getSessionUserId();
+  if (!userId) redirect("/login");
+
+  const view = await getMonthView();
+  const isPast = view.summary.isPast;
+  const [{ data }, book] = await Promise.all([
+    isPast ? loadMonthSnapshot(userId, null) : view,
+    loadDebtBook(userId),
+  ]);
+
+  return {
+    accounts: data.accounts,
+    categories: data.categories.map(({ id, name }) => ({ id, name })),
+    people: book.people.map(({ id, name, net }) => ({ id, name, net })),
+    lastAccountId: lastUsedAccountId(listEntries(data)),
+    today: zonedToday().day,
+    period: currentPeriod(),
+    isPast,
   };
 });
