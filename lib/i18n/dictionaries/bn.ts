@@ -114,6 +114,7 @@ export const bn = {
       "{name}-এ আছে {balance}। এর চেয়ে বেশি খরচ বা ট্রান্সফার করা যাবে না।",
     balanceBelowZero:
       "এতে {name}-এর টাকা শূন্যের নিচে নেমে যাবে। আগে ওই অ্যাকাউন্টের খরচ বা ট্রান্সফার ঠিক করো।",
+    balanceUnchanged: "এই অ্যাকাউন্টের ব্যালেন্স এটাই আছে।",
     transferAmount: "কত টাকা পাঠাবে লিখে দাও।",
     transferSameAccount:
       "একই অ্যাকাউন্টে ট্রান্সফার করা যায় না। আলাদা দুটো অ্যাকাউন্ট বেছে নাও।",
@@ -319,8 +320,27 @@ export const bn = {
     accountName: "অ্যাকাউন্টের নাম",
     accountPlaceholder: "যেমন, বিকাশ",
     nameAria: "অ্যাকাউন্ট {index} — নাম",
-    balance: "ব্যালেন্স",
-    balanceAria: "অ্যাকাউন্ট {index} — ব্যালেন্স",
+    openingAria: "অ্যাকাউন্ট {index} — শুরুতে ছিল",
+    correctAction: "ঠিক করো",
+    correctAria: "অ্যাকাউন্ট {index}-এর ব্যালেন্স ঠিক করো",
+    correctSaveFirst: "আগে পরিবর্তনগুলো সেভ করো।",
+    correctTitle: "{name} ঠিক করো",
+    correctHint:
+      "এই অ্যাকাউন্টে আসলে কত আছে দেখে এখানে বসাও। ব্যালেন্স সেই অনুযায়ী মিলিয়ে দেওয়া হবে।",
+    correctShown: "অ্যাপে দেখাচ্ছে",
+    correctReal: "আসলে আছে",
+    correctLess: "অ্যাপে যা দেখাচ্ছে তার চেয়ে {amount} কম।",
+    correctMore: "অ্যাপে যা দেখাচ্ছে তার চেয়ে {amount} বেশি।",
+    correctSame: "অ্যাপের হিসাবের সাথে মিলে গেছে।",
+    correctNote:
+      "সংশোধন বাজেটে খরচ বা আয় হিসেবে ধরা হয় না। বাদ পড়া হিসাবগুলো মনে থাকলে সেগুলোই যোগ করো, নইলে দুবার ধরা হবে।",
+    correctLogExpense: "খরচ যোগ করো",
+    correctCancel: "বাতিল",
+    correctSubmit: "ব্যালেন্স ঠিক করো",
+    correctionsTitle: "এই মাসের ব্যালেন্স সংশোধন",
+    correctionsHint:
+      "কোনো সংশোধন মুছে দিলে সেটা বাতিল হয়ে যায়, যেমন বাদ পড়া হিসাবগুলো পরে যোগ করে থাকলে।",
+    removeCorrection: "{name}-এর {amount} সংশোধন মুছে ফেলো",
     transferTitle: "ট্রান্সফার",
     transferNeedTwo:
       "এক অ্যাকাউন্ট থেকে আরেকটায় টাকা সরাতে অন্তত দুটো অ্যাকাউন্ট লাগবে। উপরে আরেকটা যোগ করে সেভ করো।",

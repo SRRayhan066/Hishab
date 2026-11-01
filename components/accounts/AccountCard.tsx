@@ -6,6 +6,7 @@ import {
   Gem,
   Landmark,
   Nfc,
+  PencilLine,
   PiggyBank,
   Smartphone,
   Vault,
@@ -40,11 +41,14 @@ type AccountCardProps = {
   icon: string;
   balance: number;
   removable: boolean;
+  correctable: boolean;
+  dirty: boolean;
   busy: boolean;
   register: UseFormRegister<AccountFormValues>;
   nameRef: (node: HTMLInputElement | null) => void;
   onRemove: () => void;
   onEdit: () => void;
+  onCorrect: () => void;
 };
 
 export function AccountCard({
@@ -53,11 +57,14 @@ export function AccountCard({
   icon,
   balance,
   removable,
+  correctable,
+  dirty,
   busy,
   register,
   nameRef,
   onRemove,
   onEdit,
+  onCorrect,
 }: AccountCardProps) {
   const t = useT("accounts");
   const format = useFormat();
@@ -108,16 +115,32 @@ export function AccountCard({
         )}
       </div>
 
-      <div className="mt-1.5">
-        <p className="text-[13px] font-medium opacity-75">{t("balanceNow")}</p>
-        <p
-          className={cn(
-            "font-display text-[24px] leading-tight font-bold tracking-[-0.01em]",
-            balance < 0 && "text-danger",
-          )}
-        >
-          {format.taka(balance)}
-        </p>
+      <div className="mt-1.5 flex items-end justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[13px] font-medium opacity-75">{t("balanceNow")}</p>
+          <p
+            className={cn(
+              "font-display text-[24px] leading-tight font-bold tracking-[-0.01em]",
+              balance < 0 && "text-danger",
+            )}
+          >
+            {format.taka(balance)}
+          </p>
+        </div>
+
+        {correctable && (
+          <button
+            type="button"
+            onClick={onCorrect}
+            disabled={busy || dirty}
+            title={dirty ? t("correctSaveFirst") : undefined}
+            aria-label={t("correctAria", { index: number })}
+            className="focus-visible:outline-primary flex h-9 flex-none cursor-pointer items-center gap-1.5 rounded-full bg-white/55 px-3 text-[13px] font-semibold transition hover:bg-white/85 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <PencilLine className="h-3.5 w-3.5" strokeWidth={2.2} />
+            {t("correctAction")}
+          </button>
+        )}
       </div>
 
       <div className="mt-auto flex items-end gap-2 pt-2.5">
@@ -142,14 +165,14 @@ export function AccountCard({
 
         <label className="flex w-[112px] flex-none flex-col gap-1">
           <span className="text-[11px] font-medium tracking-[0.04em] opacity-65">
-            {t("balance")}
+            {t("opening")}
           </span>
           <span className={cn(fieldClass, "flex h-9 items-center gap-1 px-2.5")}>
             <span className="text-[14px] font-semibold opacity-60">৳</span>
             <AmountInput
               {...register(`accounts.${index}.amount`, { onChange: onEdit })}
               placeholder="0"
-              aria-label={t("balanceAria", { index: number })}
+              aria-label={t("openingAria", { index: number })}
               className="w-full min-w-0 border-none bg-transparent text-right text-[15px] font-bold outline-none placeholder:opacity-45"
             />
           </span>

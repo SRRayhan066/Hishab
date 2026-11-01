@@ -13,6 +13,7 @@ import {
 import { pickAccountStyle } from "@/lib/finance/account-style";
 import { useT } from "@/lib/i18n/client";
 import type {
+  BalanceAdjustmentEntry,
   MoneyAccount,
   PastMonth,
   TransferEntry,
@@ -23,6 +24,8 @@ import {
   type AccountFormValues,
 } from "./AccountListCard";
 import { AccountsSummary } from "./AccountsSummary";
+import { BalanceCorrectionDialog } from "./BalanceCorrectionDialog";
+import { CorrectionList } from "./CorrectionList";
 import { SavingsHistory } from "./SavingsHistory";
 import { TransferCard } from "./TransferCard";
 import { TransferList } from "./TransferList";
@@ -30,6 +33,7 @@ import { TransferList } from "./TransferList";
 type AccountsScreenProps = {
   accounts: MoneyAccount[];
   transfers: TransferEntry[];
+  adjustments: BalanceAdjustmentEntry[];
   history: PastMonth[];
   thisMonthNet: number;
   projectedNet: number;
@@ -49,6 +53,7 @@ const toFields = (accounts: MoneyAccount[]): AccountField[] =>
 export function AccountsScreen({
   accounts,
   transfers,
+  adjustments,
   history,
   thisMonthNet,
   projectedNet,
@@ -65,6 +70,7 @@ export function AccountsScreen({
   const [error, setError] = useState("");
   const dirty = formState.isDirty;
   const [focus, setFocus] = useState<number | null>(null);
+  const [correcting, setCorrecting] = useState("");
   const [busy, startTransition] = useTransition();
 
   useEffect(() => {
@@ -84,6 +90,8 @@ export function AccountsScreen({
     ),
   );
   const locked = list.fields.map((field) => byId.get(field.id)?.inUse ?? false);
+  const correctable = list.fields.map((field) => byId.has(field.id));
+  const correctingAccount = byId.get(correcting);
 
   const view = buildSavingsView(
     rows.reduce((sum, row) => sum + (Number(row?.amount) || 0), 0),
@@ -151,6 +159,7 @@ export function AccountsScreen({
         fields={list.fields}
         balances={balances}
         locked={locked}
+        correctable={correctable}
         register={register}
         remove={list.remove}
         focusIndex={focus}
@@ -161,6 +170,19 @@ export function AccountsScreen({
         onAdd={add}
         onSave={save}
         onEdit={edited}
+        onCorrect={(index) => setCorrecting(list.fields[index].id)}
+      />
+      {correctingAccount && (
+        <BalanceCorrectionDialog
+          key={correctingAccount.id}
+          account={correctingAccount}
+          onClose={() => setCorrecting("")}
+        />
+      )}
+      <CorrectionList
+        accounts={accounts}
+        adjustments={adjustments}
+        monthName={monthName}
       />
       <div
         data-tour="transfers"
