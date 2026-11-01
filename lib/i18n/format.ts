@@ -1,4 +1,9 @@
-import type { Locale } from "./config";
+import {
+  currencySymbols,
+  defaultCurrency,
+  type Currency,
+  type Locale,
+} from "./config";
 
 const banglaDigits = "০১২৩৪৫৬৭৮৯";
 
@@ -33,13 +38,23 @@ const monthNames: Record<Locale, string[]> = {
   ],
 };
 
+const weekdayNames: Record<Locale, string[]> = {
+  bn: ["র", "সো", "ম", "বু", "বৃ", "শু", "শ"],
+  en: ["S", "M", "T", "W", "T", "F", "S"],
+};
+
 export function toLatinDigits(value: string) {
   return value.replace(/[০-৯]/g, (digit) =>
     String(banglaDigits.indexOf(digit)),
   );
 }
 
-export function createFormat(locale: Locale) {
+export function createFormat(
+  locale: Locale,
+  currency: Currency = defaultCurrency,
+) {
+  const symbol = currencySymbols[currency];
+
   const digits = (value: number | string) =>
     locale === "bn"
       ? String(value).replace(/\d/g, (digit) => banglaDigits[Number(digit)])
@@ -49,14 +64,30 @@ export function createFormat(locale: Locale) {
     digits(Math.round(value).toLocaleString("en-US"));
 
   const taka = (value: number) =>
-    `${value < 0 ? "-" : ""}৳${number(Math.abs(value))}`;
+    `${value < 0 ? "-" : ""}${symbol}${number(Math.abs(value))}`;
 
   const signedTaka = (value: number) =>
-    `${value >= 0 ? "+" : "−"}${taka(Math.abs(value))}`;
+    `${value > 0 ? "+" : value < 0 ? "−" : ""}${taka(Math.abs(value))}`;
 
   const month = (index: number) => monthNames[locale][index] ?? "";
 
-  return { locale, digits, number, taka, signedTaka, month };
+  const monthShort = (index: number) => {
+    const name = month(index);
+    return locale === "en" ? name.slice(0, 3) : name;
+  };
+
+  return {
+    locale,
+    currency,
+    symbol: symbol.trim(),
+    digits,
+    number,
+    taka,
+    signedTaka,
+    month,
+    monthShort,
+    weekdays: weekdayNames[locale],
+  };
 }
 
 export type Format = ReturnType<typeof createFormat>;

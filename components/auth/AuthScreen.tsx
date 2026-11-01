@@ -43,8 +43,8 @@ export function AuthScreen({ notice }: { notice?: string }) {
       <AuthCard>
         <AuthPanel />
 
-        <div className="flex flex-col gap-5 px-[22px] py-8 sm:px-[34px] md:pt-10 md:pb-9">
-          <Logo className="md:hidden" />
+        <div className="flex flex-col gap-5 px-0.5 py-3 md:p-9 xl:p-11">
+          <Logo className="xl:hidden" />
 
           <FormError message={notice} />
 

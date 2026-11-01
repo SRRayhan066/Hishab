@@ -3,7 +3,8 @@ import { db } from "@/lib/db";
 import { getSessionUserId } from "@/lib/auth/session";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { loadAccounts } from "./account-store";
-import { currentPeriod, type Period } from "./period";
+import { accountEffect } from "./debts";
+import { currentPeriod, samePeriod, type Period } from "./period";
 import type { ExpenseEntry, MonthData, PastMonth } from "./types";
 
 /** How many earlier months feed the history list and the month-by-month savings. */
@@ -19,6 +20,8 @@ const byOrder = [
 export type MonthSnapshot = {
   monthId: string;
   period: Period;
+  isPast: boolean;
+  months: Period[];
   data: MonthData;
 };
 
@@ -116,6 +119,14 @@ export async function ensureCurrentMonth(
   }
 }
 
+function listMonths(userId: string) {
+  return db.budgetMonth.findMany({
+    where: { userId },
+    orderBy: [{ year: "desc" }, { month: "desc" }],
+    select: { id: true, year: true, month: true },
+  });
+}
+
 type HistoryRow = {
   year: number;
   month: number;
@@ -192,7 +203,9 @@ async function loadHistory(
 }
 
 /**
- * Everything the screens need for the current month, in one object.
+ * Everything the screens need for one month, in one object. `viewed` is the
+ * month the user picked; anything they have no record of falls back to the
+ * current month. Past months are only read, never created.
  *
  * The queries are deliberately flat rather than one nested read: Prisma
  * resolves each level of a nested `select` with its own round trip, so the
@@ -202,15 +215,26 @@ async function loadHistory(
  */
 export async function loadMonthSnapshot(
   userId: string,
-  period: Period = currentPeriod(),
+  viewed: Period | null = null,
 ): Promise<MonthSnapshot> {
-  const [monthId, history] = await Promise.all([
-    ensureCurrentMonth(userId, period),
-    loadHistory(userId, period),
+  const current = currentPeriod();
+  const [currentId, saved] = await Promise.all([
+    ensureCurrentMonth(userId, current),
+    listMonths(userId),
   ]);
 
-  const [accounts, income, categories, expenses, transfers, adjustments] = await Promise.all([
-    loadAccounts(userId),
+  const months = saved.some((month) => month.id === currentId)
+    ? saved
+    : [{ id: currentId, ...current }, ...saved];
+  const chosen =
+    viewed && months.find((month) => samePeriod(month, viewed));
+  const monthId = chosen?.id ?? currentId;
+  const period = chosen ? { year: chosen.year, month: chosen.month } : current;
+  const isPast = !samePeriod(period, current);
+
+  const [history, accounts, income, categories, expenses, transfers, adjustments, debtEntries] = await Promise.all([
+    loadHistory(userId, period),
+    loadAccounts(userId, isPast ? period : undefined),
     db.incomeSource.findMany({
       where: { monthId },
       select: { id: true, name: true, amount: true, accountId: true },
@@ -256,6 +280,10 @@ export async function loadMonthSnapshot(
       },
       orderBy: { createdAt: "asc" },
     }),
+    db.debtEntry.findMany({
+      where: { monthId },
+      select: { kind: true, amount: true },
+    }),
   ]);
 
   // One pass instead of a `filter` per category, which is O(categories ×
@@ -278,6 +306,8 @@ export async function loadMonthSnapshot(
   return {
     monthId,
     period,
+    isPast,
+    months: months.map(({ year, month }) => ({ year, month })),
     data: {
       accounts,
       income,
@@ -293,6 +323,10 @@ export async function loadMonthSnapshot(
         ...adjustment,
         addedAt: createdAt.getTime(),
       })),
+      debtMoved: debtEntries.reduce(
+        (sum, entry) => sum + accountEffect(entry.kind, entry.amount),
+        0,
+      ),
       history,
     },
   };

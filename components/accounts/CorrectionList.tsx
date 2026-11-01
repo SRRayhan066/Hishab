@@ -15,12 +15,14 @@ type CorrectionListProps = {
   accounts: MoneyAccount[];
   adjustments: BalanceAdjustmentEntry[];
   monthName: string;
+  readOnly: boolean;
 };
 
 export function CorrectionList({
   accounts,
   adjustments,
   monthName,
+  readOnly,
 }: CorrectionListProps) {
   const t = useT("accounts");
   const common = useT("common");
@@ -60,11 +62,17 @@ export function CorrectionList({
   if (visible.length === 0 && !error) return null;
 
   return (
-    <Card className="px-[22px] pt-[22px] pb-4">
-      <h2 className="font-display text-[18px] font-bold">{t("correctionsTitle")}</h2>
-      <p className="text-ink-muted mt-0.5 text-[14px] leading-[1.55]">
-        {t("correctionsHint")}
-      </p>
+    <Card className="p-5 md:p-6">
+      <h2 className="font-display text-[19px] font-bold">
+        {readOnly
+          ? t("correctionsTitlePast", { month: monthName })
+          : t("correctionsTitle")}
+      </h2>
+      {!readOnly && (
+        <p className="text-ink-soft mt-0.5 text-[14px] leading-[1.55]">
+          {t("correctionsHint")}
+        </p>
+      )}
 
       {error && (
         <div className="mt-3">
@@ -80,28 +88,30 @@ export function CorrectionList({
           return (
             <li
               key={adjustment.id}
-              className="flex items-center gap-3 border-b-[1.5px] border-[#f4f0e7] py-2.5 last:border-b-0"
+              className="flex items-center gap-3 border-b border-[#f4f0e7] py-2.5 last:border-b-0"
             >
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[16px] font-semibold">{name}</p>
-                <p className="text-ink-muted mt-px text-[14px]">
+                <p className="truncate text-[15px] font-semibold">{name}</p>
+                <p className="text-ink-soft text-[13px]">
                   {common("dayMonth", {
                     day: format.digits(adjustment.day),
                     month: monthName,
                   })}
                 </p>
               </div>
-              <span className="text-ink-soft text-[16px] font-semibold">
+              <span className="font-display text-[16px] font-bold">
                 {amount}
               </span>
-              <button
-                type="button"
-                onClick={() => handleRemove(adjustment.id)}
-                aria-label={t("removeCorrection", { name, amount })}
-                className="text-line-strong hover:text-danger focus-visible:outline-primary -mr-2.5 flex h-11 w-11 flex-none cursor-pointer items-center justify-center rounded-[12px] text-[20px] leading-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
-              >
-                ×
-              </button>
+              {!readOnly && (
+                <button
+                  type="button"
+                  onClick={() => handleRemove(adjustment.id)}
+                  aria-label={t("removeCorrection", { name, amount })}
+                  className="text-line-strong hover:text-danger focus-visible:outline-primary -mr-2.5 flex h-11 w-11 flex-none cursor-pointer items-center justify-center rounded-[12px] text-[20px] leading-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+                >
+                  ×
+                </button>
+              )}
             </li>
           );
         })}

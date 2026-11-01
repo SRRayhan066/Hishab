@@ -1,7 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { sessionAudience, sessionCookie, verifyToken } from "@/lib/auth/token";
 
-const appRoutes = ["/home", "/budget", "/accounts", "/history", "/add", "/profile"];
+const appRoutes = [
+  "/home",
+  "/spending",
+  "/budget",
+  "/debts",
+  "/accounts",
+  "/history",
+  "/add",
+  "/profile",
+];
 const authRoutes = ["/login", "/signup", "/forgot-password"];
 
 function matches(pathname: string, routes: string[]) {

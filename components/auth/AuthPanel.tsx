@@ -3,33 +3,26 @@
 import { Logo } from "@/components/icons/Logo";
 import { useT } from "@/lib/i18n/client";
 
-const points = ["pointDaily", "pointCarry", "pointPrivate"] as const;
+const points = ["pointDaily", "pointBudget", "pointDebts"] as const;
 
 export function AuthPanel() {
   const t = useT("auth");
 
   return (
-    <aside className="bg-panel hidden flex-col justify-between gap-9 px-9 py-10 md:flex md:min-h-[420px]">
+    <aside className="bg-panel hidden flex-col gap-7 px-10 py-11 xl:flex">
       <Logo />
 
-      <div>
-        <p className="font-display text-[clamp(26px,4.4vw,34px)] leading-[1.3] font-bold tracking-[-0.01em]">
-          {t("panelHeadlineTop")}
-          <br />
-          {t("panelHeadlineBottom")}
-        </p>
-        <p className="text-ink-panel mt-[14px] max-w-[30ch] text-[16px] leading-[1.6]">
-          {t("panelBody")}
-        </p>
-      </div>
+      <p className="font-display text-[32px] leading-[1.3] font-bold tracking-[-0.01em] text-pretty">
+        {t("panelHeadlineTop")} {t("panelHeadlineBottom")}
+      </p>
 
-      <ul className="flex flex-col gap-[11px]">
+      <ul className="mt-auto flex flex-col gap-3.5">
         {points.map((point) => (
           <li
             key={point}
-            className="text-ink-panel flex items-center gap-[11px] text-[15px]"
+            className="text-ink-panel flex gap-3 text-[15px] leading-[1.5]"
           >
-            <span className="bg-primary h-[7px] w-[7px] flex-none rounded-full" />
+            <span className="bg-primary mt-2 h-2 w-2 flex-none rounded-full" />
             {t(point)}
           </li>
         ))}

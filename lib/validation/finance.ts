@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { accountColorKeys, accountIcons } from "@/lib/finance/account-style";
+import { debtKinds } from "@/lib/finance/debts";
 import type { Translator } from "@/lib/i18n/translate";
 
 // Amounts are stored as whole taka. Everything on screen is already whole
@@ -75,6 +76,13 @@ export function financeSchemas(t: Translator<"errors">) {
       });
     });
 
+  const newAccount = z.object({
+    name: z.string().trim().min(1, t("accountName")).max(60, nameTooLongError),
+    amount: money,
+    color: z.string().pipe(z.enum(accountColorKeys)),
+    icon: z.string().pipe(z.enum(accountIcons)),
+  });
+
   const newCategory = z.object({
     name: z.string().trim().min(1, t("categoryName")).max(60, nameTooLongError),
   });
@@ -98,6 +106,21 @@ export function financeSchemas(t: Translator<"errors">) {
       path: ["toId"],
     });
 
+  const debt = z
+    .object({
+      kind: z.enum(debtKinds),
+      personId: z.string().trim().max(64).optional(),
+      personName: z.string().trim().max(60, nameTooLongError).optional(),
+      accountId: z.string({ error: accountMissingError }).trim().min(1, accountMissingError),
+      day,
+      amount: money.pipe(z.number().min(1, t("debtAmount"))),
+      note: z.string().trim().max(120, t("debtNoteLong")).optional(),
+    })
+    .refine((values) => values.personId || values.personName, {
+      message: t("debtPerson"),
+      path: ["personId"],
+    });
+
   const balanceCorrection = z.object({
     accountId: z.string({ error: accountMissingError }).trim().min(1, accountMissingError),
     balance: z
@@ -112,9 +135,11 @@ export function financeSchemas(t: Translator<"errors">) {
     planRow,
     planSection,
     accountSection,
+    newAccount,
     newCategory,
     expense,
     transfer,
+    debt,
     balanceCorrection,
   };
 }
@@ -125,7 +150,9 @@ export type PlanRowValues = z.input<FinanceSchemas["planRow"]>;
 export type PlanRow = z.output<FinanceSchemas["planRow"]>;
 export type AccountRowValues = z.input<FinanceSchemas["accountSection"]>[number];
 export type AccountRow = z.output<FinanceSchemas["accountSection"]>[number];
+export type NewAccountValues = z.input<FinanceSchemas["newAccount"]>;
 export type NewCategoryValues = z.input<FinanceSchemas["newCategory"]>;
 export type ExpenseValues = z.input<FinanceSchemas["expense"]>;
 export type TransferValues = z.input<FinanceSchemas["transfer"]>;
+export type DebtValues = z.input<FinanceSchemas["debt"]>;
 export type BalanceCorrectionValues = z.input<FinanceSchemas["balanceCorrection"]>;

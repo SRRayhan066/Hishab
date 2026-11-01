@@ -14,6 +14,7 @@ import type {
   AccountRowValues,
   BalanceCorrectionValues,
   FinanceActionResult,
+  NewAccountValues,
   SectionSaveResult,
   TransferValues,
 } from "@/types/finance";
@@ -35,6 +36,43 @@ export async function saveAccountSection(
 
   refresh();
   return { rows: result.rows };
+}
+
+export async function addAccount(
+  values: NewAccountValues,
+): Promise<FinanceActionResult> {
+  const t = await getT("errors");
+  const parsed = financeSchemas(t).newAccount.safeParse(values);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? t("invalidRow") };
+  }
+
+  const userId = await getSessionUserId();
+  if (!userId) return { error: t("signedOut") };
+
+  const { name, amount, color, icon } = parsed.data;
+  const existing = await db.moneyAccount.findMany({
+    where: { userId },
+    select: { name: true, sortOrder: true },
+  });
+  const key = name.toLocaleLowerCase();
+  if (existing.some((account) => account.name.toLocaleLowerCase() === key)) {
+    return { error: t("accountNameTaken") };
+  }
+
+  await db.moneyAccount.create({
+    data: {
+      userId,
+      name,
+      openingBalance: amount,
+      color,
+      icon,
+      sortOrder: Math.max(-1, ...existing.map((row) => row.sortOrder)) + 1,
+    },
+  });
+
+  refresh();
+  return {};
 }
 
 export async function addTransfer(

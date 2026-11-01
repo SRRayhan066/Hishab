@@ -3,6 +3,7 @@ import type { PastMonth } from "./types";
 export type MonthResult = {
   /** Stable key — a month name alone repeats across years. */
   id: string;
+  year: number;
   /** 1–12. */
   month: number;
   spent: number;
@@ -42,6 +43,7 @@ function buildResults(
 
       return {
         id: `${month.year}-${month.month}`,
+        year: month.year,
         month: month.month,
         spent: month.spent,
         budget: month.budget,

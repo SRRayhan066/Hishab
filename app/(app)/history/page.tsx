@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { CategorySpend } from "@/components/history/CategorySpend";
 import { PastMonths } from "@/components/history/PastMonths";
 import { buildMonthResults } from "@/lib/finance/history";
-import { getCurrentMonthView } from "@/lib/finance/view";
+import { getMonthView } from "@/lib/finance/view";
 import { getT } from "@/lib/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -14,12 +14,16 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HistoryPage() {
-  const { data, summary } = await getCurrentMonthView();
+  const { data, summary } = await getMonthView();
 
   return (
-    <>
+    <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 md:grid-cols-2">
       <PastMonths months={buildMonthResults(data.history)} />
-      <CategorySpend categories={summary.categories} />
-    </>
+      <CategorySpend
+        categories={summary.categories}
+        isPast={summary.isPast}
+        monthName={summary.monthName}
+      />
+    </div>
   );
 }

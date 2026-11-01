@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import type { Burndown } from "@/lib/finance/types";
 import { useFormat, useT } from "@/lib/i18n/client";
+import { cn } from "@/lib/utils";
 
 type BurndownChartProps = {
   burndown: Burndown;
@@ -15,7 +16,7 @@ export function BurndownChart({
   isUnderPlan,
   monthName,
 }: BurndownChartProps) {
-  const { width, height, points, grid, xLabels, today } = burndown;
+  const { width, height, points, grid, xLabels, today, todayLabel } = burndown;
   const plotRef = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState<number | null>(null);
   const t = useT("home");
@@ -49,7 +50,7 @@ export function BurndownChart({
   const active = hovered === null ? null : points[hovered];
 
   return (
-    <div className="mt-3 pl-[54px]">
+    <div>
       <div
         ref={plotRef}
         onPointerMove={handleMove}
@@ -59,7 +60,7 @@ export function BurndownChart({
         <svg
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="none"
-          className="block h-[190px] w-full sm:h-[240px] lg:h-[280px]"
+          className="block h-[170px] w-full md:h-[220px]"
           role="img"
           aria-label={t("chartLabel", { month: monthName })}
         >
@@ -108,29 +109,6 @@ export function BurndownChart({
           />
         </svg>
 
-        {grid.map((line) => (
-          <span
-            key={`${line.label}-${line.y}`}
-            className="text-ink-faint absolute -left-[54px] w-[46px] -translate-y-1/2 text-right text-[12px] font-medium"
-            style={{ top: toTop(line.y) }}
-          >
-            {line.label}
-          </span>
-        ))}
-
-        {xLabels.map((label) => (
-          <span
-            key={label.label}
-            className="text-ink-faint absolute -bottom-[22px] text-[12px] font-medium whitespace-nowrap"
-            style={{
-              left: `${label.xPercent}%`,
-              transform: `translateX(${label.shift})`,
-            }}
-          >
-            {label.label}
-          </span>
-        ))}
-
         {active && (
           <span
             className="pointer-events-none absolute top-0 bottom-0 w-px bg-[#c6bfae]"
@@ -176,6 +154,26 @@ export function BurndownChart({
             </p>
           </div>
         )}
+      </div>
+
+      <div className="relative mt-3.5 h-4 text-[12px] font-medium">
+        {xLabels.map((label) => (
+          <span
+            key={label.label}
+            className={cn(
+              "absolute whitespace-nowrap",
+              label.label === todayLabel
+                ? "text-ink font-semibold"
+                : "text-ink-soft",
+            )}
+            style={{
+              left: `${label.xPercent}%`,
+              transform: `translateX(${label.shift})`,
+            }}
+          >
+            {label.label}
+          </span>
+        ))}
       </div>
 
       <div className="sr-only">

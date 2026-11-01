@@ -7,17 +7,13 @@ export type Profile = {
   email: string;
   joined: Period;
   monthsTracked: number;
-  entries: number;
 };
 
 export async function loadProfile(userId: string): Promise<Profile | null> {
-  const [user, entries] = await Promise.all([
-    db.user.findUnique({
-      where: { id: userId },
-      select: { name: true, email: true, createdAt: true },
-    }),
-    db.expense.count({ where: { category: { month: { userId } } } }),
-  ]);
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: { name: true, email: true, createdAt: true },
+  });
   if (!user) return null;
 
   const joined = currentPeriod(user.createdAt);
@@ -28,6 +24,5 @@ export async function loadProfile(userId: string): Promise<Profile | null> {
     email: user.email,
     joined,
     monthsTracked: (now.year - joined.year) * 12 + (now.month - joined.month) + 1,
-    entries,
   };
 }

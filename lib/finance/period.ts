@@ -34,6 +34,10 @@ export function zonedReferenceDate(now?: Date): Date {
   return new Date(year, month - 1, day, 12, 0, 0, 0);
 }
 
+export function monthEndReference({ year, month }: Period): Date {
+  return new Date(year, month, 0, 12, 0, 0, 0);
+}
+
 export function daysInPeriod({ year, month }: Period): number {
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
@@ -45,4 +49,17 @@ export function lastRecordableDay(now?: Date): number {
 
 export function periodKey({ year, month }: Period): string {
   return `${year}-${String(month).padStart(2, "0")}`;
+}
+
+export function parsePeriodKey(key: string | null | undefined): Period | null {
+  const match = key?.match(/^(\d{4})-(0[1-9]|1[0-2])$/);
+  return match ? { year: Number(match[1]), month: Number(match[2]) } : null;
+}
+
+export function samePeriod(a: Period, b: Period): boolean {
+  return a.year === b.year && a.month === b.month;
+}
+
+export function isBeforePeriod(a: Period, b: Period): boolean {
+  return periodKey(a) < periodKey(b);
 }

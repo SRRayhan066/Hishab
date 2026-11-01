@@ -2,7 +2,16 @@ import "server-only";
 import { cookies } from "next/headers";
 import { db } from "@/lib/db";
 import { daysFromNow, secureCookieOptions } from "@/lib/auth/cookies";
-import { defaultLocale, isLocale, localeCookie, type Locale } from "./config";
+import {
+  currencyCookie,
+  defaultCurrency,
+  defaultLocale,
+  isCurrency,
+  isLocale,
+  localeCookie,
+  type Currency,
+  type Locale,
+} from "./config";
 import { bn, type Dictionary } from "./dictionaries/bn";
 import { en } from "./dictionaries/en";
 import { createFormat } from "./format";
@@ -18,6 +27,12 @@ export async function getLocale(): Promise<Locale> {
   return isLocale(value) ? value : defaultLocale;
 }
 
+export async function getCurrency(): Promise<Currency> {
+  const cookieStore = await cookies();
+  const value = cookieStore.get(currencyCookie)?.value;
+  return isCurrency(value) ? value : defaultCurrency;
+}
+
 export async function getDictionary() {
   return dictionaries[await getLocale()];
 }
@@ -31,7 +46,8 @@ export async function getT<N extends Namespace>(namespace: N) {
 }
 
 export async function getFormat() {
-  return createFormat(await getLocale());
+  const [locale, currency] = await Promise.all([getLocale(), getCurrency()]);
+  return createFormat(locale, currency);
 }
 
 export async function pickMessages(namespaces: Namespace[]): Promise<Messages> {
@@ -48,6 +64,23 @@ export async function setLocaleCookie(locale: Locale) {
     locale,
     secureCookieOptions(daysFromNow(localeCookieDays)),
   );
+}
+
+export async function setCurrencyCookie(currency: Currency) {
+  const cookieStore = await cookies();
+  cookieStore.set(
+    currencyCookie,
+    currency,
+    secureCookieOptions(daysFromNow(localeCookieDays)),
+  );
+}
+
+export async function syncCurrency(userId: string) {
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: { currency: true },
+  });
+  if (isCurrency(user?.currency)) await setCurrencyCookie(user.currency);
 }
 
 export async function syncLocale(userId: string) {

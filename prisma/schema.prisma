@@ -14,6 +14,7 @@ model User {
   passwordHash      String
   image             String?
   locale            String             @default("bn")
+  currency          String             @default("BDT")
   tourCompletedAt   DateTime?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
@@ -21,6 +22,7 @@ model User {
   moneyAccounts     MoneyAccount[]
   passwordResetOtps PasswordResetOtp[]
   budgetMonths      BudgetMonth[]
+  debtPeople        DebtPerson[]
 }
 
 model MoneyAccount {
@@ -40,6 +42,7 @@ model MoneyAccount {
   transfersOut Transfer[]     @relation("TransferFrom")
   transfersIn  Transfer[]     @relation("TransferTo")
   adjustments  BalanceAdjustment[]
+  debtEntries  DebtEntry[]
 
   @@index([userId])
 }
@@ -87,6 +90,7 @@ model BudgetMonth {
   categories SpendCategory[]
   transfers  Transfer[]
   adjustments BalanceAdjustment[]
+  debtEntries DebtEntry[]
 
   @@unique([userId, year, month])
   @@index([userId, year, month])
@@ -178,6 +182,47 @@ model BalanceAdjustment {
   month   BudgetMonth  @relation(fields: [monthId], references: [id], onDelete: Cascade)
   account MoneyAccount @relation(fields: [accountId], references: [id], onDelete: NoAction)
 
+  @@index([monthId])
+  @@index([accountId])
+}
+
+enum DebtKind {
+  lend
+  borrow
+  gotBack
+  paidBack
+}
+
+model DebtPerson {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entries DebtEntry[]
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+model DebtEntry {
+  id        String   @id @default(cuid())
+  personId  String
+  monthId   String
+  accountId String
+  kind      DebtKind
+  day       Int
+  amount    Int
+  note      String?
+  createdAt DateTime @default(now())
+
+  person  DebtPerson   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  month   BudgetMonth  @relation(fields: [monthId], references: [id], onDelete: Cascade)
+  account MoneyAccount @relation(fields: [accountId], references: [id], onDelete: NoAction)
+
+  @@index([personId])
   @@index([monthId])
   @@index([accountId])
 }

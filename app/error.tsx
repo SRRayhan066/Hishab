@@ -7,7 +7,7 @@ import { RetryNotice } from "@/components/app/RetryNotice";
  *
  * A layout's own throw is caught by the boundary *above* it, so this is what
  * handles the header reads in `(app)/layout.tsx` — `MonthLine` and
- * `SavingsStatus` — which are the queries that run on every single screen and
+ * `ProfileAvatar` — which are the queries that run on every single screen and
  * therefore the ones most likely to meet a dead connection. Without this file
  * they fell through to the framework's "This page couldn't load" page.
  */

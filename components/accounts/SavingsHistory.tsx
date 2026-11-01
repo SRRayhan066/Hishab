@@ -12,27 +12,22 @@ export function SavingsHistory({ months }: { months: MonthResult[] }) {
   const format = useFormat();
 
   return (
-    <Card data-tour="savings" className="px-[22px] pt-[22px] pb-4">
-      <h2 className="font-display text-[18px] font-bold">
-        {t("savingsTitle")}
-      </h2>
+    <Card className="grid gap-3 p-5 md:p-6">
+      <h2 className="font-display text-[19px] font-bold">{t("savingsTitle")}</h2>
 
       {months.length === 0 ? (
-        <p className="text-ink-faint pt-3.5 pb-3 text-[15px]">
-          {t("savingsEmpty")}
-        </p>
+        <p className="text-ink-soft text-[15px]">{t("savingsEmpty")}</p>
       ) : (
-        <ul className="mt-1">
+        <ul className="grid gap-3">
           {months.map((month) => (
             <li
               key={month.id}
-              className="flex items-center gap-3 border-b-[1.5px] border-[#f4f0e7] py-3.5 last:border-b-0"
+              className="grid grid-cols-[84px_minmax(0,1fr)_auto] items-center gap-3"
             >
-              <span className="w-[84px] flex-none text-[16px] font-semibold">
+              <span className="text-ink-soft truncate text-[14px]">
                 {format.month(month.month - 1)}
               </span>
-
-              <div className="h-[10px] min-w-[40px] flex-1 rounded-full bg-[#f2eee5]">
+              <div className="h-2.5 rounded-full bg-[#f2eee5]">
                 <div
                   className="h-full rounded-full"
                   style={{
@@ -41,17 +36,18 @@ export function SavingsHistory({ months }: { months: MonthResult[] }) {
                   }}
                 />
               </div>
-
               <span
-                className="font-display w-[92px] flex-none text-right text-[16px] font-bold"
-                style={{ color: toneInk[month.tone] }}
+                className="font-display min-w-16 text-right text-[15px] font-bold"
+                style={{ color: month.tone === "over" ? toneInk.over : undefined }}
                 aria-label={t("savingsAria", {
                   month: format.month(month.month - 1),
                   amount: format.taka(Math.abs(month.amount)),
                   word: t(month.amount >= 0 ? "savedWord" : "lostWord"),
                 })}
               >
-                {format.signedTaka(month.amount)}
+                {month.amount < 0
+                  ? format.signedTaka(month.amount)
+                  : format.taka(month.amount)}
               </span>
             </li>
           ))}

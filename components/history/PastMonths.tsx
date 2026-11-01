@@ -1,59 +1,87 @@
+"use client";
+
+import { useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { viewMonth } from "@/app/actions/month";
 import { Card } from "@/components/ui/Card";
-import { getFormat, getT } from "@/lib/i18n/server";
 import type { MonthResult } from "@/lib/finance/history";
+import { periodKey } from "@/lib/finance/period";
+import { useFormat, useT } from "@/lib/i18n/client";
 
-const toneInk: Record<MonthResult["tone"], string> = {
-  good: "var(--color-primary)",
-  over: "var(--color-over)",
-};
+export function PastMonths({ months }: { months: MonthResult[] }) {
+  const t = useT("history");
+  const format = useFormat();
+  const router = useRouter();
+  const [busy, startTransition] = useTransition();
 
-export async function PastMonths({ months }: { months: MonthResult[] }) {
-  const [t, format] = await Promise.all([getT("history"), getFormat()]);
+  const open = (month: MonthResult) => {
+    startTransition(async () => {
+      await viewMonth(periodKey(month));
+      router.push("/home");
+    });
+  };
 
   return (
-    <Card data-tour="history" className="px-[22px] pt-6 pb-[26px]">
+    <Card className="grid grid-cols-[minmax(0,1fr)] p-5 md:p-6">
       <h2 className="font-display text-[19px] font-bold">{t("pastTitle")}</h2>
-      <p className="text-ink-muted mt-[3px] text-[15px]">
+      <p className="text-ink-soft mb-2 text-[14px] leading-[1.55]">
         {t("pastHint")}
       </p>
 
       {months.length === 0 ? (
-        <p className="text-ink-faint pt-4 text-[15px]">
+        <p className="text-ink-soft border-t border-[#f4f0e7] pt-3 text-[15px]">
           {t("pastEmpty")}
         </p>
       ) : (
-        <ul className="mt-2">
-          {months.map((month) => (
-            <li
-              key={month.id}
-              className="flex items-center gap-3.5 border-b-[1.5px] border-[#f4f0e7] py-4 last:border-b-0"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="text-[17px] font-semibold">
-                  {format.month(month.month - 1)}
-                </p>
-                <p className="text-ink-muted mt-0.5 text-[14px]">
-                  {t("spentAndLimit", {
-                    spent: format.taka(month.spent),
-                    budget: format.taka(month.budget),
-                  })}
-                </p>
-              </div>
+        months.map((month) => {
+          const good = month.tone === "good";
+          const percent =
+            month.budget > 0
+              ? Math.min(100, (month.spent / month.budget) * 100)
+              : 100;
 
-              <div className="flex-none text-right">
-                <p
-                  className="font-display text-[19px] font-bold"
-                  style={{ color: toneInk[month.tone] }}
+          return (
+            <button
+              key={month.id}
+              type="button"
+              disabled={busy}
+              onClick={() => open(month)}
+              className="focus-visible:outline-primary grid cursor-pointer gap-2 border-t border-[#f4f0e7] py-3.5 text-left focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-wait"
+            >
+              <span className="flex items-baseline justify-between gap-3">
+                <span className="text-[16px] font-semibold">
+                  {format.month(month.month - 1)} {format.digits(month.year)}
+                </span>
+                <span
+                  className={`font-display text-[16px] font-bold ${
+                    good ? "text-primary-dark" : "text-over"
+                  }`}
                 >
-                  {format.signedTaka(month.amount)}
-                </p>
-                <p className="text-ink-muted text-[14px]">
-                  {t(month.tone === "good" ? "savedWord" : "overWord")}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ul>
+                  {t(good ? "savedResult" : "overResult", {
+                    amount: good
+                      ? format.signedTaka(month.amount)
+                      : format.taka(-month.amount),
+                  })}
+                </span>
+              </span>
+              <span className="block h-2.5 rounded-full bg-[#f2eee5]">
+                <span
+                  className="block h-full rounded-full"
+                  style={{
+                    width: `${percent}%`,
+                    background: good ? "var(--color-fixed)" : "var(--color-over)",
+                  }}
+                />
+              </span>
+              <span className="text-ink-soft text-[13px]">
+                {t("spentAndLimit", {
+                  spent: format.taka(month.spent),
+                  budget: format.taka(month.budget),
+                })}
+              </span>
+            </button>
+          );
+        })
       )}
     </Card>
   );

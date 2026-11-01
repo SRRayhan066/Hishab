@@ -19,3 +19,26 @@ export const localeShortNames: Record<Locale, string> = {
 export function isLocale(value: unknown): value is Locale {
   return locales.includes(value as Locale);
 }
+
+export const currencySymbols = {
+  BDT: "৳",
+  INR: "₹",
+  PKR: "Rs ",
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+  AED: "AED ",
+  MYR: "RM ",
+} as const;
+
+export type Currency = keyof typeof currencySymbols;
+
+export const currencies = Object.keys(currencySymbols) as Currency[];
+
+export const defaultCurrency: Currency = "BDT";
+
+export const currencyCookie = "currency";
+
+export function isCurrency(value: unknown): value is Currency {
+  return currencies.includes(value as Currency);
+}

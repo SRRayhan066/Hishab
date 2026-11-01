@@ -95,6 +95,7 @@ export async function clearAllData(
   const account = await defaultMoneyAccount();
   await db.$transaction([
     db.budgetMonth.deleteMany({ where: { userId } }),
+    db.debtPerson.deleteMany({ where: { userId } }),
     db.moneyAccount.deleteMany({ where: { userId } }),
     db.moneyAccount.create({ data: { userId, ...account } }),
   ]);

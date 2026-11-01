@@ -43,13 +43,24 @@ export function lastUsedAccountId(entries: RecentEntry[]): string | undefined {
   return latest?.accountId;
 }
 
-export function spentOnDay(data: MonthData, day: number): number {
-  return data.categories.reduce(
-    (total, category) =>
-      total +
-      category.entries
-        .filter((entry) => entry.day === day)
-        .reduce((sum, entry) => sum + entry.amount, 0),
-    0,
-  );
+export type EntryDay = {
+  day: number;
+  total: number;
+  entries: RecentEntry[];
+};
+
+export function groupByDay(entries: RecentEntry[]): EntryDay[] {
+  const days = new Map<number, RecentEntry[]>();
+
+  for (const entry of entries) {
+    const rows = days.get(entry.day);
+    if (rows) rows.push(entry);
+    else days.set(entry.day, [entry]);
+  }
+
+  return [...days].map(([day, rows]) => ({
+    day,
+    total: rows.reduce((sum, row) => sum + row.amount, 0),
+    entries: rows,
+  }));
 }

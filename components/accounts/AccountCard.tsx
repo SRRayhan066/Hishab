@@ -19,7 +19,7 @@ import { AmountInput } from "@/components/ui/AmountInput";
 import { colorOf, type AccountIcon } from "@/lib/finance/account-style";
 import { useFormat, useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
-import type { AccountFormValues } from "./AccountListCard";
+import type { AccountFormValues } from "./AccountsScreen";
 
 const icons: Record<AccountIcon, LucideIcon> = {
   landmark: Landmark,
@@ -32,8 +32,20 @@ const icons: Record<AccountIcon, LucideIcon> = {
   gem: Gem,
 };
 
+export function AccountIcon({
+  icon,
+  className,
+}: {
+  icon: string;
+  className?: string;
+}) {
+  const Icon = icons[icon as AccountIcon] ?? Wallet;
+  return <Icon className={className} />;
+}
+
 const fieldClass =
   "rounded-[10px] border-[1.5px] border-dashed border-black/15 bg-white/35 outline-none transition-colors hover:border-black/25 focus-within:border-solid focus-within:border-primary focus-within:bg-white/85";
+const fixedFieldClass = "rounded-[10px] border-[1.5px] border-transparent bg-white/20";
 
 type AccountCardProps = {
   index: number;
@@ -42,6 +54,8 @@ type AccountCardProps = {
   balance: number;
   removable: boolean;
   correctable: boolean;
+  openingFixed: boolean;
+  readOnly: boolean;
   dirty: boolean;
   busy: boolean;
   register: UseFormRegister<AccountFormValues>;
@@ -58,6 +72,8 @@ export function AccountCard({
   balance,
   removable,
   correctable,
+  openingFixed,
+  readOnly,
   dirty,
   busy,
   register,
@@ -75,7 +91,7 @@ export function AccountCard({
 
   return (
     <li
-      className="relative isolate flex min-h-[172px] flex-col overflow-hidden rounded-[20px] border px-4 pt-3.5 pb-3.5 shadow-[0_1px_2px_rgba(42,40,37,0.04),0_10px_24px_-14px_rgba(42,40,37,0.28)]"
+      className="relative isolate flex min-h-[172px] flex-col overflow-hidden rounded-[18px] border px-4 py-3.5 shadow-[0_1px_2px_rgba(42,40,37,0.04),0_10px_24px_-14px_rgba(42,40,37,0.28)]"
       style={{
         background: `linear-gradient(135deg, ${palette.from} 0%, ${palette.to} 100%)`,
         borderColor: palette.border,
@@ -117,7 +133,7 @@ export function AccountCard({
 
       <div className="mt-1.5 flex items-end justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-[13px] font-medium opacity-75">{t("balanceNow")}</p>
+          <p className="text-[13px] font-medium opacity-75">{t(readOnly ? "balanceEnd" : "balanceNow")}</p>
           <p
             className={cn(
               "font-display text-[24px] leading-tight font-bold tracking-[-0.01em]",
@@ -133,7 +149,7 @@ export function AccountCard({
             type="button"
             onClick={onCorrect}
             disabled={busy || dirty}
-            title={dirty ? t("correctSaveFirst") : undefined}
+            title={dirty ? t("saveFirst") : undefined}
             aria-label={t("correctAria", { index: number })}
             className="focus-visible:outline-primary flex h-9 flex-none cursor-pointer items-center gap-1.5 rounded-full bg-white/55 px-3 text-[13px] font-semibold transition hover:bg-white/85 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
           >
@@ -154,10 +170,11 @@ export function AccountCard({
               nameField.ref(node);
               nameRef(node);
             }}
+            readOnly={readOnly}
             placeholder={t("accountPlaceholder")}
             aria-label={t("nameAria", { index: number })}
             className={cn(
-              fieldClass,
+              readOnly ? fixedFieldClass : fieldClass,
               "font-display h-9 w-full min-w-0 px-2.5 text-[16px] font-semibold tracking-[0.02em] placeholder:font-normal placeholder:opacity-45",
             )}
           />
@@ -167,10 +184,17 @@ export function AccountCard({
           <span className="text-[11px] font-medium tracking-[0.04em] opacity-65">
             {t("opening")}
           </span>
-          <span className={cn(fieldClass, "flex h-9 items-center gap-1 px-2.5")}>
-            <span className="text-[14px] font-semibold opacity-60">৳</span>
+          <span
+            title={openingFixed && !readOnly ? t("openingFixed") : undefined}
+            className={cn(
+              openingFixed || readOnly ? fixedFieldClass : fieldClass,
+              "flex h-9 items-center gap-1 px-2.5",
+            )}
+          >
+            <span className="text-[14px] font-semibold opacity-60">{format.symbol}</span>
             <AmountInput
               {...register(`accounts.${index}.amount`, { onChange: onEdit })}
+              readOnly={openingFixed || readOnly}
               placeholder="0"
               aria-label={t("openingAria", { index: number })}
               className="w-full min-w-0 border-none bg-transparent text-right text-[15px] font-bold outline-none placeholder:opacity-45"

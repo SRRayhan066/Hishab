@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { BudgetScreen } from "@/components/budget/BudgetScreen";
-import { getCurrentMonthView } from "@/lib/finance/view";
+import { PastBudget } from "@/components/budget/PastBudget";
+import { getMonthView } from "@/lib/finance/view";
 import { getT } from "@/lib/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -12,7 +13,13 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function BudgetPage() {
-  const { data, summary } = await getCurrentMonthView();
+  const { data, summary } = await getMonthView();
+
+  if (summary.isPast) {
+    return (
+      <PastBudget data={data} daysInMonth={summary.daysInMonth} />
+    );
+  }
 
   return (
     <BudgetScreen
@@ -24,7 +31,6 @@ export default async function BudgetPage() {
         ...data,
         categories: data.categories.filter((category) => !category.temporary),
       }}
-      monthName={summary.monthName}
       daysInMonth={summary.daysInMonth}
     />
   );

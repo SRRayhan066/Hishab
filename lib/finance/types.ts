@@ -6,6 +6,8 @@ export type MoneyAccount = {
   icon: string;
   balance: number;
   inUse: boolean;
+  /** The account's first month has ended, so its past balances must not move. */
+  openingLocked: boolean;
 };
 
 export type IncomeSource = {
@@ -73,6 +75,7 @@ export type MonthData = {
   categories: Category[];
   transfers: TransferEntry[];
   adjustments: BalanceAdjustmentEntry[];
+  debtMoved: number;
   history: PastMonth[];
 };
 
@@ -119,9 +122,11 @@ export type Burndown = {
   today: { x: number; y: number };
   grid: GridLine[];
   xLabels: AxisLabel[];
+  todayLabel: string;
 };
 
 export type MonthSummary = {
+  isPast: boolean;
   monthName: string;
   monthIndex: number;
   year: number;
@@ -137,6 +142,10 @@ export type MonthSummary = {
   /** What has actually been paid out this month. */
   spentTotal: number;
   adjustedTotal: number;
+  /** What the month left behind: income, less spending, give or take corrections. */
+  netTotal: number;
+  /** How far every account moved this month, debts and all. */
+  balanceChange: number;
   /** Of the plan, what is still unpaid — bills yet to come. */
   remainingPlanned: number;
 
