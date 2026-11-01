@@ -25,7 +25,9 @@ export async function CategoryBreakdown({ summary }: { summary: MonthSummary }) 
       <h2 className="font-display text-[19px] font-bold">
         {t("breakdownTitle")}
       </h2>
-      <p className="text-ink-muted mb-2.5 text-[14px]">{t("breakdownHint")}</p>
+      <p className="text-ink-muted mb-2.5 text-[14px]">
+        {t(summary.isPast ? "breakdownHintPast" : "breakdownHint")}
+      </p>
 
       <ul className="flex flex-col gap-1">
         {summary.categories.map((category) => (
@@ -53,10 +55,12 @@ export async function CategoryBreakdown({ summary }: { summary: MonthSummary }) 
                     background: barColor[category.tone],
                   }}
                 />
-                <div
-                  className="absolute -top-[3px] -bottom-[3px] w-[2px] rounded-[2px] bg-[#c6bfae]"
-                  style={{ left: `${category.idealPercent}%` }}
-                />
+                {!summary.isPast && (
+                  <div
+                    className="absolute -top-[3px] -bottom-[3px] w-[2px] rounded-[2px] bg-[#c6bfae]"
+                    style={{ left: `${category.idealPercent}%` }}
+                  />
+                )}
               </div>
             )}
 

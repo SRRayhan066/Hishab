@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { AddExpenseScreen } from "@/components/add/AddExpenseScreen";
-import { getCurrentMonthView } from "@/lib/finance/view";
+import { RecentEntries } from "@/components/add/RecentEntries";
+import { listEntries } from "@/lib/finance/entries";
+import { getMonthView } from "@/lib/finance/view";
 import { getT } from "@/lib/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -12,7 +14,16 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AddExpensePage() {
-  const { data, summary } = await getCurrentMonthView();
+  const { data, summary } = await getMonthView();
+
+  if (summary.isPast) {
+    return (
+      <RecentEntries
+        entries={listEntries(data)}
+        monthName={summary.monthName}
+      />
+    );
+  }
 
   return (
     <AddExpenseScreen

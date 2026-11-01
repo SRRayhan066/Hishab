@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { AccountsScreen } from "@/components/accounts/AccountsScreen";
-import { getCurrentMonthView } from "@/lib/finance/view";
+import { getMonthView } from "@/lib/finance/view";
 import { getT } from "@/lib/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AccountsPage() {
-  const { data, summary } = await getCurrentMonthView();
+  const { data, summary } = await getMonthView();
 
   return (
     <AccountsScreen
@@ -21,13 +21,12 @@ export default async function AccountsPage() {
       transfers={data.transfers}
       adjustments={data.adjustments}
       history={data.history}
-      thisMonthNet={
-        summary.incomeTotal - summary.spentTotal + summary.adjustedTotal
-      }
+      thisMonthNet={summary.netTotal}
       projectedNet={
         summary.incomeTotal - summary.projected + summary.adjustedTotal
       }
       monthName={summary.monthName}
+      readOnly={summary.isPast}
       reference={{
         year: summary.year,
         monthIndex: summary.monthIndex,

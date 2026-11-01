@@ -15,12 +15,14 @@ type CorrectionListProps = {
   accounts: MoneyAccount[];
   adjustments: BalanceAdjustmentEntry[];
   monthName: string;
+  readOnly: boolean;
 };
 
 export function CorrectionList({
   accounts,
   adjustments,
   monthName,
+  readOnly,
 }: CorrectionListProps) {
   const t = useT("accounts");
   const common = useT("common");
@@ -61,10 +63,16 @@ export function CorrectionList({
 
   return (
     <Card className="px-[22px] pt-[22px] pb-4">
-      <h2 className="font-display text-[18px] font-bold">{t("correctionsTitle")}</h2>
-      <p className="text-ink-muted mt-0.5 text-[14px] leading-[1.55]">
-        {t("correctionsHint")}
-      </p>
+      <h2 className="font-display text-[18px] font-bold">
+        {readOnly
+          ? t("correctionsTitlePast", { month: monthName })
+          : t("correctionsTitle")}
+      </h2>
+      {!readOnly && (
+        <p className="text-ink-muted mt-0.5 text-[14px] leading-[1.55]">
+          {t("correctionsHint")}
+        </p>
+      )}
 
       {error && (
         <div className="mt-3">
@@ -94,14 +102,16 @@ export function CorrectionList({
               <span className="text-ink-soft text-[16px] font-semibold">
                 {amount}
               </span>
-              <button
-                type="button"
-                onClick={() => handleRemove(adjustment.id)}
-                aria-label={t("removeCorrection", { name, amount })}
-                className="text-line-strong hover:text-danger focus-visible:outline-primary -mr-2.5 flex h-11 w-11 flex-none cursor-pointer items-center justify-center rounded-[12px] text-[20px] leading-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
-              >
-                ×
-              </button>
+              {!readOnly && (
+                <button
+                  type="button"
+                  onClick={() => handleRemove(adjustment.id)}
+                  aria-label={t("removeCorrection", { name, amount })}
+                  className="text-line-strong hover:text-danger focus-visible:outline-primary -mr-2.5 flex h-11 w-11 flex-none cursor-pointer items-center justify-center rounded-[12px] text-[20px] leading-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+                >
+                  ×
+                </button>
+              )}
             </li>
           );
         })}

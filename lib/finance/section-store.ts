@@ -2,6 +2,7 @@ import "server-only";
 import { db } from "@/lib/db";
 import { lockBalances, moneyTransaction } from "./account-store";
 import { incomeChanges, openingChanges, overdrawnAccount } from "./accounts";
+import { currentPeriod, isBeforePeriod } from "./period";
 import { getT } from "@/lib/i18n/server";
 import type { AccountRow, PlanRow } from "@/lib/validation/finance";
 
@@ -256,6 +257,8 @@ export async function replaceAccountSection(
     where: { userId },
     select: {
       id: true,
+      openingBalance: true,
+      createdAt: true,
       _count: {
         select: {
           incomes: true,
@@ -288,6 +291,22 @@ export async function replaceAccountSection(
   );
   if (inUse) {
     return { error: t("accountInUse"), rows: await savedAccountRows(userId) };
+  }
+
+  const finished = existing.filter(({ createdAt }) =>
+    isBeforePeriod(currentPeriod(createdAt), currentPeriod()),
+  );
+  const openingEdited = finished.some(({ id, openingBalance }) =>
+    updates.some((row) => row.id === id && row.amount !== openingBalance),
+  );
+  if (openingEdited) {
+    return { error: t("openingLocked"), rows: await savedAccountRows(userId) };
+  }
+  const historyDeleted = finished.some(
+    ({ id, openingBalance }) => deletes.includes(id) && openingBalance !== 0,
+  );
+  if (historyDeleted) {
+    return { error: t("accountHasHistory"), rows: await savedAccountRows(userId) };
   }
 
   const overdrawn = await moneyTransaction(async (tx) => {

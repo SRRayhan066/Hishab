@@ -8,18 +8,32 @@ const barColor: Record<CategoryStat["tone"], string> = {
   over: "var(--color-over)",
 };
 
-export async function CategorySpend({ categories }: { categories: CategoryStat[] }) {
+type CategorySpendProps = {
+  categories: CategoryStat[];
+  isPast: boolean;
+  monthName: string;
+};
+
+export async function CategorySpend({
+  categories,
+  isPast,
+  monthName,
+}: CategorySpendProps) {
   const [t, format] = await Promise.all([getT("history"), getFormat()]);
 
   return (
     <Card className="px-[22px] pt-6 pb-[26px]">
       <h2 className="font-display text-[19px] font-bold">
-        {t("categoryTitle")}
+        {isPast
+          ? t("categoryTitlePast", { month: monthName })
+          : t("categoryTitle")}
       </h2>
 
       {categories.length === 0 ? (
         <p className="text-ink-faint pt-4 text-[15px]">
-          {t("categoryEmpty")}
+          {isPast
+            ? t("categoryEmptyPast", { month: monthName })
+            : t("categoryEmpty")}
         </p>
       ) : (
         <ul className="mt-2">

@@ -75,8 +75,11 @@ export const en: Dictionary = {
     savings: "Saved",
     savingsLabel: "Saved {amount}",
     profile: "Profile",
-    monthLine: "{month} {year} · {days} days left",
-    monthLineOne: "{month} {year} · {days} day left",
+    daysLeft: "{days} days left",
+    daysLeftOne: "{days} day left",
+    pickMonth: "Month",
+    pickYear: "Year",
+    backToCurrent: "Back to current month",
   },
   errors: {
     requestFailed: "Something went wrong. Please try again.",
@@ -112,6 +115,10 @@ export const en: Dictionary = {
     accountGone: "Couldn't find that account. Try refreshing the page.",
     accountInUse:
       "This account has income, spending or transfers, so it can't be deleted. You can rename it instead.",
+    accountHasHistory:
+      "This account is part of a finished month, so it can't be deleted. You can rename it instead.",
+    openingLocked:
+      "This account's first month is over, so what it started with can't be changed. Use Correct to change its balance.",
     lastAccount: "You need at least one account.",
     notEnoughBalance:
       "{name} has {balance}. You can't spend or transfer more than that.",
@@ -216,6 +223,12 @@ export const en: Dictionary = {
   },
   home: {
     balanceLabel: "In hand right now",
+    balanceLabelPast: "Balance at the end of {month}",
+    pastSaved: "{amount} was saved in {month}.",
+    pastLost: "{amount} more went out than came in during {month}.",
+    pastIncome: "Money in",
+    pastSpent: "Spent",
+    pastNet: "Saved",
     short:
       "You need {amount} more to cover everything you planned. Try trimming a category.",
     perDay:
@@ -239,6 +252,7 @@ export const en: Dictionary = {
     breakdownTitle: "Where the money goes",
     breakdownHint:
       "The small mark shows how much you'd have spent by today if you were on track.",
+    breakdownHintPast: "How each category ended the month.",
   },
   add: {
     amountLabel: "How much did you spend?",
@@ -261,6 +275,9 @@ export const en: Dictionary = {
     inAccount: "In {name}",
     recentTitle: "Recently added",
     recentEmpty: "Nothing added this month yet.",
+    pastTitle: "Spending in {month}",
+    pastEmpty: "Nothing was added in {month}.",
+    pastHint: "This month has ended, so it can't be changed.",
     removeEntry: "Delete {amount} spent on {category}",
     showLess: "Show less",
     showMore: "Show {count} more",
@@ -269,6 +286,8 @@ export const en: Dictionary = {
     summaryTitle: "{month} budget",
     summaryHint:
       "Here you only decide where the money goes. Log real spending in the “Spend” tab.",
+    summaryHintPast: "This is how {month} was planned. It has ended, so it can't be changed.",
+    pastSpent: "{amount} spent",
     splitLabel: "Income split — total budget {planned}, left over {left}",
     incomeIn: "Coming in",
     totalBudget: "Total budget",
@@ -310,6 +329,8 @@ export const en: Dictionary = {
   },
   accounts: {
     totalLabel: "Across all accounts",
+    totalLabelPast: "Across all accounts at the end of {month}",
+    sentencePast: "This is what your accounts held when {month} ended.",
     sentenceGain:
       "Whatever you save each month gets added here. At your current pace, you'll have {amount} left at the end of this month.",
     sentenceLoss:
@@ -317,12 +338,16 @@ export const en: Dictionary = {
     opening: "Started with",
     pastMonths: "From past months",
     thisMonth: "This month so far",
+    monthNet: "Saved in {month}",
     listTitle: "Accounts",
     listHint:
-      "Cash, bank, bKash — anywhere you keep money. Enter how much each one had on the day you started using the app. Accounts with transactions can be renamed but not deleted.",
+      "Cash, bank, bKash — anywhere you keep money. Enter how much each one had on the day you started using the app. After an account's first month, change its balance with Correct. Accounts with transactions can be renamed but not deleted.",
+    listHintPast: "What each account held at the end of {month}.",
     addAccount: "Add account",
     removeAccount: "Delete account {index}",
     balanceNow: "Balance now",
+    balanceEnd: "Month-end balance",
+    openingFixed: "Use Correct to change this account's balance.",
     accountName: "Account name",
     accountPlaceholder: "e.g. bKash",
     nameAria: "Account {index} — name",
@@ -344,6 +369,7 @@ export const en: Dictionary = {
     correctCancel: "Cancel",
     correctSubmit: "Update balance",
     correctionsTitle: "This month's balance corrections",
+    correctionsTitlePast: "Balance corrections in {month}",
     correctionsHint:
       "Delete a correction to undo it, for example if you've since added the missing entries.",
     removeCorrection: "Delete {amount} correction on {name}",
@@ -362,7 +388,9 @@ export const en: Dictionary = {
     submit: "Transfer",
     done: "Transfer done.",
     transfersTitle: "This month's transfers",
+    transfersTitlePast: "Transfers in {month}",
     transfersEmpty: "No transfers this month yet.",
+    transfersEmptyPast: "No transfers in {month}.",
     removeTransfer: "Delete {amount} transfer from {from} to {to}",
     savingsTitle: "Savings month by month",
     savingsEmpty: "No past months yet.",
@@ -378,7 +406,9 @@ export const en: Dictionary = {
     savedWord: "saved",
     overWord: "overspent",
     categoryTitle: "This month by category",
+    categoryTitlePast: "{month} by category",
     categoryEmpty: "No categories this month yet.",
+    categoryEmptyPast: "No categories in {month}.",
   },
   profile: {
     joined: "Joined",

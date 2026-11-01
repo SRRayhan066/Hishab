@@ -40,6 +40,10 @@ export function balanceWithOpening(
   return account.balance - account.openingBalance + opening;
 }
 
+export function keepsHistory(account: MoneyAccount): boolean {
+  return account.inUse || (account.openingLocked && account.openingBalance !== 0);
+}
+
 type Balance = Pick<MoneyAccount, "id" | "name" | "balance">;
 
 export function overdrawnAccount<T extends Balance>(

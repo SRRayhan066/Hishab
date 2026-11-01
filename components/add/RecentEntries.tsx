@@ -8,7 +8,7 @@ import { useFormat, useT } from "@/lib/i18n/client";
 type RecentEntriesProps = {
   entries: RecentEntry[];
   monthName: string;
-  onRemove: (id: string) => void;
+  onRemove?: (id: string) => void;
 };
 
 const PAGE_SIZE = 8;
@@ -24,14 +24,20 @@ export function RecentEntries({
   const format = useFormat();
   const visible = expanded ? entries : entries.slice(0, PAGE_SIZE);
   const hidden = entries.length - visible.length;
+  const month = { month: monthName };
 
   return (
     <Card className="flex min-h-0 flex-col px-[22px] pt-[22px] pb-4">
-      <h2 className="font-display text-[19px] font-bold">{t("recentTitle")}</h2>
+      <h2 className="font-display text-[19px] font-bold">
+        {onRemove ? t("recentTitle") : t("pastTitle", month)}
+      </h2>
+      {!onRemove && (
+        <p className="text-ink-muted mt-0.5 text-[14px]">{t("pastHint")}</p>
+      )}
 
       {entries.length === 0 ? (
         <p className="text-ink-faint pt-3.5 pb-5 text-[15px]">
-          {t("recentEmpty")}
+          {onRemove ? t("recentEmpty") : t("pastEmpty", month)}
         </p>
       ) : (
         <>
@@ -56,17 +62,19 @@ export function RecentEntries({
                 <span className="text-ink-soft text-[16px] font-semibold">
                   {format.taka(entry.amount)}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => onRemove(entry.id)}
-                  aria-label={t("removeEntry", {
-                    category: entry.categoryName,
-                    amount: format.taka(entry.amount),
-                  })}
-                  className="text-line-strong hover:text-danger focus-visible:outline-primary -mr-2.5 flex h-11 w-11 flex-none cursor-pointer items-center justify-center rounded-[12px] text-[20px] leading-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
-                >
-                  ×
-                </button>
+                {onRemove && (
+                  <button
+                    type="button"
+                    onClick={() => onRemove(entry.id)}
+                    aria-label={t("removeEntry", {
+                      category: entry.categoryName,
+                      amount: format.taka(entry.amount),
+                    })}
+                    className="text-line-strong hover:text-danger focus-visible:outline-primary -mr-2.5 flex h-11 w-11 flex-none cursor-pointer items-center justify-center rounded-[12px] text-[20px] leading-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+                  >
+                    ×
+                  </button>
+                )}
               </li>
             ))}
           </ul>

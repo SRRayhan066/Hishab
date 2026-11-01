@@ -34,6 +34,7 @@ const icons: Record<AccountIcon, LucideIcon> = {
 
 const fieldClass =
   "rounded-[10px] border-[1.5px] border-dashed border-black/15 bg-white/35 outline-none transition-colors hover:border-black/25 focus-within:border-solid focus-within:border-primary focus-within:bg-white/85";
+const fixedFieldClass = "rounded-[10px] border-[1.5px] border-transparent bg-white/20";
 
 type AccountCardProps = {
   index: number;
@@ -42,6 +43,8 @@ type AccountCardProps = {
   balance: number;
   removable: boolean;
   correctable: boolean;
+  openingFixed: boolean;
+  readOnly: boolean;
   dirty: boolean;
   busy: boolean;
   register: UseFormRegister<AccountFormValues>;
@@ -58,6 +61,8 @@ export function AccountCard({
   balance,
   removable,
   correctable,
+  openingFixed,
+  readOnly,
   dirty,
   busy,
   register,
@@ -117,7 +122,7 @@ export function AccountCard({
 
       <div className="mt-1.5 flex items-end justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-[13px] font-medium opacity-75">{t("balanceNow")}</p>
+          <p className="text-[13px] font-medium opacity-75">{t(readOnly ? "balanceEnd" : "balanceNow")}</p>
           <p
             className={cn(
               "font-display text-[24px] leading-tight font-bold tracking-[-0.01em]",
@@ -154,10 +159,11 @@ export function AccountCard({
               nameField.ref(node);
               nameRef(node);
             }}
+            readOnly={readOnly}
             placeholder={t("accountPlaceholder")}
             aria-label={t("nameAria", { index: number })}
             className={cn(
-              fieldClass,
+              readOnly ? fixedFieldClass : fieldClass,
               "font-display h-9 w-full min-w-0 px-2.5 text-[16px] font-semibold tracking-[0.02em] placeholder:font-normal placeholder:opacity-45",
             )}
           />
@@ -167,10 +173,17 @@ export function AccountCard({
           <span className="text-[11px] font-medium tracking-[0.04em] opacity-65">
             {t("opening")}
           </span>
-          <span className={cn(fieldClass, "flex h-9 items-center gap-1 px-2.5")}>
+          <span
+            title={openingFixed && !readOnly ? t("openingFixed") : undefined}
+            className={cn(
+              openingFixed || readOnly ? fixedFieldClass : fieldClass,
+              "flex h-9 items-center gap-1 px-2.5",
+            )}
+          >
             <span className="text-[14px] font-semibold opacity-60">৳</span>
             <AmountInput
               {...register(`accounts.${index}.amount`, { onChange: onEdit })}
+              readOnly={openingFixed || readOnly}
               placeholder="0"
               aria-label={t("openingAria", { index: number })}
               className="w-full min-w-0 border-none bg-transparent text-right text-[15px] font-bold outline-none placeholder:opacity-45"

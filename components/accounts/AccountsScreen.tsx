@@ -7,6 +7,7 @@ import type { SaveState } from "@/components/budget/SaveStatus";
 import {
   balanceWithOpening,
   buildSavingsView,
+  keepsHistory,
   openingChanges,
   overdrawnAccount,
 } from "@/lib/finance/accounts";
@@ -18,6 +19,7 @@ import type {
   PastMonth,
   TransferEntry,
 } from "@/lib/finance/types";
+import { cn } from "@/lib/utils";
 import {
   AccountListCard,
   type AccountField,
@@ -38,6 +40,7 @@ type AccountsScreenProps = {
   thisMonthNet: number;
   projectedNet: number;
   monthName: string;
+  readOnly: boolean;
   reference: { year: number; monthIndex: number; day: number };
 };
 
@@ -58,6 +61,7 @@ export function AccountsScreen({
   thisMonthNet,
   projectedNet,
   monthName,
+  readOnly,
   reference,
 }: AccountsScreenProps) {
   const errorsT = useT("errors");
@@ -89,7 +93,13 @@ export function AccountsScreen({
       Number(row?.amount) || 0,
     ),
   );
-  const locked = list.fields.map((field) => byId.get(field.id)?.inUse ?? false);
+  const locked = list.fields.map((field) => {
+    const account = byId.get(field.id);
+    return account ? keepsHistory(account) : false;
+  });
+  const openingFixed = list.fields.map(
+    (field) => byId.get(field.id)?.openingLocked ?? false,
+  );
   const correctable = list.fields.map((field) => byId.has(field.id));
   const correctingAccount = byId.get(correcting);
 
@@ -154,12 +164,15 @@ export function AccountsScreen({
 
   return (
     <>
-      <AccountsSummary view={view} />
+      <AccountsSummary view={view} monthName={monthName} past={readOnly} />
       <AccountListCard
         fields={list.fields}
         balances={balances}
         locked={locked}
+        openingFixed={openingFixed}
         correctable={correctable}
+        readOnly={readOnly}
+        monthName={monthName}
         register={register}
         remove={list.remove}
         focusIndex={focus}
@@ -183,16 +196,18 @@ export function AccountsScreen({
         accounts={accounts}
         adjustments={adjustments}
         monthName={monthName}
+        readOnly={readOnly}
       />
       <div
         data-tour="transfers"
-        className="grid gap-4 lg:grid-cols-2 lg:items-start"
+        className={cn("grid gap-4 lg:items-start", !readOnly && "lg:grid-cols-2")}
       >
-        <TransferCard accounts={accounts} reference={reference} />
+        {!readOnly && <TransferCard accounts={accounts} reference={reference} />}
         <TransferList
           accounts={accounts}
           transfers={transfers}
           monthName={monthName}
+          readOnly={readOnly}
         />
       </div>
       <SavingsHistory months={view.months} />

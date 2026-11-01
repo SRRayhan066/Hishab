@@ -1,7 +1,8 @@
 import { Avatar } from "@/components/ui/Avatar";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { getCurrentUser } from "@/lib/auth/session";
-import { getCurrentMonthView } from "@/lib/finance/view";
+import { getMonthView } from "@/lib/finance/view";
+import { MonthPicker } from "./MonthPicker";
 import { SavingsChip } from "./SavingsChip";
 
 export { SavingsChipFallback as SavingsStatusFallback } from "./SavingsChip";
@@ -12,23 +13,27 @@ export { SavingsChipFallback as SavingsStatusFallback } from "./SavingsChip";
  * the shell — heading, tabs, account button — paints while the query is still
  * running, instead of the whole screen waiting on it.
  *
- * Both read `getCurrentMonthView`, which is request-cached, so the pair costs
+ * Both read `getMonthView`, which is request-cached, so the pair costs
  * one query between them, not two.
  */
 export async function MonthLine() {
-  const { monthLabel } = await getCurrentMonthView();
+  const { monthLabel, daysLabel, months, period } = await getMonthView();
 
-  return (
-    <p className="text-ink-muted text-[14px] font-medium">{monthLabel}</p>
-  );
+  if (months.length < 2) {
+    return (
+      <p className="text-ink-muted text-[14px] font-medium">{monthLabel}</p>
+    );
+  }
+
+  return <MonthPicker months={months} selected={period} daysLabel={daysLabel} />;
 }
 
 export function MonthLineFallback() {
-  return <Skeleton className="my-[5px] h-[11px] w-40 rounded-[4px]" />;
+  return <Skeleton className="h-[46px] w-[260px] rounded-[12px]" />;
 }
 
 export async function SavingsStatus() {
-  const { savingsLabel } = await getCurrentMonthView();
+  const { savingsLabel } = await getMonthView();
 
   return <SavingsChip label={savingsLabel} />;
 }

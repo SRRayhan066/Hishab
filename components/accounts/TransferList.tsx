@@ -12,12 +12,14 @@ type TransferListProps = {
   accounts: MoneyAccount[];
   transfers: TransferEntry[];
   monthName: string;
+  readOnly: boolean;
 };
 
 export function TransferList({
   accounts,
   transfers,
   monthName,
+  readOnly,
 }: TransferListProps) {
   const t = useT("accounts");
   const common = useT("common");
@@ -56,7 +58,11 @@ export function TransferList({
 
   return (
     <Card className="px-[22px] pt-[22px] pb-4">
-      <h2 className="font-display text-[18px] font-bold">{t("transfersTitle")}</h2>
+      <h2 className="font-display text-[18px] font-bold">
+        {readOnly
+          ? t("transfersTitlePast", { month: monthName })
+          : t("transfersTitle")}
+      </h2>
 
       {error && (
         <div className="mt-3">
@@ -66,7 +72,9 @@ export function TransferList({
 
       {visible.length === 0 ? (
         <p className="text-ink-faint pt-3.5 pb-3 text-[15px]">
-          {t("transfersEmpty")}
+          {readOnly
+            ? t("transfersEmptyPast", { month: monthName })
+            : t("transfersEmpty")}
         </p>
       ) : (
         <ul className="mt-1">
@@ -93,18 +101,20 @@ export function TransferList({
                 <span className="text-ink-soft text-[16px] font-semibold">
                   {format.taka(transfer.amount)}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => handleRemove(transfer.id)}
-                  aria-label={t("removeTransfer", {
-                    from,
-                    to,
-                    amount: format.taka(transfer.amount),
-                  })}
-                  className="text-line-strong hover:text-danger focus-visible:outline-primary -mr-2.5 flex h-11 w-11 flex-none cursor-pointer items-center justify-center rounded-[12px] text-[20px] leading-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
-                >
-                  ×
-                </button>
+                {!readOnly && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemove(transfer.id)}
+                    aria-label={t("removeTransfer", {
+                      from,
+                      to,
+                      amount: format.taka(transfer.amount),
+                    })}
+                    className="text-line-strong hover:text-danger focus-visible:outline-primary -mr-2.5 flex h-11 w-11 flex-none cursor-pointer items-center justify-center rounded-[12px] text-[20px] leading-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+                  >
+                    ×
+                  </button>
+                )}
               </li>
             );
           })}

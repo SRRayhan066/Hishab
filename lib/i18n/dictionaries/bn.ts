@@ -71,8 +71,11 @@ export const bn = {
     savings: "জমা আছে",
     savingsLabel: "জমা আছে {amount}",
     profile: "প্রোফাইল",
-    monthLine: "{month} {year} · {days} দিন বাকি",
-    monthLineOne: "{month} {year} · {days} দিন বাকি",
+    daysLeft: "{days} দিন বাকি",
+    daysLeftOne: "{days} দিন বাকি",
+    pickMonth: "মাস",
+    pickYear: "বছর",
+    backToCurrent: "চলতি মাসে ফিরে যাও",
   },
   errors: {
     requestFailed: "কিছু একটা গড়বড় হলো। আবার চেষ্টা করো।",
@@ -109,6 +112,10 @@ export const bn = {
       "অ্যাকাউন্টটা খুঁজে পাওয়া গেলো না। পাতাটা একবার রিফ্রেশ করো।",
     accountInUse:
       "এই অ্যাকাউন্টে আয়, খরচ বা ট্রান্সফার লেখা আছে, তাই মুছে ফেলা যাবে না। চাইলে নাম বদলে দাও।",
+    accountHasHistory:
+      "এই অ্যাকাউন্ট শেষ হওয়া মাসের হিসাবে আছে, তাই মুছে ফেলা যাবে না। চাইলে নাম বদলে দাও।",
+    openingLocked:
+      "এই অ্যাকাউন্টের প্রথম মাস শেষ, তাই শুরুতে কত ছিল সেটা আর বদলানো যাবে না। ব্যালেন্স বদলাতে সংশোধন ব্যবহার করো।",
     lastAccount: "অন্তত একটা অ্যাকাউন্ট রাখতেই হবে।",
     notEnoughBalance:
       "{name}-এ আছে {balance}। এর চেয়ে বেশি খরচ বা ট্রান্সফার করা যাবে না।",
@@ -212,6 +219,12 @@ export const bn = {
   },
   home: {
     balanceLabel: "এখন হাতে আছে",
+    balanceLabelPast: "{month} শেষে ব্যালেন্স",
+    pastSaved: "{month} মাসে {amount} জমেছে।",
+    pastLost: "{month} মাসে আয়ের চেয়ে {amount} বেশি খরচ হয়েছে।",
+    pastIncome: "যা এসেছে",
+    pastSpent: "খরচ হয়েছে",
+    pastNet: "জমেছে",
     short: "পরিকল্পনার সব খরচ মেটাতে আরও {amount} লাগবে। কোনো খাত কমাতে হবে।",
     perDay:
       "ফিক্সড খরচগুলো সরিয়ে রাখলে দিনে প্রায় {amount} করে খরচ করতে পারো।",
@@ -233,6 +246,7 @@ export const bn = {
     tableLeft: "বাকি",
     breakdownTitle: "কোথায় কত যাচ্ছে",
     breakdownHint: "ছোট দাগটা দেখায় আজ পর্যন্ত কতটুকু খরচ হলে ঠিক থাকতো।",
+    breakdownHintPast: "মাস শেষে প্রতিটা খাতের অবস্থা।",
   },
   add: {
     amountLabel: "কত টাকা খরচ হলো?",
@@ -255,6 +269,9 @@ export const bn = {
     inAccount: "{name}-এ আছে",
     recentTitle: "সর্বশেষ যোগ করা",
     recentEmpty: "এই মাসে এখনো কিছু যোগ করা হয়নি।",
+    pastTitle: "{month} মাসের খরচ",
+    pastEmpty: "{month} মাসে কিছু যোগ করা হয়নি।",
+    pastHint: "এই মাস শেষ হয়ে গেছে, তাই আর বদলানো যাবে না।",
     removeEntry: "{category} খাতের {amount} খরচ মুছে ফেলো",
     showLess: "কম দেখাও",
     showMore: "আরও {count}টি দেখাও",
@@ -272,6 +289,8 @@ export const bn = {
       "সব মিলে গেছে! বাজেট মেনে চললে মাস শেষে {amount} হাতে থাকবে।",
     overPlanned:
       "আয়ের চেয়ে {amount} বেশি খরচ ধরে ফেলেছো। কোথাও একটু কাটছাঁট করো।",
+    summaryHintPast: "{month} মাসের পরিকল্পনা এমন ছিল। মাস শেষ হয়ে গেছে, তাই আর বদলানো যাবে না।",
+    pastSpent: "{amount} খরচ হয়েছে",
     incomeTitle: "যা আসে",
     incomeHint:
       "বেতন, টিউশন, ভাড়া — যেখান থেকেই আসুক। পরের মাসেও এগুলো আপনা-আপনি বসে যাবে, আবার লিখতে হবে না।",
@@ -304,6 +323,8 @@ export const bn = {
   },
   accounts: {
     totalLabel: "সব অ্যাকাউন্ট মিলিয়ে আছে",
+    totalLabelPast: "{month} শেষে সব অ্যাকাউন্ট মিলিয়ে ছিল",
+    sentencePast: "{month} শেষ হওয়ার সময় তোমার অ্যাকাউন্টগুলোতে এটাই ছিল।",
     sentenceGain:
       "প্রতি মাসে যা বেঁচে যায় সেটা এর সাথে যোগ হয়। এই মাসে এখনকার খরচের গতি ধরলে মাস শেষে {amount} থাকবে।",
     sentenceLoss:
@@ -311,12 +332,16 @@ export const bn = {
     opening: "শুরুতে ছিল",
     pastMonths: "আগের মাসগুলো থেকে",
     thisMonth: "এই মাসে এ পর্যন্ত",
+    monthNet: "{month} মাসে জমেছে",
     listTitle: "অ্যাকাউন্টগুলো",
     listHint:
-      "ক্যাশ, ব্যাংক, বিকাশ — যেখানে যেখানে টাকা রাখো। অ্যাপ শুরুর দিন প্রতিটায় কত ছিল সেটা বসিয়ে দাও। লেনদেন আছে এমন অ্যাকাউন্টের শুধু নাম বদলানো যায়, মোছা যায় না।",
+      "ক্যাশ, ব্যাংক, বিকাশ — যেখানে যেখানে টাকা রাখো। অ্যাপ শুরুর দিন প্রতিটায় কত ছিল সেটা বসিয়ে দাও। অ্যাকাউন্টের প্রথম মাস শেষ হলে ব্যালেন্স বদলাতে সংশোধন ব্যবহার করো। লেনদেন আছে এমন অ্যাকাউন্টের শুধু নাম বদলানো যায়, মোছা যায় না।",
+    listHintPast: "{month} শেষে কোন অ্যাকাউন্টে কত ছিল।",
     addAccount: "অ্যাকাউন্ট যোগ করো",
     removeAccount: "অ্যাকাউন্ট {index} মুছে ফেলো",
     balanceNow: "এখন আছে",
+    balanceEnd: "মাস শেষে ছিল",
+    openingFixed: "এই অ্যাকাউন্টের ব্যালেন্স বদলাতে সংশোধন ব্যবহার করো।",
     accountName: "অ্যাকাউন্টের নাম",
     accountPlaceholder: "যেমন, বিকাশ",
     nameAria: "অ্যাকাউন্ট {index} — নাম",
@@ -338,6 +363,7 @@ export const bn = {
     correctCancel: "বাতিল",
     correctSubmit: "ব্যালেন্স ঠিক করো",
     correctionsTitle: "এই মাসের ব্যালেন্স সংশোধন",
+    correctionsTitlePast: "{month} মাসের ব্যালেন্স সংশোধন",
     correctionsHint:
       "কোনো সংশোধন মুছে দিলে সেটা বাতিল হয়ে যায়, যেমন বাদ পড়া হিসাবগুলো পরে যোগ করে থাকলে।",
     removeCorrection: "{name}-এর {amount} সংশোধন মুছে ফেলো",
@@ -356,7 +382,9 @@ export const bn = {
     submit: "ট্রান্সফার করো",
     done: "ট্রান্সফার হয়ে গেছে।",
     transfersTitle: "এই মাসের ট্রান্সফার",
+    transfersTitlePast: "{month} মাসের ট্রান্সফার",
     transfersEmpty: "এই মাসে এখনো কোনো ট্রান্সফার হয়নি।",
+    transfersEmptyPast: "{month} মাসে কোনো ট্রান্সফার হয়নি।",
     removeTransfer: "{from} থেকে {to}-এ {amount} ট্রান্সফার মুছে ফেলো",
     savingsTitle: "মাসে মাসে জমার হিসাব",
     savingsEmpty: "আগের মাসের কোনো হিসাব এখনো নেই।",
@@ -372,7 +400,9 @@ export const bn = {
     savedWord: "বেঁচেছে",
     overWord: "বেশি খরচ",
     categoryTitle: "এই মাসের খাত অনুযায়ী",
+    categoryTitlePast: "{month} মাসের খাত অনুযায়ী",
     categoryEmpty: "এই মাসে এখনো কোনো খাত নেই।",
+    categoryEmptyPast: "{month} মাসে কোনো খাত ছিল না।",
   },
   profile: {
     joined: "যোগ দিয়েছ",

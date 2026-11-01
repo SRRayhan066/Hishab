@@ -5,9 +5,10 @@ import type { BudgetPlan } from "@/lib/finance/budget";
 type PlanSummaryProps = {
   plan: BudgetPlan;
   monthName: string;
+  past?: boolean;
 };
 
-export function PlanSummary({ plan, monthName }: PlanSummaryProps) {
+export function PlanSummary({ plan, monthName, past = false }: PlanSummaryProps) {
   const t = useT("budget");
   const format = useFormat();
   const {
@@ -26,7 +27,7 @@ export function PlanSummary({ plan, monthName }: PlanSummaryProps) {
         {t("summaryTitle", { month: monthName })}
       </h2>
       <p className="text-ink-muted mt-[3px] text-[15px] leading-[1.55]">
-        {t("summaryHint")}
+        {past ? t("summaryHintPast", { month: monthName }) : t("summaryHint")}
       </p>
 
       <div
@@ -92,17 +93,19 @@ export function PlanSummary({ plan, monthName }: PlanSummaryProps) {
         </div>
       </dl>
 
-      <p
-        className={`mt-4 rounded-[14px] px-4 py-3.5 text-[15px] leading-[1.55] ${
-          isBalanced
-            ? "bg-panel text-primary-dark"
-            : "bg-danger-bg text-danger-ink"
-        }`}
-      >
-        {isBalanced
-          ? t("balanced", { amount: format.taka(leftOver) })
-          : t("overPlanned", { amount: format.taka(-leftOver) })}
-      </p>
+      {!past && (
+        <p
+          className={`mt-4 rounded-[14px] px-4 py-3.5 text-[15px] leading-[1.55] ${
+            isBalanced
+              ? "bg-panel text-primary-dark"
+              : "bg-danger-bg text-danger-ink"
+          }`}
+        >
+          {isBalanced
+            ? t("balanced", { amount: format.taka(leftOver) })
+            : t("overPlanned", { amount: format.taka(-leftOver) })}
+        </p>
+      )}
     </Card>
   );
 }

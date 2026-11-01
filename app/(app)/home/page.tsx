@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { BurndownCard } from "@/components/home/BurndownCard";
 import { CategoryBreakdown } from "@/components/home/CategoryBreakdown";
 import { BalanceCard } from "@/components/home/BalanceCard";
-import { getCurrentMonthView } from "@/lib/finance/view";
+import { getMonthView } from "@/lib/finance/view";
 import { getT } from "@/lib/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const { summary } = await getCurrentMonthView();
+  const { summary } = await getMonthView();
 
   return (
     <>

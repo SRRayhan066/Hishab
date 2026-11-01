@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { viewMonth } from "@/app/actions/month";
 import { completeTour } from "@/app/actions/tour";
 import { TourOverlay } from "./TourOverlay";
 
@@ -33,7 +34,10 @@ export function TourProvider({ children }: { children: ReactNode }) {
   const firstRun = useRef<"idle" | "running" | "done">("idle");
   const active = index !== null;
 
-  const start = useCallback(() => setIndex(0), []);
+  const start = useCallback(() => {
+    setIndex(0);
+    void viewMonth(null);
+  }, []);
 
   const startFirstRun = useCallback(() => {
     if (firstRun.current !== "idle") return;

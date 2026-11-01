@@ -30,6 +30,7 @@ function buildBurndown(
   daysInMonth: number,
   today: number,
   projected: number,
+  isPast: boolean,
   { t, format }: SummaryText,
 ): Burndown {
   const projectedRemaining = plannedTotal - projected;
@@ -86,6 +87,7 @@ function buildBurndown(
       (toX(1) / CHART_WIDTH) * 100,
       (last.x / CHART_WIDTH) * 100,
       (toX(daysInMonth) / CHART_WIDTH) * 100,
+      isPast,
       t,
     ),
   };
@@ -95,6 +97,7 @@ function axisLabels(
   startPercent: number,
   todayPercent: number,
   endPercent: number,
+  isPast: boolean,
   t: Translator<"summary">,
 ): AxisLabel[] {
   const labels: AxisLabel[] = [];
@@ -109,7 +112,7 @@ function axisLabels(
 
   labels.push({
     xPercent: Number(todayPercent.toFixed(2)),
-    label: t("axisToday"),
+    label: t(isPast ? "axisEnd" : "axisToday"),
     shift: `-${todayPercent.toFixed(2)}%`,
   });
 
@@ -128,6 +131,7 @@ export function buildMonthSummary(
   data: MonthData,
   now: Date,
   text: SummaryText,
+  isPast = false,
 ): MonthSummary {
   const { t, format } = text;
   const day = now.getDate();
@@ -229,6 +233,7 @@ export function buildMonthSummary(
   });
 
   return {
+    isPast,
     monthName: format.month(now.getMonth()),
     monthIndex: now.getMonth(),
     year: now.getFullYear(),
@@ -240,6 +245,7 @@ export function buildMonthSummary(
     plannedTotal,
     spentTotal,
     adjustedTotal,
+    netTotal: incomeTotal - spentTotal + adjustedTotal,
     remainingPlanned,
     balance,
     freeToSpend,
@@ -257,6 +263,7 @@ export function buildMonthSummary(
       daysInMonth,
       Math.min(day, daysInMonth),
       projected,
+      isPast,
       text,
     ),
   };
