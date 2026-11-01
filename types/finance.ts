@@ -20,4 +20,5 @@ export type {
   NewCategoryValues,
   ExpenseValues,
   TransferValues,
+  BalanceCorrectionValues,
 } from "@/lib/validation/finance";

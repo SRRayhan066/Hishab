@@ -32,6 +32,14 @@ export type TransferEntry = {
   addedAt: number;
 };
 
+export type BalanceAdjustmentEntry = {
+  id: string;
+  accountId: string;
+  day: number;
+  amount: number;
+  addedAt: number;
+};
+
 /**
  * One planned line of spending — rent, groceries, transport, all the same
  * kind of thing. `budget` is only a forecast; money moves when an expense is
@@ -56,6 +64,7 @@ export type PastMonth = {
   budget: number;
   /** What was actually spent. */
   spent: number;
+  adjusted: number;
 };
 
 export type MonthData = {
@@ -63,6 +72,7 @@ export type MonthData = {
   income: IncomeSource[];
   categories: Category[];
   transfers: TransferEntry[];
+  adjustments: BalanceAdjustmentEntry[];
   history: PastMonth[];
 };
 
@@ -126,6 +136,7 @@ export type MonthSummary = {
   plannedTotal: number;
   /** What has actually been paid out this month. */
   spentTotal: number;
+  adjustedTotal: number;
   /** Of the plan, what is still unpaid — bills yet to come. */
   remainingPlanned: number;
 

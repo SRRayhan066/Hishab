@@ -146,6 +146,7 @@ export function buildMonthSummary(
     sum(category.entries.map((entry) => entry.amount)),
   );
   const spentTotal = sum(spentByCategory);
+  const adjustedTotal = sum(data.adjustments.map((item) => item.amount));
 
   // Only the unpaid part of each line is still owed. A category that went
   // over its plan does not lend its overspend back to the others.
@@ -238,6 +239,7 @@ export function buildMonthSummary(
     incomeTotal,
     plannedTotal,
     spentTotal,
+    adjustedTotal,
     remainingPlanned,
     balance,
     freeToSpend,

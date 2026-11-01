@@ -117,6 +117,7 @@ export const en: Dictionary = {
       "{name} has {balance}. You can't spend or transfer more than that.",
     balanceBelowZero:
       "This would take {name} below zero. Fix that account's spending or transfers first.",
+    balanceUnchanged: "That's already this account's balance.",
     transferAmount: "Enter how much to move.",
     transferSameAccount:
       "You can't transfer to the same account. Pick two different ones.",
@@ -325,8 +326,27 @@ export const en: Dictionary = {
     accountName: "Account name",
     accountPlaceholder: "e.g. bKash",
     nameAria: "Account {index} — name",
-    balance: "Balance",
-    balanceAria: "Account {index} — balance",
+    openingAria: "Account {index} — started with",
+    correctAction: "Correct",
+    correctAria: "Correct the balance of account {index}",
+    correctSaveFirst: "Save your changes first.",
+    correctTitle: "Correct {name}",
+    correctHint:
+      "Check how much is really in this account and enter it here. The balance will be set to match.",
+    correctShown: "The app shows",
+    correctReal: "Real balance",
+    correctLess: "That's {amount} less than the app shows.",
+    correctMore: "That's {amount} more than the app shows.",
+    correctSame: "That already matches the app.",
+    correctNote:
+      "A correction doesn't count as spending or income in your budget. If you remember the missing entries, add those instead, or they'll be counted twice.",
+    correctLogExpense: "Add an expense",
+    correctCancel: "Cancel",
+    correctSubmit: "Update balance",
+    correctionsTitle: "This month's balance corrections",
+    correctionsHint:
+      "Delete a correction to undo it, for example if you've since added the missing entries.",
+    removeCorrection: "Delete {amount} correction on {name}",
     transferTitle: "Transfer",
     transferNeedTwo:
       "You need at least two accounts to move money between them. Add another one above and save.",

@@ -16,12 +16,14 @@ export function financeSchemas(t: Translator<"errors">) {
   const accountMissingError = t("accountMissing");
   const expenseDayError = t("expenseDay");
 
+  const wholeTaka = z.number({ error: amountError }).int(amountError).min(0, amountError).max(MAX_AMOUNT, amountError);
+
   const money = z
     .union([z.string(), z.number()])
     .transform((value) =>
       typeof value === "string" && value.trim() === "" ? 0 : Math.round(Number(value)),
     )
-    .pipe(z.number({ error: amountError }).int(amountError).min(0, amountError).max(MAX_AMOUNT, amountError));
+    .pipe(wholeTaka);
 
   // A row can sit nameless for a moment — the user adds it, then types.
   const rowName = z.string().trim().max(60, nameTooLongError);
@@ -96,7 +98,25 @@ export function financeSchemas(t: Translator<"errors">) {
       path: ["toId"],
     });
 
-  return { planRow, planSection, accountSection, newCategory, expense, transfer };
+  const balanceCorrection = z.object({
+    accountId: z.string({ error: accountMissingError }).trim().min(1, accountMissingError),
+    balance: z
+      .string({ error: amountError })
+      .trim()
+      .min(1, amountError)
+      .transform((value) => Math.round(Number(value)))
+      .pipe(wholeTaka),
+  });
+
+  return {
+    planRow,
+    planSection,
+    accountSection,
+    newCategory,
+    expense,
+    transfer,
+    balanceCorrection,
+  };
 }
 
 type FinanceSchemas = ReturnType<typeof financeSchemas>;
@@ -108,3 +128,4 @@ export type AccountRow = z.output<FinanceSchemas["accountSection"]>[number];
 export type NewCategoryValues = z.input<FinanceSchemas["newCategory"]>;
 export type ExpenseValues = z.input<FinanceSchemas["expense"]>;
 export type TransferValues = z.input<FinanceSchemas["transfer"]>;
+export type BalanceCorrectionValues = z.input<FinanceSchemas["balanceCorrection"]>;

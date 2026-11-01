@@ -14,9 +14,11 @@ export type MonthResult = {
 
 /**
  * How much money the month actually left behind: what came in, less every
- * taka that really went out. This is what moves the balance.
+ * taka that really went out, give or take any balance corrections. This is
+ * what moves the balance.
  */
-export const monthSaving = (month: PastMonth) => month.income - month.spent;
+export const monthSaving = (month: PastMonth) =>
+  month.income - month.spent + month.adjusted;
 
 /**
  * Whether the month's plan was respected. A different question from

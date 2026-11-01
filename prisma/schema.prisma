@@ -39,6 +39,7 @@ model MoneyAccount {
   expenses     Expense[]
   transfersOut Transfer[]     @relation("TransferFrom")
   transfersIn  Transfer[]     @relation("TransferTo")
+  adjustments  BalanceAdjustment[]
 
   @@index([userId])
 }
@@ -85,6 +86,7 @@ model BudgetMonth {
   incomes    IncomeSource[]
   categories SpendCategory[]
   transfers  Transfer[]
+  adjustments BalanceAdjustment[]
 
   @@unique([userId, year, month])
   @@index([userId, year, month])
@@ -163,4 +165,19 @@ model Transfer {
   @@index([monthId])
   @@index([fromId])
   @@index([toId])
+}
+
+model BalanceAdjustment {
+  id        String   @id @default(cuid())
+  monthId   String
+  accountId String
+  day       Int
+  amount    Int
+  createdAt DateTime @default(now())
+
+  month   BudgetMonth  @relation(fields: [monthId], references: [id], onDelete: Cascade)
+  account MoneyAccount @relation(fields: [accountId], references: [id], onDelete: NoAction)
+
+  @@index([monthId])
+  @@index([accountId])
 }

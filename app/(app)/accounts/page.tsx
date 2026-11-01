@@ -19,9 +19,14 @@ export default async function AccountsPage() {
       key={`${summary.year}-${summary.monthIndex}`}
       accounts={data.accounts}
       transfers={data.transfers}
+      adjustments={data.adjustments}
       history={data.history}
-      thisMonthNet={summary.incomeTotal - summary.spentTotal}
-      projectedNet={summary.incomeTotal - summary.projected}
+      thisMonthNet={
+        summary.incomeTotal - summary.spentTotal + summary.adjustedTotal
+      }
+      projectedNet={
+        summary.incomeTotal - summary.projected + summary.adjustedTotal
+      }
       monthName={summary.monthName}
       reference={{
         year: summary.year,

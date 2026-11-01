@@ -25,12 +25,14 @@ function selectAccounts(
         - COALESCE(spend.total, 0)
         + COALESCE(incoming.total, 0)
         - COALESCE(outgoing.total, 0)
+        + COALESCE(adjusted.total, 0)
       )::int AS balance,
       (
         income.total IS NOT NULL
         OR spend.total IS NOT NULL
         OR incoming.total IS NOT NULL
         OR outgoing.total IS NOT NULL
+        OR adjusted.total IS NOT NULL
       ) AS "inUse"
     FROM "MoneyAccount" a
     LEFT JOIN LATERAL (
@@ -53,6 +55,11 @@ function selectAccounts(
       FROM "Transfer" t
       WHERE t."fromId" = a."id"
     ) outgoing ON TRUE
+    LEFT JOIN LATERAL (
+      SELECT SUM(b."amount") AS total
+      FROM "BalanceAdjustment" b
+      WHERE b."accountId" = a."id"
+    ) adjusted ON TRUE
     WHERE ${where}
     ORDER BY a."sortOrder" ASC, a."createdAt" ASC
   `;

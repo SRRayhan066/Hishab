@@ -12,6 +12,7 @@ import { getFormat, getT } from "@/lib/i18n/server";
 import { financeSchemas, rowIdSchema } from "@/lib/validation/finance";
 import type {
   AccountRowValues,
+  BalanceCorrectionValues,
   FinanceActionResult,
   SectionSaveResult,
   TransferValues,
@@ -101,6 +102,80 @@ export async function removeTransfer(
     if (found) return found;
 
     await tx.transfer.delete({ where: { id: transfer.id } });
+    return undefined;
+  });
+  if (overdrawn) {
+    return { error: t("balanceBelowZero", { name: overdrawn.name }) };
+  }
+
+  refresh();
+  return {};
+}
+
+export async function correctBalance(
+  values: BalanceCorrectionValues,
+): Promise<FinanceActionResult> {
+  const t = await getT("errors");
+  const parsed = financeSchemas(t).balanceCorrection.safeParse(values);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? t("invalidRow") };
+  }
+
+  const session = await currentSessionMonth();
+  if (!session) return { error: t("signedOut") };
+
+  const { accountId, balance } = parsed.data;
+
+  const result = await moneyTransaction(async (tx) => {
+    const [account] = await lockBalances(tx, session.userId, [accountId]);
+    if (!account) return { error: t("accountGone") };
+
+    const amount = balance - account.balance;
+    if (amount === 0) return { error: t("balanceUnchanged") };
+
+    await tx.balanceAdjustment.create({
+      data: {
+        monthId: session.monthId,
+        accountId: account.id,
+        day: lastRecordableDay(),
+        amount,
+      },
+    });
+    return {};
+  });
+  if (result.error) return result;
+
+  refresh();
+  return {};
+}
+
+export async function removeCorrection(
+  id: string,
+): Promise<FinanceActionResult> {
+  const t = await getT("errors");
+  const parsed = rowIdSchema.safeParse(id);
+  if (!parsed.success) return { error: t("rowMissing") };
+
+  const session = await currentSessionMonth();
+  if (!session) return { error: t("signedOut") };
+
+  const adjustment = await db.balanceAdjustment.findFirst({
+    where: { id: parsed.data, monthId: session.monthId },
+    select: { id: true, accountId: true, amount: true },
+  });
+  if (!adjustment) return { error: t("rowMissing") };
+
+  const overdrawn = await moneyTransaction(async (tx) => {
+    const accounts = await lockBalances(tx, session.userId, [
+      adjustment.accountId,
+    ]);
+    const found = overdrawnAccount(
+      accounts,
+      new Map([[adjustment.accountId, -adjustment.amount]]),
+    );
+    if (found) return found;
+
+    await tx.balanceAdjustment.delete({ where: { id: adjustment.id } });
     return undefined;
   });
   if (overdrawn) {

@@ -262,6 +262,7 @@ export async function replaceAccountSection(
           expenses: true,
           transfersIn: true,
           transfersOut: true,
+          adjustments: true,
         },
       },
     },
@@ -278,7 +279,12 @@ export async function replaceAccountSection(
   const inUse = existing.some(
     ({ id, _count }) =>
       deletes.includes(id) &&
-      _count.incomes + _count.expenses + _count.transfersIn + _count.transfersOut > 0,
+      _count.incomes +
+        _count.expenses +
+        _count.transfersIn +
+        _count.transfersOut +
+        _count.adjustments >
+        0,
   );
   if (inUse) {
     return { error: t("accountInUse"), rows: await savedAccountRows(userId) };

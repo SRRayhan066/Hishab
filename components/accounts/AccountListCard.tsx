@@ -26,6 +26,7 @@ type AccountListCardProps = {
   fields: FieldArrayWithId<AccountFormValues, "accounts", "key">[];
   balances: number[];
   locked: boolean[];
+  correctable: boolean[];
   register: UseFormRegister<AccountFormValues>;
   remove: UseFieldArrayRemove;
   focusIndex: number | null;
@@ -36,12 +37,14 @@ type AccountListCardProps = {
   onAdd: () => void;
   onSave: () => void;
   onEdit: () => void;
+  onCorrect: (index: number) => void;
 };
 
 export function AccountListCard({
   fields,
   balances,
   locked,
+  correctable,
   register,
   remove,
   focusIndex,
@@ -52,6 +55,7 @@ export function AccountListCard({
   onAdd,
   onSave,
   onEdit,
+  onCorrect,
 }: AccountListCardProps) {
   const t = useT("accounts");
   const common = useT("common");
@@ -85,6 +89,8 @@ export function AccountListCard({
             icon={field.icon}
             balance={balances[index] ?? 0}
             removable={!locked[index] && fields.length > 1}
+            correctable={correctable[index] ?? false}
+            dirty={dirty}
             busy={busy}
             register={register}
             nameRef={(node) => {
@@ -95,6 +101,7 @@ export function AccountListCard({
               onEdit();
             }}
             onEdit={onEdit}
+            onCorrect={() => onCorrect(index)}
           />
         ))}
 

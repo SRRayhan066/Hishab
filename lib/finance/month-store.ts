@@ -122,6 +122,7 @@ type HistoryRow = {
   income: number;
   budget: number;
   spent: number;
+  adjusted: number;
 };
 
 /**
@@ -144,7 +145,8 @@ async function loadHistory(
       m."month",
       COALESCE(income.total, 0)::int AS income,
       COALESCE(plan.total, 0)::int   AS budget,
-      COALESCE(spend.total, 0)::int  AS spent
+      COALESCE(spend.total, 0)::int  AS spent,
+      COALESCE(adjusted.total, 0)::int AS adjusted
     FROM "BudgetMonth" m
     LEFT JOIN LATERAL (
       SELECT SUM(i."amount") AS total
@@ -162,6 +164,11 @@ async function loadHistory(
       JOIN "SpendCategory" c ON c."id" = e."categoryId"
       WHERE c."monthId" = m."id"
     ) spend ON TRUE
+    LEFT JOIN LATERAL (
+      SELECT SUM(b."amount") AS total
+      FROM "BalanceAdjustment" b
+      WHERE b."monthId" = m."id"
+    ) adjusted ON TRUE
     WHERE m."userId" = ${userId}
       AND (
         m."year" < ${period.year}
@@ -178,7 +185,8 @@ async function loadHistory(
       (month) =>
         month.income > 0 ||
         month.budget > 0 ||
-        month.spent > 0,
+        month.spent > 0 ||
+        month.adjusted !== 0,
     )
     .reverse();
 }
@@ -201,7 +209,7 @@ export async function loadMonthSnapshot(
     loadHistory(userId, period),
   ]);
 
-  const [accounts, income, categories, expenses, transfers] = await Promise.all([
+  const [accounts, income, categories, expenses, transfers, adjustments] = await Promise.all([
     loadAccounts(userId),
     db.incomeSource.findMany({
       where: { monthId },
@@ -231,6 +239,17 @@ export async function loadMonthSnapshot(
         id: true,
         fromId: true,
         toId: true,
+        day: true,
+        amount: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "asc" },
+    }),
+    db.balanceAdjustment.findMany({
+      where: { monthId },
+      select: {
+        id: true,
+        accountId: true,
         day: true,
         amount: true,
         createdAt: true,
@@ -268,6 +287,10 @@ export async function loadMonthSnapshot(
       })),
       transfers: transfers.map(({ createdAt, ...transfer }) => ({
         ...transfer,
+        addedAt: createdAt.getTime(),
+      })),
+      adjustments: adjustments.map(({ createdAt, ...adjustment }) => ({
+        ...adjustment,
         addedAt: createdAt.getTime(),
       })),
       history,
